@@ -126,6 +126,7 @@ void bind_plan(nb::module_& m, const std::string& name)
 
     nb::class_<T>(m, name.c_str())  //
         .def(nb::init<Node<Task>, LabeledNodeList<Task>>(), "start_node", "labeled_succ_nodes")
+        .def("__str__", [](const T& self) { return to_string(self); })
         .def("get_start_node", &T::get_start_node, nb::rv_policy::copy)
         .def("get_labeled_succ_nodes", &T::get_labeled_succ_nodes, nb::rv_policy::copy)
         .def("get_cost", &T::get_cost)

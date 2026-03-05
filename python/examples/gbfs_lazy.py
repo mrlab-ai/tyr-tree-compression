@@ -12,8 +12,11 @@ def main():
 
     parser_options = p.ParserOptions()
     parser = p.Parser(domain_filepath, parser_options)
-    lifted_task = parser.parse_task(task_filepath, parser_options)
 
+    # Lifted
+
+    lifted_task = parser.parse_task(task_filepath, parser_options)
+ 
     lifted_state_repository = p.lifted.StateRepository(lifted_task)
     lifted_init_state = lifted_state_repository.get_initial_state()
     print(lifted_init_state)
@@ -23,11 +26,13 @@ def main():
     print(lifted_init_node)
     lifted_labeled_succ_nodes = lifted_succ_gen.get_labeled_successor_nodes(lifted_init_node)
 
-    print(lifted_task.get_task().get_domain().get_actions()[0].get_condition().get_static_literals())
-
     lifted_ff = p.lifted.FFHeuristic(lifted_task)
     lifted_astar_eager_options = p.lifted.astar_eager.Options()
-    p.lifted.astar_eager.find_solution(lifted_task, lifted_succ_gen, lifted_ff, lifted_astar_eager_options)
+    lifted_solution = p.lifted.astar_eager.find_solution(lifted_task, lifted_succ_gen, lifted_ff, lifted_astar_eager_options)
+    print(lifted_solution.plan)
+    print(lifted_solution.goal_node)
+
+    # Grounded
 
     ground_task = lifted_task.instantiate_ground_task()
 
@@ -42,7 +47,9 @@ def main():
 
     ground_blind = p.ground.BlindHeuristic()
     ground_astar_eager_options = p.ground.astar_eager.Options()
-    p.ground.astar_eager.find_solution(ground_task, ground_succ_gen, ground_blind, ground_astar_eager_options)
+    grounded_solution = p.ground.astar_eager.find_solution(ground_task, ground_succ_gen, ground_blind, ground_astar_eager_options)
+    print(grounded_solution.plan)
+    print(grounded_solution.goal_node)
     
 
 
