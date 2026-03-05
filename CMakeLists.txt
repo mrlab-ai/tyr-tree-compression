@@ -15,6 +15,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Options
 ##############################################################
 
+option(TYR_ENABLE_INNER_PARALLELISM "Enable inner rule parallelism" ON)
+
+if(TYR_ENABLE_INNER_PARALLELISM)
+    add_compile_definitions(TYR_ENABLE_INNER_PARALLELISM)
+endif()
 
 ##############################################################
 # Build Targets
@@ -24,6 +29,7 @@ option(BUILD_PYTYR "Build" OFF)
 option(BUILD_TESTS "Build" OFF)
 option(BUILD_EXECUTABLES "Build" OFF)
 option(BUILD_PROFILING "Build" OFF)
+
 
 ##############################################################
 # Common Settings
