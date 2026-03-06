@@ -125,7 +125,7 @@ private:
                                                                          m_task->get_parameter_domains_per_cond_effect_per_action()[uint_t(action)],
                                                                          m_assign,
                                                                          m_iter_workspace,
-                                                                         *m_task->get_fdr_context())
+                                                                         m_task->get_fdr_context())
                                                  .first;
 
             m_relaxed_plan.insert(ground_action_index);

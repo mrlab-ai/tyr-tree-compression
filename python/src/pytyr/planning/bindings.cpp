@@ -107,7 +107,7 @@ void bind_lifted_module_definitions(nb::module_& m)
     nb::class_<LiftedTask>(m, "Task")  //
         .def("get_repository", &LiftedTask::get_repository)
         .def("get_task", &LiftedTask::get_task)
-        .def("get_fdr_context", &LiftedTask::get_fdr_context)
+        .def("get_fdr_context", nb::overload_cast<>(&LiftedTask::get_fdr_context, nb::const_))
         .def("instantiate_ground_task", &LiftedTask::instantiate_ground_task);
 
     bind_state<LiftedTask>(m, "State");

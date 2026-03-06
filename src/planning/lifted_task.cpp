@@ -35,14 +35,11 @@ namespace fp = tyr::formalism::planning;
 namespace tyr::planning
 {
 
-LiftedTask::LiftedTask(DomainPtr domain,
-                       fp::RepositoryPtr overlay_repository,
-                       View<Index<fp::Task>, fp::Repository> task,
-                       std::shared_ptr<fp::BinaryFDRContext> fdr_context) :
+LiftedTask::LiftedTask(DomainPtr domain, fp::RepositoryPtr overlay_repository, View<Index<fp::Task>, fp::Repository> task, fp::BinaryFDRContext fdr_context) :
     m_domain(std::move(domain)),
     m_overlay_repository(std::move(overlay_repository)),
     m_task(task),
-    m_fdr_context(fdr_context),
+    m_fdr_context(std::move(fdr_context)),
     m_static_atoms_bitset(),
     m_static_numeric_variables(),
     m_axiom_program(m_task),

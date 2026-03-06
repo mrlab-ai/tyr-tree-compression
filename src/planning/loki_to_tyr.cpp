@@ -332,7 +332,7 @@ LiftedTaskPtr LokiToTyrTranslator::translate(const loki::Problem& element, fp::B
 
     auto task_context = std::make_shared<fp::Repository>(domain_context.get());
 
-    auto fdr_context = std::make_shared<fp::BinaryFDRContext>(*task_context);
+    auto fdr_context = fp::BinaryFDRContext(*task_context);
 
     /* Name */
     task.name = element->get_name();
@@ -394,7 +394,7 @@ LiftedTaskPtr LokiToTyrTranslator::translate(const loki::Problem& element, fp::B
 
     for (const auto& literal : element->get_initial_literals())
     {
-        const auto index_atom_variant = translate_grounded(literal, builder, *task_context, *fdr_context);
+        const auto index_atom_variant = translate_grounded(literal, builder, *task_context, fdr_context);
 
         func_insert_ground_atom(index_atom_variant, task.static_atoms, task.fluent_atoms);
     }
@@ -433,7 +433,7 @@ LiftedTaskPtr LokiToTyrTranslator::translate(const loki::Problem& element, fp::B
 
     if (element->get_goal_condition().has_value())
     {
-        task.goal = translate_grounded(element->get_goal_condition().value(), builder, *task_context, *fdr_context);
+        task.goal = translate_grounded(element->get_goal_condition().value(), builder, *task_context, fdr_context);
     }
     else
     {
@@ -459,7 +459,7 @@ LiftedTaskPtr LokiToTyrTranslator::translate(const loki::Problem& element, fp::B
     task.axioms = translate_lifted(element->get_axioms(), builder, *task_context);
 
     canonicalize(task);
-    return std::make_shared<LiftedTask>(domain,
+    return std::make_shared<LiftedTask>(std::move(domain),
                                         task_context,
                                         make_view(task_context->get_or_create(task, builder.get_buffer()).first, *task_context),
                                         std::move(fdr_context));

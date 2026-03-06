@@ -336,7 +336,7 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task)
                                                             lifted_task.get_parameter_domains_per_cond_effect_per_action()[action_index.get_value()],
                                                             fluent_assign,
                                                             iter_workspace,
-                                                            *lifted_task.get_fdr_context())
+                                                            lifted_task.get_fdr_context())
                                                      .first;
 
                 const auto ground_action = make_view(ground_action_index, grounder_context.destination);
@@ -392,7 +392,7 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task)
 
                 const auto axiom = make_view(axiom_index, grounder_context.destination);
 
-                const auto ground_axiom_index = fp::ground(axiom, grounder_context, *lifted_task.get_fdr_context()).first;
+                const auto ground_axiom_index = fp::ground(axiom, grounder_context, lifted_task.get_fdr_context()).first;
 
                 const auto ground_axiom = make_view(ground_axiom_index, grounder_context.destination);
 

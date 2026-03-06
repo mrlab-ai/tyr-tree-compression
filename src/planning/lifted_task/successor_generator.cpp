@@ -120,7 +120,7 @@ void SuccessorGenerator<LiftedTask>::get_labeled_successor_nodes(const Node<Lift
                                                             m_task->get_parameter_domains_per_cond_effect_per_action()[action_index.get_value()],
                                                             fluent_assign,
                                                             iter_workspace,
-                                                            *m_task->get_fdr_context())
+                                                            m_task->get_fdr_context())
                                                      .first;
 
                 const auto ground_action = make_view(ground_action_index, grounder_context.destination);
