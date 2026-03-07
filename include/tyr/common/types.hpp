@@ -68,12 +68,18 @@ auto make_view(const T& element, const C& context) noexcept
     return View<T, C>(element, context);
 }
 
+/// @brief A context that can map an element to the canonical context in which it is stored.
 template<typename T, typename C>
-auto make_view(T&& element, C&& context) noexcept
+concept CanonicalizableContext = requires(const C& a, const T& e) {
+    { a.get_canonical_context(e) } -> std::same_as<const C&>;
+};
+
+/// @brief Helper to create a view
+template<typename T, typename C>
+    requires CanonicalizableContext<T, C>
+auto make_view(const T& element, const C& context) noexcept
 {
-    using TT = std::remove_cvref_t<T>;
-    using CC = std::remove_cvref_t<C>;
-    return View<TT, CC>(std::forward<T>(element), std::forward<C>(context));
+    return View<T, C>(element, context.get_canonical_context(element));
 }
 
 }
