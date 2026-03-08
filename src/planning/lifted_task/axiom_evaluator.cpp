@@ -112,4 +112,6 @@ void AxiomEvaluator<LiftedTask>::compute_extended_state(UnpackedState<LiftedTask
     read_derived_atoms_from_program_context(m_task->get_axiom_program(), unpacked_state, merge_planning_context, m_workspace.facts.fact_sets);
 }
 
+static_assert(AxiomEvaluatorConcept<AxiomEvaluator<LiftedTask>, LiftedTask>);
+
 }

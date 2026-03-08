@@ -147,4 +147,6 @@ Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_node(StateIndex state_index
 
     return Node<LiftedTask>(std::move(state), state_metric);
 }
+
+static_assert(SuccessorGeneratorConcept<SuccessorGenerator<LiftedTask>, LiftedTask>);
 }

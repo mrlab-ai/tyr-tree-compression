@@ -21,6 +21,7 @@
 #include "tyr/planning/ground_task/unpacked_state.hpp"
 //
 #include "tyr/formalism/planning/ground_axiom_index.hpp"
+#include "tyr/planning/axiom_evaluator.hpp"
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/ground_task/match_tree/declarations.hpp"
 #include "tyr/planning/ground_task/match_tree/match_tree.hpp"

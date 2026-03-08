@@ -99,4 +99,6 @@ Node<GroundTask> SuccessorGenerator<GroundTask>::get_node(StateIndex state_index
     return Node<GroundTask>(std::move(state), state_metric);
 }
 
+static_assert(SuccessorGeneratorConcept<SuccessorGenerator<GroundTask>, GroundTask>);
+
 }

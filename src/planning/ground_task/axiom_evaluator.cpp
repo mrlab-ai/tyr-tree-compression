@@ -65,4 +65,6 @@ void AxiomEvaluator<GroundTask>::compute_extended_state(UnpackedState<GroundTask
     }
 }
 
+static_assert(AxiomEvaluatorConcept<AxiomEvaluator<GroundTask>, GroundTask>);
+
 }
