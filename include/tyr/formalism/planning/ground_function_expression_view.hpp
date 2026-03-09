@@ -47,7 +47,7 @@ public:
 
 namespace formalism::planning
 {
-using GroundFunctionExpressionView = View<Index<GroundFunctionExpression>, Repository>;
+using GroundFunctionExpressionView = View<Data<GroundFunctionExpression>, Repository>;
 }
 }
 

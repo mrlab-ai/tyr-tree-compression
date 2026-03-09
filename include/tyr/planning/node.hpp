@@ -43,7 +43,7 @@ using NodeList = std::vector<Node<Task>>;
 template<typename Task>
 struct LabeledNode
 {
-    View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> label;
+    formalism::planning::GroundActionView label;
     Node<Task> node;
 };
 

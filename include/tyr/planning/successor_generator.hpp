@@ -37,7 +37,7 @@ concept SuccessorGeneratorConcept = requires(T& r,
                                              StateIndex state_index,
                                              const Node<Task>& node,
                                              std::vector<LabeledNode<Task>>& labeled_successor_nodes,
-                                             View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> action) {
+                                             formalism::planning::GroundActionView action) {
     { T(task) };
     { r.get_initial_node() } -> std::same_as<Node<Task>>;
     { r.get_labeled_successor_nodes(node) } -> std::same_as<std::vector<LabeledNode<Task>>>;

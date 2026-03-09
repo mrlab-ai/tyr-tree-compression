@@ -36,7 +36,7 @@ class RPGProgram
 public:
     using RuleToActionMapping = UnorderedMap<Index<formalism::datalog::Rule>, Index<formalism::planning::Action>>;
 
-    explicit RPGProgram(View<Index<formalism::planning::Task>, formalism::planning::Repository> task);
+    explicit RPGProgram(formalism::planning::TaskView task);
 
     const RuleToActionMapping& get_rule_to_action_mapping() const noexcept;
     datalog::ProgramContext& get_program_context() noexcept;

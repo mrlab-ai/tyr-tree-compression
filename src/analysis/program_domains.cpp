@@ -116,20 +116,20 @@ void insert_constants_into_parameter_domain(fd::FunctionExpressionView element, 
 void insert_constants_into_parameter_domain(float_t, DomainSetListList&) {}
 
 template<f::OpKind O>
-void insert_constants_into_parameter_domain(fd::UnaryOperatorView<O> element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fd::LiftedUnaryOperatorView<O> element, DomainSetListList& function_domain_sets)
 {
     insert_constants_into_parameter_domain(element.get_arg(), function_domain_sets);
 }
 
 template<f::OpKind O>
-void insert_constants_into_parameter_domain(fd::BinaryOperatorView<O> element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fd::LiftedBinaryOperatorView<O> element, DomainSetListList& function_domain_sets)
 {
     insert_constants_into_parameter_domain(element.get_lhs(), function_domain_sets);
     insert_constants_into_parameter_domain(element.get_rhs(), function_domain_sets);
 }
 
 template<f::OpKind O>
-void insert_constants_into_parameter_domain(fd::MultiOperatorView<O> element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fd::LiftedMultiOperatorView<O> element, DomainSetListList& function_domain_sets)
 {
     for (const auto arg : element.get_args())
         insert_constants_into_parameter_domain(arg, function_domain_sets);
@@ -198,7 +198,7 @@ void insert_constants_into_parameter_domain(fd::FunctionTermView<f::FluentTag> e
     // Dont restrict for fluent fterm
 }
 
-void insert_constants_into_parameter_domain(fd::ArithmeticOperatorView element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fd::LiftedArithmeticOperatorView element, DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
 }
@@ -208,7 +208,7 @@ void insert_constants_into_parameter_domain(fd::FunctionExpressionView element, 
     visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
 }
 
-void insert_constants_into_parameter_domain(fd::BooleanOperatorView element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fd::LiftedBooleanOperatorView element, DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
 }
@@ -217,16 +217,16 @@ void insert_constants_into_parameter_domain(fd::BooleanOperatorView element, Dom
  * Restrict
  */
 
-static void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&);
+void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&);
 
 template<f::OpKind O>
-void restrict_parameter_domain(fd::UnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fd::LiftedUnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
 template<f::OpKind O>
-void restrict_parameter_domain(fd::BinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fd::LiftedBinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
 template<f::OpKind O>
-void restrict_parameter_domain(fd::MultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fd::LiftedMultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
 template<f::FactKind T>
 void restrict_parameter_domain(fd::AtomView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
@@ -239,29 +239,29 @@ void restrict_parameter_domain(fd::FunctionTermView<T> element, DomainSetList& p
 
 void restrict_parameter_domain(fd::FunctionTermView<f::FluentTag> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-void restrict_parameter_domain(fd::ArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fd::LiftedArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
 void restrict_parameter_domain(fd::FunctionExpressionView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-void restrict_parameter_domain(fd::BooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fd::LiftedBooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-static void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&) {}
+void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&) {}
 
 template<f::OpKind O>
-void restrict_parameter_domain(fd::UnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fd::LiftedUnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     restrict_parameter_domain(element.get_arg(), parameter_domains, function_domain_sets);
 }
 
 template<f::OpKind O>
-void restrict_parameter_domain(fd::BinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fd::LiftedBinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     restrict_parameter_domain(element.get_lhs(), parameter_domains, function_domain_sets);
     restrict_parameter_domain(element.get_rhs(), parameter_domains, function_domain_sets);
 }
 
 template<f::OpKind O>
-void restrict_parameter_domain(fd::MultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fd::LiftedMultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     for (const auto arg : element.get_args())
         restrict_parameter_domain(arg, parameter_domains, function_domain_sets);
@@ -351,7 +351,7 @@ void restrict_parameter_domain(fd::FunctionTermView<f::FluentTag> element, Domai
     // Dont restrict for fluent fterm
 }
 
-void restrict_parameter_domain(fd::ArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fd::LiftedArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
@@ -361,7 +361,7 @@ void restrict_parameter_domain(fd::FunctionExpressionView element, DomainSetList
     visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-void restrict_parameter_domain(fd::BooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fd::LiftedBooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
@@ -372,16 +372,16 @@ void restrict_parameter_domain(fd::BooleanOperatorView element, DomainSetList& p
 
 bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-static bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&);
+bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&);
 
 template<f::OpKind O>
-bool lift_parameter_domain(fd::UnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fd::LiftedUnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
 template<f::OpKind O>
-bool lift_parameter_domain(fd::BinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fd::LiftedBinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
 template<f::OpKind O>
-bool lift_parameter_domain(fd::MultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fd::LiftedMultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
 template<f::FactKind T>
 bool lift_parameter_domain(fd::AtomView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
@@ -394,31 +394,31 @@ bool lift_parameter_domain(fd::FunctionTermView<T> element, const DomainSetList&
 
 bool lift_parameter_domain(fd::FunctionTermView<f::StaticTag> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-bool lift_parameter_domain(fd::ArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fd::LiftedArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
 bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-bool lift_parameter_domain(fd::BooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fd::LiftedBooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
 bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-static bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&) { return false; }
+bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&) { return false; }
 
 template<f::OpKind O>
-bool lift_parameter_domain(fd::UnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fd::LiftedUnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return lift_parameter_domain(element.get_arg(), parameter_domains, function_domain_sets);
 }
 
 template<f::OpKind O>
-bool lift_parameter_domain(fd::BinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fd::LiftedBinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return lift_parameter_domain(element.get_lhs(), parameter_domains, function_domain_sets)
            || lift_parameter_domain(element.get_rhs(), parameter_domains, function_domain_sets);
 }
 
 template<f::OpKind O>
-bool lift_parameter_domain(fd::MultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fd::LiftedMultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return std::any_of(element.get_args().begin(),
                        element.get_args().end(),
@@ -524,7 +524,7 @@ bool lift_parameter_domain(fd::FunctionTermView<f::StaticTag> element, const Dom
     return false;
 }
 
-bool lift_parameter_domain(fd::ArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fd::LiftedArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
@@ -534,7 +534,7 @@ bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetLi
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-bool lift_parameter_domain(fd::BooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fd::LiftedBooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }

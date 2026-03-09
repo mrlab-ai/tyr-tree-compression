@@ -27,7 +27,7 @@ namespace fd = tyr::formalism::datalog;
 namespace tyr::analysis
 {
 // Build dependency graph: nodes = fluent predicates
-static stratification::DepGraph build_dependency_graph(View<Index<fd::Program>, fd::Repository> program, size_t num_predicates)
+static stratification::DepGraph build_dependency_graph(fd::ProgramView program, size_t num_predicates)
 {
     stratification::DepGraph graph(num_predicates);
 
@@ -48,7 +48,7 @@ static stratification::DepGraph build_dependency_graph(View<Index<fd::Program>, 
     return graph;
 }
 
-RuleStrata compute_rule_stratification(View<Index<fd::Program>, fd::Repository> program)
+RuleStrata compute_rule_stratification(fd::ProgramView program)
 {
     const auto num_predicates = program.get_predicates<f::FluentTag>().size();
 

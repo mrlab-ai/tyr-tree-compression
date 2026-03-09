@@ -30,7 +30,7 @@ namespace tyr::datalog
 class ProgramContext
 {
 public:
-    ProgramContext(View<Index<formalism::datalog::Program>, formalism::datalog::Repository> program,
+    ProgramContext(formalism::datalog::ProgramView program,
                    formalism::datalog::RepositoryPtr repository,
                    analysis::ProgramVariableDomains domains,
                    analysis::RuleStrata strata,
@@ -50,7 +50,7 @@ public:
     const auto& get_listeners() const noexcept { return listeners; }
 
 private:
-    View<Index<formalism::datalog::Program>, formalism::datalog::Repository> program;
+    formalism::datalog::ProgramView program;
     formalism::datalog::RepositoryPtr repository;
     analysis::ProgramVariableDomains domains;
     analysis::RuleStrata strata;

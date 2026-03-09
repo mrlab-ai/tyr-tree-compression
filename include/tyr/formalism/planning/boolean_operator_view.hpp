@@ -45,7 +45,9 @@ public:
 
 namespace formalism::planning
 {
-using BooleanOperatorView = View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository>;
+template<typename T>
+using BooleanOperatorView = View<Data<BooleanOperator<T>>, Repository>;
+using LiftedBooleanOperatorView = View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository>;
 using GroundBooleanOperatorView = View<Data<BooleanOperator<Data<GroundFunctionExpression>>>, Repository>;
 }
 }

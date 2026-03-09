@@ -31,7 +31,7 @@ public:
 
     static std::shared_ptr<BlindHeuristic> create() { return std::make_shared<BlindHeuristic>(); }
 
-    void set_goal(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> goal) override {}
+    void set_goal(formalism::planning::GroundConjunctiveConditionView goal) override {}
 
     float_t evaluate(const State<Task>& state) override { return float_t { 0 }; }
 };

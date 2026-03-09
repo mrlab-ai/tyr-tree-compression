@@ -50,8 +50,10 @@ public:
 
 namespace formalism::datalog
 {
+template<formalism::OpKind Op, typename T>
+using MultiOperatorView = View<Index<MultiOperator<Op, T>>, Repository>;
 template<formalism::OpKind Op>
-using MultiOperatorView = View<Index<MultiOperator<Op, Data<FunctionExpression>>>, Repository>;
+using LiftedMultiOperatorView = View<Index<MultiOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<formalism::OpKind Op>
 using GroundMultiOperatorView = View<Index<MultiOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }

@@ -344,9 +344,9 @@ void push_result(GeneratorStackEntry<Tag>& el, Data<Node<Tag>> node)
     throw std::logic_error("Unexpected case.");
 }
 
-inline auto get_condition(View<Index<formalism::planning::GroundAxiom>, formalism::planning::Repository> el) { return el.get_body(); }
+inline auto get_condition(formalism::planning::GroundAxiomView el) { return el.get_body(); }
 
-inline auto get_condition(View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> el) { return el.get_condition(); }
+inline auto get_condition(formalism::planning::GroundActionView el) { return el.get_condition(); }
 
 template<typename Tag>
 static std::optional<StackEntry<Tag>>

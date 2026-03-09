@@ -41,7 +41,7 @@ private:
     std::vector<std::vector<Index<formalism::Object>>> m_columns;
 
 public:
-    explicit PredicateFactSet(View<Index<formalism::Predicate<T>>, formalism::datalog::Repository> predicate);
+    explicit PredicateFactSet(formalism::datalog::PredicateView<T> predicate);
 
     auto get_predicate() const noexcept { return make_view(m_predicate, m_context); }
 
@@ -51,13 +51,13 @@ public:
 
     void insert(Index<formalism::datalog::GroundAtom<T>> ground_atom);
 
-    void insert(View<Index<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atom);
+    void insert(formalism::datalog::GroundAtomView<T> ground_atom);
 
     void insert(View<IndexList<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atoms);
 
     bool contains(Index<formalism::datalog::GroundAtom<T>> ground_atom) const noexcept;
 
-    bool contains(View<Index<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atom) const noexcept;
+    bool contains(formalism::datalog::GroundAtomView<T> ground_atom) const noexcept;
 
     View<IndexList<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> get_facts() const noexcept;
 
@@ -104,7 +104,7 @@ public:
         m_sets[uint_t(ground_atom.group)].insert(ground_atom);
     }
 
-    void insert(View<Index<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atom) { insert(ground_atom.get_index()); }
+    void insert(formalism::datalog::GroundAtomView<T> ground_atom) { insert(ground_atom.get_index()); }
 
     void insert(View<IndexList<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atoms)
     {
@@ -114,10 +114,7 @@ public:
 
     bool contains(Index<formalism::datalog::GroundAtom<T>> ground_atom) const noexcept { return m_sets[uint_t(ground_atom.get_group())].contains(ground_atom); }
 
-    bool contains(View<Index<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atom) const noexcept
-    {
-        return contains(ground_atom.get_index());
-    }
+    bool contains(formalism::datalog::GroundAtomView<T> ground_atom) const noexcept { return contains(ground_atom.get_index()); }
 
     const std::vector<PredicateFactSet<T>>& get_sets() const noexcept { return m_sets; }
 };
@@ -136,23 +133,23 @@ private:
     std::vector<float_t> m_values;
 
 public:
-    explicit FunctionFactSet(View<Index<formalism::Function<T>>, formalism::datalog::Repository> function);
+    explicit FunctionFactSet(formalism::datalog::FunctionView<T> function);
 
     void insert(const FunctionFactSet& other) { insert(other.get_fterms(), other.get_values()); }
 
     void reset();
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> function_term, float_t value);
+    void insert(formalism::datalog::GroundFunctionTermView<T> function_term, float_t value);
 
     void insert(View<IndexList<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> function_terms, const std::vector<float_t>& values);
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTermValue<T>>, formalism::datalog::Repository> fterm_value);
+    void insert(formalism::datalog::GroundFunctionTermValueView<T> fterm_value);
 
     void insert(View<IndexList<formalism::datalog::GroundFunctionTermValue<T>>, formalism::datalog::Repository> fterm_values);
 
     bool contains(Index<formalism::datalog::GroundFunctionTerm<T>> fterm) const noexcept;
 
-    bool contains(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> fterm) const noexcept;
+    bool contains(formalism::datalog::GroundFunctionTermView<T> fterm) const noexcept;
 
     float_t operator[](Index<formalism::datalog::GroundFunctionTerm<T>> fterm) const noexcept;
 
@@ -192,7 +189,7 @@ public:
             m_sets[i].insert(other.m_sets[i]);
     }
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> function_term, float_t value)
+    void insert(formalism::datalog::GroundFunctionTermView<T> function_term, float_t value)
     {
         m_sets[uint_t(function_term.get_index().get_group())].insert(function_term, value);
     }
@@ -205,7 +202,7 @@ public:
             insert(function_terms[i], values[i]);
     }
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTermValue<T>>, formalism::datalog::Repository> fterm_value)
+    void insert(formalism::datalog::GroundFunctionTermValueView<T> fterm_value)
     {
         m_sets[uint_t(fterm_value.get_fterm().get_index().get_group())].insert(fterm_value.get_fterm(), fterm_value.get_value());
     }
@@ -218,10 +215,7 @@ public:
 
     bool contains(Index<formalism::datalog::GroundFunctionTerm<T>> fterm) const noexcept { return m_sets[uint_t(fterm.get_group())].contains(fterm); }
 
-    bool contains(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> fterm) const noexcept
-    {
-        return contains(fterm.get_index());
-    }
+    bool contains(formalism::datalog::GroundFunctionTermView<T> fterm) const noexcept { return contains(fterm.get_index()); }
 
     float_t operator[](Index<formalism::datalog::GroundFunctionTerm<T>> fterm) const noexcept { return m_sets[uint_t(fterm.get_group())][fterm]; }
 

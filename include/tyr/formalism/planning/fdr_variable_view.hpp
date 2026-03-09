@@ -48,7 +48,7 @@ public:
 namespace formalism::planning
 {
 template<formalism::FactKind T>
-using FDRVariableView = View<Data<FDRVariable<T>>, Repository>;
+using FDRVariableView = View<Index<FDRVariable<T>>, Repository>;
 }
 }
 

@@ -62,8 +62,10 @@ public:
 
 namespace formalism::planning
 {
+template<OpKind Op, typename T>
+using BinaryOperatorView = View<Index<BinaryOperator<Op, T>>, Repository>;
 template<OpKind Op>
-using BinaryOperatorView = View<Index<BinaryOperator<Op, Data<FunctionExpression>>>, Repository>;
+using LiftedBinaryOperatorView = View<Index<BinaryOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<OpKind Op>
 using GroundBinaryOperatorView = View<Index<BinaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }

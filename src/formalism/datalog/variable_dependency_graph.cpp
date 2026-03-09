@@ -56,7 +56,7 @@ static void insert_literal(LiteralView<T> literal, uint_t k, boost::dynamic_bits
     }
 }
 
-static void insert_numeric_constraint(BooleanOperatorView numeric_constraint, uint_t k, boost::dynamic_bitset<>& positive_dependencies)
+static void insert_numeric_constraint(LiftedBooleanOperatorView numeric_constraint, uint_t k, boost::dynamic_bitset<>& positive_dependencies)
 {
     const auto parameters_set = collect_parameters(numeric_constraint);
     auto parameters = std::vector<ParameterIndex>(parameters_set.begin(), parameters_set.end());

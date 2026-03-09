@@ -43,7 +43,7 @@ public:
     std::vector<LabeledNode<GroundTask>> get_labeled_successor_nodes(const Node<GroundTask>& node);
     void get_labeled_successor_nodes(const Node<GroundTask>& node, std::vector<LabeledNode<GroundTask>>& out_nodes);
 
-    Node<GroundTask> get_successor_node(const Node<GroundTask>& node, View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> action);
+    Node<GroundTask> get_successor_node(const Node<GroundTask>& node, formalism::planning::GroundActionView action);
 
     Node<GroundTask> get_node(StateIndex state_index);
 

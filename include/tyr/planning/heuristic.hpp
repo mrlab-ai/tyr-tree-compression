@@ -35,7 +35,7 @@ class Heuristic
 public:
     virtual ~Heuristic() = default;
 
-    virtual void set_goal(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> goal) = 0;
+    virtual void set_goal(formalism::planning::GroundConjunctiveConditionView goal) = 0;
 
     virtual float_t evaluate(const State<Task>& state) = 0;
 
@@ -45,9 +45,9 @@ public:
         return actions;
     }
 
-    virtual const UnorderedSet<View<Index<formalism::planning::GroundAction>, formalism::planning::Repository>>& get_preferred_action_views()
+    virtual const UnorderedSet<formalism::planning::GroundActionView>& get_preferred_action_views()
     {
-        static const auto actions = UnorderedSet<View<Index<formalism::planning::GroundAction>, formalism::planning::Repository>> {};
+        static const auto actions = UnorderedSet<formalism::planning::GroundActionView> {};
         return actions;
     }
 };

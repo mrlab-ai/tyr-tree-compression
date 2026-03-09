@@ -144,9 +144,7 @@ private:
     boost::dynamic_bitset<> m_set;
 
 public:
-    PredicateAssignmentSet(View<Index<formalism::Predicate<T>>, formalism::datalog::Repository> predicate,
-                           const analysis::DomainListList& parameter_domains,
-                           size_t num_objects) :
+    PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate, const analysis::DomainListList& parameter_domains, size_t num_objects) :
         m_predicate(predicate.get_index()),
         m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
         m_set(m_hash.size(), false)
@@ -155,7 +153,7 @@ public:
 
     void reset() noexcept { m_set.reset(); }
 
-    void insert(View<Index<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atom)
+    void insert(formalism::datalog::GroundAtomView<T> ground_atom)
     {
         const auto arity = ground_atom.get_predicate().get_arity();
         const auto objects = ground_atom.get_objects();
@@ -229,10 +227,7 @@ public:
             insert(ground_atom);
     }
 
-    void insert(View<Index<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atom)
-    {
-        m_sets[uint_t(ground_atom.get_predicate().get_index())].insert(ground_atom);
-    }
+    void insert(formalism::datalog::GroundAtomView<T> ground_atom) { m_sets[uint_t(ground_atom.get_predicate().get_index())].insert(ground_atom); }
 
     const PredicateAssignmentSet<T>& get_set(Index<formalism::Predicate<T>> index) const noexcept { return m_sets[uint_t(index)]; }
 
@@ -256,9 +251,7 @@ private:
 public:
     FunctionAssignmentSet() = default;
 
-    FunctionAssignmentSet(View<Index<formalism::Function<T>>, formalism::datalog::Repository> function,
-                          const analysis::DomainListList& parameter_domains,
-                          size_t num_objects) :
+    FunctionAssignmentSet(formalism::datalog::FunctionView<T> function, const analysis::DomainListList& parameter_domains, size_t num_objects) :
         m_function(function.get_index()),
         m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
         m_set(m_hash.size(), ClosedInterval<float_t>())
@@ -267,7 +260,7 @@ public:
 
     void reset() noexcept { std::fill(m_set.begin(), m_set.end(), ClosedInterval<float_t>()); }
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> function_term, float_t value)
+    void insert(formalism::datalog::GroundFunctionTermView<T> function_term, float_t value)
     {
         const auto arity = function_term.get_function().get_arity();
         const auto arguments = function_term.get_objects();
@@ -299,10 +292,7 @@ public:
         }
     }
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTermValue<T>>, formalism::datalog::Repository> fterm_value)
-    {
-        insert(fterm_value.get_fterm(), fterm_value.get_value());
-    }
+    void insert(formalism::datalog::GroundFunctionTermValueView<T> fterm_value) { insert(fterm_value.get_fterm(), fterm_value.get_value()); }
 
     ClosedInterval<float_t> operator[](const EmptyAssignment& assignment) const noexcept { return m_set[EmptyAssignment::rank]; }
     ClosedInterval<float_t> operator[](const VertexAssignment& assignment) const noexcept { return m_set[m_hash.template get_rank<false>(assignment)]; }
@@ -345,7 +335,7 @@ public:
             set.reset();
     }
 
-    void insert(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> function_term, float_t value)
+    void insert(formalism::datalog::GroundFunctionTermView<T> function_term, float_t value)
     {
         m_sets[function_term.get_function().get_index().get_value()].insert(function_term, value);
     }

@@ -22,10 +22,10 @@
 #include "tyr/common/equal_to.hpp"      // for EqualTo
 #include "tyr/common/hash.hpp"          // for Hash
 #include "tyr/common/types.hpp"
-#include "tyr/formalism/datalog/declarations.hpp"   // for Object, Program (ptr only)
-#include "tyr/formalism/datalog/program_index.hpp"  // for Index
-#include "tyr/formalism/object_index.hpp"           // for Index
-#include "tyr/formalism/planning/task_index.hpp"    // for Index
+#include "tyr/formalism/datalog/declarations.hpp"  // for Object, Program (ptr only)
+#include "tyr/formalism/datalog/program_view.hpp"  // for Index
+#include "tyr/formalism/object_index.hpp"          // for Index
+#include "tyr/formalism/planning/task_view.hpp"    // for Index
 
 #include <utility>  // for pair
 #include <vector>   // for vector
@@ -60,9 +60,9 @@ struct TaskVariableDomains
     DomainListListList axiom_domains;
 };
 
-extern ProgramVariableDomains compute_variable_domains(View<Index<formalism::datalog::Program>, formalism::datalog::Repository> program);
+extern ProgramVariableDomains compute_variable_domains(formalism::datalog::ProgramView program);
 
-extern TaskVariableDomains compute_variable_domains(View<Index<formalism::planning::Task>, formalism::planning::Repository> task);
+extern TaskVariableDomains compute_variable_domains(formalism::planning::TaskView task);
 }
 
 #endif

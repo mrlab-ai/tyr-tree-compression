@@ -47,7 +47,7 @@ public:
 namespace formalism::planning
 {
 template<FactKind T>
-using GroundNumericEffectOperatorView = View<Index<GroundNumericEffectOperator<T>>, Repository>;
+using GroundNumericEffectOperatorView = View<Data<GroundNumericEffectOperator<T>>, Repository>;
 }
 }
 

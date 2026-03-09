@@ -62,8 +62,10 @@ public:
 
 namespace formalism::datalog
 {
+template<formalism::OpKind Op, typename T>
+using BinaryOperatorView = View<Index<BinaryOperator<Op, T>>, Repository>;
 template<formalism::OpKind Op>
-using BinaryOperatorView = View<Index<BinaryOperator<Op, Data<FunctionExpression>>>, Repository>;
+using LiftedBinaryOperatorView = View<Index<BinaryOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<formalism::OpKind Op>
 using GroundBinaryOperatorView = View<Index<BinaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }

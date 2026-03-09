@@ -128,19 +128,19 @@ ClosedInterval<float_t>
 consistent_interval(const RuleToFunctionTermInfo<T>& info, const Edge& edge, const FunctionAssignmentSets<T>& function_assignment_sets) noexcept;
 
 template<f::ArithmeticOpKind O, typename GraphStructure>
-ClosedInterval<float_t> consistent_interval(fd::UnaryOperatorView<O> element,
+ClosedInterval<float_t> consistent_interval(fd::LiftedUnaryOperatorView<O> element,
                                             const GraphStructure& structure,
                                             const RuleToConstraintInfo& constraint_info,
                                             const AssignmentSets& assignment_sets) noexcept;
 
 template<f::ArithmeticOpKind O, typename GraphStructure>
-ClosedInterval<float_t> consistent_interval(fd::BinaryOperatorView<O> element,
+ClosedInterval<float_t> consistent_interval(fd::LiftedBinaryOperatorView<O> element,
                                             const GraphStructure& structure,
                                             const RuleToConstraintInfo& constraint_info,
                                             const AssignmentSets& assignment_sets) noexcept;
 
 template<f::ArithmeticOpKind O, typename GraphStructure>
-ClosedInterval<float_t> consistent_interval(fd::MultiOperatorView<O> element,
+ClosedInterval<float_t> consistent_interval(fd::LiftedMultiOperatorView<O> element,
                                             const GraphStructure& structure,
                                             const RuleToConstraintInfo& constraint_info,
                                             const AssignmentSets& assignment_sets) noexcept;
@@ -152,13 +152,13 @@ ClosedInterval<float_t> consistent_interval(fd::FunctionExpressionView element,
                                             const AssignmentSets& assignment_sets) noexcept;
 
 template<typename GraphStructure>
-ClosedInterval<float_t> consistent_interval(fd::ArithmeticOperatorView element,
+ClosedInterval<float_t> consistent_interval(fd::LiftedArithmeticOperatorView element,
                                             const GraphStructure& structure,
                                             const RuleToConstraintInfo& constraint_info,
                                             const AssignmentSets& assignment_sets) noexcept;
 
 template<typename GraphStructure>
-bool consistent_numeric_constraint(fd::BooleanOperatorView element,
+bool consistent_numeric_constraint(fd::LiftedBooleanOperatorView element,
                                    const GraphStructure& structure,
                                    const RuleToConstraintInfo& constraint_info,
                                    const AssignmentSets& assignment_sets) noexcept;
@@ -362,7 +362,7 @@ consistent_interval(const RuleToFunctionTermInfo<T>& info, const Edge& edge, con
 }
 
 template<f::ArithmeticOpKind O, typename GraphStructure>
-inline ClosedInterval<float_t> consistent_interval(fd::UnaryOperatorView<O> element,
+inline ClosedInterval<float_t> consistent_interval(fd::LiftedUnaryOperatorView<O> element,
                                                    const GraphStructure& structure,
                                                    const RuleToConstraintInfo& constraint_info,
                                                    const AssignmentSets& assignment_sets) noexcept
@@ -371,7 +371,7 @@ inline ClosedInterval<float_t> consistent_interval(fd::UnaryOperatorView<O> elem
 }
 
 template<f::ArithmeticOpKind O, typename GraphStructure>
-inline ClosedInterval<float_t> consistent_interval(fd::BinaryOperatorView<O> element,
+inline ClosedInterval<float_t> consistent_interval(fd::LiftedBinaryOperatorView<O> element,
                                                    const GraphStructure& structure,
                                                    const RuleToConstraintInfo& constraint_info,
                                                    const AssignmentSets& assignment_sets) noexcept
@@ -382,7 +382,7 @@ inline ClosedInterval<float_t> consistent_interval(fd::BinaryOperatorView<O> ele
 }
 
 template<f::ArithmeticOpKind O, typename GraphStructure>
-inline ClosedInterval<float_t> consistent_interval(fd::MultiOperatorView<O> element,
+inline ClosedInterval<float_t> consistent_interval(fd::LiftedMultiOperatorView<O> element,
                                                    const GraphStructure& structure,
                                                    const RuleToConstraintInfo& constraint_info,
                                                    const AssignmentSets& assignment_sets) noexcept
@@ -409,7 +409,7 @@ inline ClosedInterval<float_t> consistent_interval(fd::FunctionExpressionView el
 
             if constexpr (std::is_same_v<Alternative, float_t>)
                 return ClosedInterval<float_t>(arg, arg);
-            else if constexpr (std::is_same_v<Alternative, fd::ArithmeticOperatorView>)
+            else if constexpr (std::is_same_v<Alternative, fd::LiftedArithmeticOperatorView>)
                 return consistent_interval(arg, structure, constraint_info, assignment_sets);
             else if constexpr (std::is_same_v<Alternative, fd::FunctionTermView<f::StaticTag>>)
                 return consistent_interval(constraint_info.static_infos.infos.at(arg.get_index()), structure, assignment_sets.static_sets.function);
@@ -422,7 +422,7 @@ inline ClosedInterval<float_t> consistent_interval(fd::FunctionExpressionView el
 }
 
 template<typename GraphStructure>
-inline ClosedInterval<float_t> consistent_interval(fd::ArithmeticOperatorView element,
+inline ClosedInterval<float_t> consistent_interval(fd::LiftedArithmeticOperatorView element,
                                                    const GraphStructure& structure,
                                                    const RuleToConstraintInfo& constraint_info,
                                                    const AssignmentSets& assignment_sets) noexcept
@@ -431,7 +431,7 @@ inline ClosedInterval<float_t> consistent_interval(fd::ArithmeticOperatorView el
 }
 
 template<typename GraphStructure>
-inline bool consistent_numeric_constraint(fd::BooleanOperatorView element,
+inline bool consistent_numeric_constraint(fd::LiftedBooleanOperatorView element,
                                           const GraphStructure& structure,
                                           const RuleToConstraintInfo& constraint_info,
                                           const AssignmentSets& assignment_sets) noexcept
@@ -895,7 +895,7 @@ static auto compute_tagged_indexed_fterms(View<IndexList<fd::FunctionTerm<T>>, f
     return result;
 }
 
-static auto compute_constraint_info(fd::BooleanOperatorView element, size_t arity)
+static auto compute_constraint_info(fd::LiftedBooleanOperatorView element, size_t arity)
 {
     auto result = details::RuleToConstraintInfo {};
 

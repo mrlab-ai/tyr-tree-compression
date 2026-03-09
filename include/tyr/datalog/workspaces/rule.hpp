@@ -46,7 +46,7 @@ namespace tyr::datalog
 struct NullaryApplicabilityCheck
 {
 private:
-    std::optional<View<Index<formalism::datalog::GroundConjunctiveCondition>, formalism::datalog::Repository>> m_condition;
+    std::optional<formalism::datalog::GroundConjunctiveConditionView> m_condition;
 
     boost::dynamic_bitset<> m_unsat_fluent_literals;
     boost::dynamic_bitset<> m_unsat_numeric_constraints;
@@ -56,7 +56,7 @@ private:
 public:
     NullaryApplicabilityCheck() : m_condition(std::nullopt), m_unsat_fluent_literals(), m_unsat_numeric_constraints(), m_statically_applicable(false) {}
 
-    void initialize(View<Index<formalism::datalog::GroundConjunctiveCondition>, formalism::datalog::Repository> condition, const FactSets& fact_sets)
+    void initialize(formalism::datalog::GroundConjunctiveConditionView condition, const FactSets& fact_sets)
     {
         m_condition = condition;
         m_unsat_fluent_literals.clear();
@@ -89,7 +89,7 @@ public:
 class ConflictingApplicabilityCheck
 {
 private:
-    std::optional<View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository>> m_condition;
+    std::optional<formalism::datalog::ConjunctiveConditionView> m_condition;
 
     boost::dynamic_bitset<> m_unsat_fluent_literals;
     boost::dynamic_bitset<> m_unsat_numeric_constraints;
@@ -99,9 +99,7 @@ private:
 public:
     ConflictingApplicabilityCheck() : m_condition(std::nullopt), m_unsat_fluent_literals(), m_unsat_numeric_constraints(), m_statically_applicable(false) {}
 
-    void initialize(View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> condition,
-                    const FactSets& fact_sets,
-                    formalism::datalog::ConstGrounderContext& context)
+    void initialize(formalism::datalog::ConjunctiveConditionView condition, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
     {
         m_condition = condition;
         m_unsat_fluent_literals.clear();
@@ -140,8 +138,8 @@ private:
 public:
     ApplicabilityCheck() : m_nullary(), m_conflicting() {}
 
-    void initialize(View<Index<formalism::datalog::GroundConjunctiveCondition>, formalism::datalog::Repository> nullary,
-                    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> conflicting,
+    void initialize(formalism::datalog::GroundConjunctiveConditionView nullary,
+                    formalism::datalog::ConjunctiveConditionView conflicting,
                     const FactSets& fact_sets,
                     formalism::datalog::ConstGrounderContext& context)
     {
@@ -263,7 +261,7 @@ public:
     auto get_conflicting_overapproximation_condition() const noexcept { return conflicting_overapproximation_condition; }
     const auto& get_static_consistency_graph() const noexcept { return static_consistency_graph; }
 
-    ConstRuleWorkspace(View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule,
+    ConstRuleWorkspace(formalism::datalog::RuleView rule,
                        formalism::datalog::Repository& repository,
                        const analysis::DomainListList& parameter_domains,
                        size_t num_objects,
@@ -271,13 +269,13 @@ public:
                        const TaggedAssignmentSets<formalism::StaticTag>& static_assignment_sets);
 
 private:
-    View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> witness_condition;
-    View<Index<formalism::datalog::GroundConjunctiveCondition>, formalism::datalog::Repository> nullary_condition;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> unary_overapproximation_condition;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> binary_overapproximation_condition;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> static_binary_overapproximation_condition;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> conflicting_overapproximation_condition;
+    formalism::datalog::RuleView rule;
+    formalism::datalog::ConjunctiveConditionView witness_condition;
+    formalism::datalog::GroundConjunctiveConditionView nullary_condition;
+    formalism::datalog::ConjunctiveConditionView unary_overapproximation_condition;
+    formalism::datalog::ConjunctiveConditionView binary_overapproximation_condition;
+    formalism::datalog::ConjunctiveConditionView static_binary_overapproximation_condition;
+    formalism::datalog::ConjunctiveConditionView conflicting_overapproximation_condition;
 
     StaticConsistencyGraph static_consistency_graph;
 };

@@ -15,28 +15,15 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_ANALYSIS_STRATIFICATION_HPP_
-#define TYR_ANALYSIS_STRATIFICATION_HPP_
+#ifndef TYR_FORMALISM_DATALOG_TERM_VIEW_HPP_
+#define TYR_FORMALISM_DATALOG_TERM_VIEW_HPP_
 
-#include "tyr/common/formatter.hpp"                // for operator<<
-#include "tyr/common/types.hpp"                    // for IndexList
-#include "tyr/formalism/datalog/declarations.hpp"  // for Program (ptr only), Rule
-#include "tyr/formalism/datalog/program_view.hpp"  // for Index
-#include "tyr/formalism/datalog/rule_index.hpp"    // for Index
+#include "tyr/formalism/datalog/declarations.hpp"
+#include "tyr/formalism/term_view.hpp"
 
-#include <vector>  // for vector
-
-namespace tyr::analysis
+namespace tyr::formalism::datalog
 {
-
-using RuleStratum = IndexList<formalism::datalog::Rule>;
-
-struct RuleStrata
-{
-    std::vector<RuleStratum> data;
-};
-
-extern RuleStrata compute_rule_stratification(formalism::datalog::ProgramView program);
+using TermView = View<Data<Term>, Repository>;
 }
 
 #endif

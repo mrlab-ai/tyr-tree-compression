@@ -36,28 +36,17 @@ void bind_state(nb::module_& m, const std::string& name)
         .def("get_repository", &T::get_repository, nb::rv_policy::copy)
         .def("get_state_repository", &T::get_state_repository, nb::rv_policy::copy)
         // AccessibleStateConcept
-        .def("test",
-             nb::overload_cast<View<Index<formalism::planning::GroundAtom<formalism::StaticTag>>, formalism::planning::Repository>>(&T::test, nb::const_),
-             nb::rv_policy::copy,
-             "static_atom"_a)
-        .def("test",
-             nb::overload_cast<View<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, formalism::planning::Repository>>(&T::test, nb::const_),
-             nb::rv_policy::copy,
-             "derived_atom"_a)
-        .def(
-            "get",
-            nb::overload_cast<View<Index<formalism::planning::GroundFunctionTerm<formalism::StaticTag>>, formalism::planning::Repository>>(&T::get, nb::const_),
-            nb::rv_policy::copy,
-            "static_fterm"_a)
+        .def("test", nb::overload_cast<formalism::planning::GroundAtomView<formalism::StaticTag>>(&T::test, nb::const_), nb::rv_policy::copy, "static_atom"_a)
+        .def("test", nb::overload_cast<formalism::planning::GroundAtomView<formalism::DerivedTag>>(&T::test, nb::const_), nb::rv_policy::copy, "derived_atom"_a)
         .def("get",
-             nb::overload_cast<View<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::Repository>>(&T::get, nb::const_),
+             nb::overload_cast<formalism::planning::GroundFunctionTermView<formalism::StaticTag>>(&T::get, nb::const_),
              nb::rv_policy::copy,
-             "fluent_fact"_a)
-        .def(
-            "get",
-            nb::overload_cast<View<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, formalism::planning::Repository>>(&T::get, nb::const_),
-            nb::rv_policy::copy,
-            "fluent_fterm"_a)
+             "static_fterm"_a)
+        .def("get", nb::overload_cast<formalism::planning::FDRVariableView<formalism::FluentTag>>(&T::get, nb::const_), nb::rv_policy::copy, "fluent_fact"_a)
+        .def("get",
+             nb::overload_cast<formalism::planning::GroundFunctionTermView<formalism::FluentTag>>(&T::get, nb::const_),
+             nb::rv_policy::copy,
+             "fluent_fterm"_a)
         // IterableStateConcept
         .def(
             "static_atoms",
@@ -157,11 +146,8 @@ void bind_state_repository(nb::module_& m, const std::string& name)
         .def("get_initial_state", &T::get_initial_state, nb::rv_policy::move)
         .def("get_registered_state", &T::get_registered_state, nb::rv_policy::move, "state_index"_a)
         .def("create_state",
-             nb::overload_cast<
-                 const std::vector<View<Data<formalism::planning::FDRFact<formalism::FluentTag>>, formalism::planning::Repository>>&,
-                 const std::vector<
-                     std::pair<View<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, formalism::planning::Repository>, float_t>>&>(
-                 &T::create_state),
+             nb::overload_cast<const std::vector<formalism::planning::FDRFactView<formalism::FluentTag>>&,
+                               const std::vector<formalism::planning::GroundFunctionTermViewValuePair<formalism::FluentTag>>&>(&T::create_state),
              nb::rv_policy::move,
              "fluent_fact"_a,
              "fterm_values"_a)
@@ -264,17 +250,11 @@ public:
     NB_TRAMPOLINE(Base, 3);
 
     /* Trampoline (need one for each virtual function) */
-    void set_goal(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> goal) override
-    {
-        NB_OVERRIDE_PURE(set_goal, goal);
-    }
+    void set_goal(formalism::planning::GroundConjunctiveConditionView goal) override { NB_OVERRIDE_PURE(set_goal, goal); }
 
     float_t evaluate(const State<Task>& state) override { NB_OVERRIDE_PURE(evaluate, state); }
 
-    const UnorderedSet<View<Index<formalism::planning::GroundAction>, formalism::planning::Repository>>& get_preferred_action_views() override
-    {
-        NB_OVERRIDE(get_preferred_action_views);
-    }
+    const UnorderedSet<formalism::planning::GroundActionView>& get_preferred_action_views() override { NB_OVERRIDE(get_preferred_action_views); }
 };
 
 template<typename Task>

@@ -39,7 +39,7 @@ public:
     // Mapping from program fluent predicate to task derived predicate
     using PredicateToPredicateMapping = UnorderedMap<Index<formalism::Predicate<formalism::FluentTag>>, Index<formalism::Predicate<formalism::DerivedTag>>>;
 
-    explicit AxiomEvaluatorProgram(View<Index<formalism::planning::Task>, formalism::planning::Repository> task);
+    explicit AxiomEvaluatorProgram(formalism::planning::TaskView task);
 
     const PredicateToPredicateMapping& get_predicate_to_predicate_mapping() const noexcept;
     datalog::ProgramContext& get_program_context() noexcept;

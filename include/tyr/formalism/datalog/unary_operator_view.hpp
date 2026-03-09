@@ -59,8 +59,10 @@ public:
 
 namespace formalism::datalog
 {
+template<formalism::OpKind Op, typename T>
+using UnaryOperatorView = View<Index<UnaryOperator<Op, T>>, Repository>;
 template<formalism::OpKind Op>
-using UnaryOperatorView = View<Index<UnaryOperator<Op, Data<FunctionExpression>>>, Repository>;
+using LiftedUnaryOperatorView = View<Index<UnaryOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<formalism::OpKind Op>
 using GroundUnaryOperatorView = View<Index<UnaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }

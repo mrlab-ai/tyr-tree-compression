@@ -59,8 +59,10 @@ public:
 
 namespace formalism::planning
 {
+template<OpKind Op, typename T>
+using UnaryOperatorView = View<Index<UnaryOperator<Op, T>>, Repository>;
 template<OpKind Op>
-using UnaryOperatorView = View<Index<UnaryOperator<Op, Data<FunctionExpression>>>, Repository>;
+using LiftedUnaryOperatorView = View<Index<UnaryOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<OpKind Op>
 using GroundUnaryOperatorView = View<Index<UnaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }

@@ -46,7 +46,9 @@ public:
 
 namespace formalism::datalog
 {
-using ArithmeticOperatorView = View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository>;
+template<typename T>
+using ArithmeticOperatorView = View<Data<ArithmeticOperator<T>>, Repository>;
+using LiftedArithmeticOperatorView = View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository>;
 using GroundArithmeticOperatorView = View<Data<ArithmeticOperator<Data<GroundFunctionExpression>>>, Repository>;
 }
 }

@@ -128,8 +128,8 @@ concept AndAnnotationPolicyConcept = requires(const T& p,
                                               Index<formalism::datalog::GroundAtom<formalism::FluentTag>> delta_head,
                                               uint_t current_cost,
                                               const formalism::datalog::Repository& program_repository,
-                                              View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule,
-                                              View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> witness_condition,
+                                              formalism::datalog::RuleView rule,
+                                              formalism::datalog::ConjunctiveConditionView witness_condition,
                                               const OrAnnotationsList& or_annot,
                                               AndAnnotationsMap& delta_and_annot,
                                               formalism::datalog::GrounderContext& delta_context) {
@@ -165,8 +165,8 @@ public:
                            Index<formalism::datalog::GroundAtom<formalism::FluentTag>> delta_head,
                            uint_t current_cost,
                            const formalism::datalog::Repository& program_repository,
-                           View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule,
-                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> witness_condition,
+                           formalism::datalog::RuleView rule,
+                           formalism::datalog::ConjunctiveConditionView witness_condition,
                            const OrAnnotationsList& or_annot,
                            AndAnnotationsMap& delta_and_annot,
                            formalism::datalog::GrounderContext& delta_context) const noexcept
@@ -258,8 +258,8 @@ public:
                            Index<formalism::datalog::GroundAtom<formalism::FluentTag>> delta_head,
                            uint_t current_cost,
                            const formalism::datalog::Repository& program_repository,
-                           View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule,
-                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> witness_condition,
+                           formalism::datalog::RuleView rule,
+                           formalism::datalog::ConjunctiveConditionView witness_condition,
                            const OrAnnotationsList& or_annot,
                            AndAnnotationsMap& delta_and_annot,
                            formalism::datalog::GrounderContext& delta_context) const
@@ -295,13 +295,12 @@ private:
         return tyr::get(atom.value, or_annot[uint_t(atom.group)], std::numeric_limits<uint_t>::max());
     }
 
-    static std::optional<Witness>
-    try_ground_better_witness(uint_t best_cost,
-                              View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule,
-                              View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> witness_condition,
-                              formalism::datalog::GrounderContext& delta_context,
-                              const formalism::datalog::Repository& program_repository,
-                              const OrAnnotationsList& or_annot)
+    static std::optional<Witness> try_ground_better_witness(uint_t best_cost,
+                                                            formalism::datalog::RuleView rule,
+                                                            formalism::datalog::ConjunctiveConditionView witness_condition,
+                                                            formalism::datalog::GrounderContext& delta_context,
+                                                            const formalism::datalog::Repository& program_repository,
+                                                            const OrAnnotationsList& or_annot)
     {
         auto body_cost = AggregationFunction::identity();
         const auto rule_cost = rule.get_cost();

@@ -25,7 +25,7 @@ namespace tyr::formalism::planning
 template<FactKind T>
 void bind_predicate(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<Predicate<T>>, Repository>;
+    using V = PredicateView<T>;
 
     nb::class_<V>(m, name.c_str())
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -39,7 +39,7 @@ void bind_predicate(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_atom(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<Atom<T>>, Repository>;
+    using V = AtomView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -53,7 +53,7 @@ void bind_atom(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_ground_atom(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<GroundAtom<T>>, Repository>;
+    using V = GroundAtomView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -67,7 +67,7 @@ void bind_ground_atom(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_literal(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<Literal<T>>, Repository>;
+    using V = LiteralView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -81,7 +81,7 @@ void bind_literal(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_ground_literal(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<GroundLiteral<T>>, Repository>;
+    using V = GroundLiteralView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -95,7 +95,7 @@ void bind_ground_literal(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_fdr_variable(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<FDRVariable<T>>, Repository>;
+    using V = FDRVariableView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -109,7 +109,7 @@ void bind_fdr_variable(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_fdr_fact(nb::module_& m, const std::string& name)
 {
-    using V = View<Data<FDRFact<T>>, Repository>;
+    using V = FDRFactView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -123,7 +123,7 @@ void bind_fdr_fact(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_function(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<Function<T>>, Repository>;
+    using V = FunctionView<T>;
 
     nb::class_<V>(m, name.c_str())
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -137,7 +137,7 @@ void bind_function(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_function_term(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<FunctionTerm<T>>, Repository>;
+    using V = FunctionTermView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -151,7 +151,7 @@ void bind_function_term(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_ground_function_term(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<GroundFunctionTerm<T>>, Repository>;
+    using V = GroundFunctionTermView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -165,7 +165,7 @@ void bind_ground_function_term(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_ground_function_term_value(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<GroundFunctionTermValue<T>>, Repository>;
+    using V = GroundFunctionTermValueView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -179,7 +179,7 @@ void bind_ground_function_term_value(nb::module_& m, const std::string& name)
 template<NumericEffectOpKind Op, FactKind T>
 void bind_numeric_effect(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<NumericEffect<Op, T>>, Repository>;
+    using V = NumericEffectView<Op, T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -193,7 +193,7 @@ void bind_numeric_effect(nb::module_& m, const std::string& name)
 template<NumericEffectOpKind Op, FactKind T>
 void bind_ground_numeric_effect(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<GroundNumericEffect<Op, T>>, Repository>;
+    using V = GroundNumericEffectView<Op, T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -207,7 +207,7 @@ void bind_ground_numeric_effect(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_numeric_effect_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Data<NumericEffectOperator<T>>, Repository>;
+    using V = NumericEffectOperatorView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -220,7 +220,7 @@ void bind_numeric_effect_operator(nb::module_& m, const std::string& name)
 template<FactKind T>
 void bind_ground_numeric_effect_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Data<GroundNumericEffectOperator<T>>, Repository>;
+    using V = GroundNumericEffectOperatorView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -233,7 +233,7 @@ void bind_ground_numeric_effect_operator(nb::module_& m, const std::string& name
 template<OpKind Op, typename T>
 void bind_unary_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<UnaryOperator<Op, T>>, Repository>;
+    using V = UnaryOperatorView<Op, T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -246,7 +246,7 @@ void bind_unary_operator(nb::module_& m, const std::string& name)
 template<OpKind Op, typename T>
 void bind_binary_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<BinaryOperator<Op, T>>, Repository>;
+    using V = BinaryOperatorView<Op, T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -260,7 +260,7 @@ void bind_binary_operator(nb::module_& m, const std::string& name)
 template<OpKind Op, typename T>
 void bind_multi_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Index<MultiOperator<Op, T>>, Repository>;
+    using V = MultiOperatorView<Op, T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -273,7 +273,7 @@ void bind_multi_operator(nb::module_& m, const std::string& name)
 template<typename T>
 void bind_arithmethic_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Data<ArithmeticOperator<T>>, Repository>;
+    using V = ArithmeticOperatorView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })
@@ -286,7 +286,7 @@ void bind_arithmethic_operator(nb::module_& m, const std::string& name)
 template<typename T>
 void bind_boolean_operator(nb::module_& m, const std::string& name)
 {
-    using V = View<Data<BooleanOperator<T>>, Repository>;
+    using V = BooleanOperatorView<T>;
 
     nb::class_<V>(m, name.c_str())  //
         .def("__str__", [](const V& self) { return to_string(self); })

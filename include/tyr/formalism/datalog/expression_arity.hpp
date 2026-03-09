@@ -35,33 +35,33 @@ namespace tyr::formalism::datalog
 
 void collect_parameters(float_t element, UnorderedSet<ParameterIndex>& result);
 
-void collect_parameters(View<Data<Term>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(TermView element, UnorderedSet<ParameterIndex>& result);
 
 template<FactKind T>
-void collect_parameters(View<Index<Atom<T>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(AtomView<T> element, UnorderedSet<ParameterIndex>& result);
 
 template<FactKind T>
-void collect_parameters(View<Index<Literal<T>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(LiteralView<T> element, UnorderedSet<ParameterIndex>& result);
 
 template<FactKind T>
-void collect_parameters(View<Index<FunctionTerm<T>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(FunctionTermView<T> element, UnorderedSet<ParameterIndex>& result);
 
-void collect_parameters(View<Data<FunctionExpression>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(FunctionExpressionView element, UnorderedSet<ParameterIndex>& result);
 
 template<ArithmeticOpKind O>
-void collect_parameters(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(LiftedUnaryOperatorView<O> element, UnorderedSet<ParameterIndex>& result);
 
 template<OpKind O>
-void collect_parameters(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(LiftedBinaryOperatorView<O> element, UnorderedSet<ParameterIndex>& result);
 
 template<ArithmeticOpKind O>
-void collect_parameters(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(LiftedMultiOperatorView<O> element, UnorderedSet<ParameterIndex>& result);
 
-void collect_parameters(View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(LiftedArithmeticOperatorView element, UnorderedSet<ParameterIndex>& result);
 
-void collect_parameters(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result);
+void collect_parameters(LiftedBooleanOperatorView element, UnorderedSet<ParameterIndex>& result);
 
-auto collect_parameters(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element);
+auto collect_parameters(LiftedBooleanOperatorView element);
 
 /**
  * Implementations
@@ -69,7 +69,7 @@ auto collect_parameters(View<Data<BooleanOperator<Data<FunctionExpression>>>, Re
 
 inline void collect_parameters(float_t element, UnorderedSet<ParameterIndex>& result) {}
 
-inline void collect_parameters(View<Data<Term>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(TermView element, UnorderedSet<ParameterIndex>& result)
 {
     visit(
         [&](auto&& arg)
@@ -78,7 +78,7 @@ inline void collect_parameters(View<Data<Term>, Repository> element, UnorderedSe
 
             if constexpr (std::is_same_v<Alternative, ParameterIndex>)
                 result.insert(arg);
-            else if constexpr (std::is_same_v<Alternative, View<Index<Object>, Repository>>) {}
+            else if constexpr (std::is_same_v<Alternative, ObjectView>) {}
             else
                 static_assert(dependent_false<Alternative>::value, "Missing case");
         },
@@ -86,62 +86,62 @@ inline void collect_parameters(View<Data<Term>, Repository> element, UnorderedSe
 }
 
 template<FactKind T>
-inline void collect_parameters(View<Index<Atom<T>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(AtomView<T> element, UnorderedSet<ParameterIndex>& result)
 {
     for (const auto term : element.get_terms())
         collect_parameters(term, result);
 }
 
 template<FactKind T>
-inline void collect_parameters(View<Index<Literal<T>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(LiteralView<T> element, UnorderedSet<ParameterIndex>& result)
 {
     collect_parameters(element.get_atom(), result);
 }
 
 template<FactKind T>
-inline void collect_parameters(View<Index<FunctionTerm<T>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(FunctionTermView<T> element, UnorderedSet<ParameterIndex>& result)
 {
     for (const auto term : element.get_terms())
         collect_parameters(term, result);
 }
 
-inline void collect_parameters(View<Data<FunctionExpression>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(FunctionExpressionView element, UnorderedSet<ParameterIndex>& result)
 {
     visit([&](auto&& arg) { collect_parameters(arg, result); }, element.get_variant());
 }
 
 template<ArithmeticOpKind O>
-inline void collect_parameters(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(LiftedUnaryOperatorView<O> element, UnorderedSet<ParameterIndex>& result)
 {
     collect_parameters(element.get_arg(), result);
 }
 
 template<OpKind O>
-inline void collect_parameters(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(LiftedBinaryOperatorView<O> element, UnorderedSet<ParameterIndex>& result)
 {
     collect_parameters(element.get_lhs(), result);
     collect_parameters(element.get_rhs(), result);
 }
 
 template<ArithmeticOpKind O>
-inline void collect_parameters(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(LiftedMultiOperatorView<O> element, UnorderedSet<ParameterIndex>& result)
 {
     for (const auto arg : element.get_args())
         collect_parameters(arg, result);
 }
 
-inline void collect_parameters(View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(LiftedArithmeticOperatorView element, UnorderedSet<ParameterIndex>& result)
 {
     visit([&](auto&& arg) { collect_parameters(arg, result); }, element.get_variant());
 }
 
-inline void collect_parameters(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<ParameterIndex>& result)
+inline void collect_parameters(LiftedBooleanOperatorView element, UnorderedSet<ParameterIndex>& result)
 {
     visit([&](auto&& arg) { collect_parameters(arg, result); }, element.get_variant());
 }
 
 template<FactKind T>
-inline auto collect_parameters(View<Index<Atom<T>>, Repository> element)
+inline auto collect_parameters(AtomView<T> element)
 {
     auto result = UnorderedSet<ParameterIndex> {};
     collect_parameters(element, result);
@@ -149,7 +149,7 @@ inline auto collect_parameters(View<Index<Atom<T>>, Repository> element)
 }
 
 template<FactKind T>
-inline auto collect_parameters(View<Index<Literal<T>>, Repository> element)
+inline auto collect_parameters(LiteralView<T> element)
 {
     auto result = UnorderedSet<ParameterIndex> {};
     collect_parameters(element, result);
@@ -157,14 +157,14 @@ inline auto collect_parameters(View<Index<Literal<T>>, Repository> element)
 }
 
 template<FactKind T>
-inline auto collect_parameters(View<Index<FunctionTerm<T>>, Repository> element)
+inline auto collect_parameters(FunctionTermView<T> element)
 {
     auto result = UnorderedSet<ParameterIndex> {};
     collect_parameters(element, result);
     return result;
 }
 
-inline auto collect_parameters(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element)
+inline auto collect_parameters(LiftedBooleanOperatorView element)
 {
     auto result = UnorderedSet<ParameterIndex> {};
     visit([&](auto&& arg) { collect_parameters(arg, result); }, element.get_variant());
@@ -178,22 +178,22 @@ inline auto collect_parameters(View<Data<BooleanOperator<Data<FunctionExpression
 inline size_t max_fterm_arity(float_t element);
 
 template<FactKind T>
-size_t max_fterm_arity(View<Index<FunctionTerm<T>>, Repository> element);
+size_t max_fterm_arity(FunctionTermView<T> element);
 
-size_t max_fterm_arity(View<Data<FunctionExpression>, Repository> element);
+size_t max_fterm_arity(FunctionExpressionView element);
 
 template<ArithmeticOpKind O>
-size_t max_fterm_arity(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element);
+size_t max_fterm_arity(LiftedUnaryOperatorView<O> element);
 
 template<OpKind O>
-size_t max_fterm_arity(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element);
+size_t max_fterm_arity(LiftedBinaryOperatorView<O> element);
 
 template<ArithmeticOpKind O>
-size_t max_fterm_arity(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element);
+size_t max_fterm_arity(LiftedMultiOperatorView<O> element);
 
-size_t max_fterm_arity(View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository> element);
+size_t max_fterm_arity(LiftedArithmeticOperatorView element);
 
-size_t max_fterm_arity(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element);
+size_t max_fterm_arity(LiftedBooleanOperatorView element);
 
 /**
  * Implementations
@@ -202,30 +202,30 @@ size_t max_fterm_arity(View<Data<BooleanOperator<Data<FunctionExpression>>>, Rep
 inline size_t max_fterm_arity(float_t element) { return 0; }
 
 template<FactKind T>
-inline size_t max_fterm_arity(View<Index<FunctionTerm<T>>, Repository> element)
+inline size_t max_fterm_arity(FunctionTermView<T> element)
 {
     return max_fterm_arity(element.get_function().get_arity());
 }
 
-inline size_t max_fterm_arity(View<Data<FunctionExpression>, Repository> element)
+inline size_t max_fterm_arity(FunctionExpressionView element)
 {
     return visit([&](auto&& arg) { return max_fterm_arity(arg); }, element.get_variant());
 }
 
 template<ArithmeticOpKind O>
-inline size_t max_fterm_arity(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element)
+inline size_t max_fterm_arity(LiftedUnaryOperatorView<O> element)
 {
     return max_fterm_arity(element.get_arg());
 }
 
 template<OpKind O>
-inline size_t max_fterm_arity(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element)
+inline size_t max_fterm_arity(LiftedBinaryOperatorView<O> element)
 {
     return std::max(max_fterm_arity(element.get_lhs()), max_fterm_arity(element.get_rhs()));
 }
 
 template<ArithmeticOpKind O>
-inline size_t max_fterm_arity(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element)
+inline size_t max_fterm_arity(LiftedMultiOperatorView<O> element)
 {
     const auto child_fexprs = element.get_args();
 
@@ -235,12 +235,12 @@ inline size_t max_fterm_arity(View<Index<MultiOperator<O, Data<FunctionExpressio
                            [&](const auto& value, const auto& child_expr) { return std::max(value, max_fterm_arity(child_expr)); });
 }
 
-inline size_t max_fterm_arity(View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository> element)
+inline size_t max_fterm_arity(LiftedArithmeticOperatorView element)
 {
     return visit([&](auto&& arg) { return max_fterm_arity(arg); }, element.get_variant());
 }
 
-inline size_t max_fterm_arity(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element)
+inline size_t max_fterm_arity(LiftedBooleanOperatorView element)
 {
     return visit([&](auto&& arg) { return max_fterm_arity(arg); }, element.get_variant());
 }
@@ -250,39 +250,36 @@ inline size_t max_fterm_arity(View<Data<BooleanOperator<Data<FunctionExpression>
  */
 
 template<FactKind T>
-inline size_t kpkc_arity(View<Index<Literal<T>>, Repository> element)
+inline size_t kpkc_arity(LiteralView<T> element)
 {
     return element.get_atom().get_predicate().get_arity();
 }
 
 template<FactKind T>
-inline size_t kpkc_arity(View<Index<FunctionTerm<T>>, Repository> element)
+inline size_t kpkc_arity(FunctionTermView<T> element)
 {
     return element.get_function().get_arity();
 }
 
-inline size_t kpkc_arity(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element)
-{
-    return std::max(max_fterm_arity(element), collect_parameters(element).size());
-}
+inline size_t kpkc_arity(LiftedBooleanOperatorView element) { return std::max(max_fterm_arity(element), collect_parameters(element).size()); }
 
 /**
  * parameter_arity
  */
 
 template<FactKind T>
-inline size_t parameter_arity(View<Index<Literal<T>>, Repository> element)
+inline size_t parameter_arity(LiteralView<T> element)
 {
     return collect_parameters(element).size();
 }
 
 template<FactKind T>
-inline size_t parameter_arity(View<Index<FunctionTerm<T>>, Repository> element)
+inline size_t parameter_arity(FunctionTermView<T> element)
 {
     return collect_parameters(element).size();
 }
 
-inline size_t parameter_arity(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element) { return collect_parameters(element).size(); }
+inline size_t parameter_arity(LiftedBooleanOperatorView element) { return collect_parameters(element).size(); }
 
 }
 

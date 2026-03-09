@@ -40,61 +40,61 @@ struct MergeContext
 
 // Common
 
-auto merge_p2p(View<Index<Variable>, Repository> element, MergeContext& context);
+auto merge_p2p(VariableView element, MergeContext& context);
 
-auto merge_p2p(View<Index<Object>, Repository> element, MergeContext& context);
+auto merge_p2p(ObjectView element, MergeContext& context);
 
-auto merge_p2p(View<Index<Binding>, Repository> element, MergeContext& context);
+auto merge_p2p(BindingView element, MergeContext& context);
 
-auto merge_p2p(View<Data<Term>, Repository> element, MergeContext& context);
+auto merge_p2p(TermView element, MergeContext& context);
 
 // Propositional
 
 template<FactKind T>
-auto merge_p2p(View<Index<Predicate<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(PredicateView<T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Index<Atom<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(AtomView<T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Index<GroundAtom<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(GroundAtomView<T> element, MergeContext& context);
 
-auto merge_p2p(View<Index<FDRVariable<FluentTag>>, Repository> element, MergeContext& context);
+auto merge_p2p(FDRVariableView<FluentTag> element, MergeContext& context);
 
-auto merge_p2p(View<Data<FDRFact<FluentTag>>, Repository> element, MergeContext& context);
-
-template<FactKind T>
-auto merge_p2p(View<Index<Literal<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(FDRFactView<FluentTag> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Index<GroundLiteral<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(LiteralView<T> element, MergeContext& context);
+
+template<FactKind T>
+auto merge_p2p(GroundLiteralView<T> element, MergeContext& context);
 
 // Numeric
 
 template<FactKind T>
-auto merge_p2p(View<Index<Function<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(FunctionView<T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Index<FunctionTerm<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(FunctionTermView<T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Index<GroundFunctionTerm<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(GroundFunctionTermView<T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Index<GroundFunctionTermValue<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(GroundFunctionTermValueView<T> element, MergeContext& context);
 
-auto merge_p2p(View<Data<FunctionExpression>, Repository> element, MergeContext& context);
+auto merge_p2p(FunctionExpressionView element, MergeContext& context);
 
-auto merge_p2p(View<Data<GroundFunctionExpression>, Repository> element, MergeContext& context);
-
-template<OpKind O, typename T>
-auto merge_p2p(View<Index<UnaryOperator<O, T>>, Repository> element, MergeContext& context);
+auto merge_p2p(GroundFunctionExpressionView element, MergeContext& context);
 
 template<OpKind O, typename T>
-auto merge_p2p(View<Index<BinaryOperator<O, T>>, Repository> element, MergeContext& context);
+auto merge_p2p(UnaryOperatorView<O, T> element, MergeContext& context);
 
 template<OpKind O, typename T>
-auto merge_p2p(View<Index<MultiOperator<O, T>>, Repository> element, MergeContext& context);
+auto merge_p2p(BinaryOperatorView<O, T> element, MergeContext& context);
+
+template<OpKind O, typename T>
+auto merge_p2p(MultiOperatorView<O, T> element, MergeContext& context);
 
 template<typename T>
 auto merge_p2p(View<Data<ArithmeticOperator<T>>, Repository> element, MergeContext& context);
@@ -103,24 +103,24 @@ template<typename T>
 auto merge_p2p(View<Data<BooleanOperator<T>>, Repository> element, MergeContext& context);
 
 template<NumericEffectOpKind O, FactKind T>
-auto merge_p2p(View<Index<NumericEffect<O, T>>, Repository> element, MergeContext& context);
+auto merge_p2p(NumericEffectView<O, T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Data<NumericEffectOperator<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(NumericEffectOperatorView<T> element, MergeContext& context);
 
 template<NumericEffectOpKind O, FactKind T>
-auto merge_p2p(View<Index<GroundNumericEffect<O, T>>, Repository> element, MergeContext& context);
+auto merge_p2p(GroundNumericEffectView<O, T> element, MergeContext& context);
 
 template<FactKind T>
-auto merge_p2p(View<Data<GroundNumericEffectOperator<T>>, Repository> element, MergeContext& context);
+auto merge_p2p(GroundNumericEffectOperatorView<T> element, MergeContext& context);
 
 // Composite
 
-auto merge_p2p(View<Index<ConjunctiveCondition>, Repository> element, MergeContext& context);
+auto merge_p2p(ConjunctiveConditionView element, MergeContext& context);
 
-auto merge_p2p(View<Index<Axiom>, Repository> element, MergeContext& context);
+auto merge_p2p(AxiomView element, MergeContext& context);
 
-auto merge_p2p(View<Index<Metric>, Repository> element, MergeContext& context);
+auto merge_p2p(MetricView element, MergeContext& context);
 
 /**
  * Implementations
@@ -128,7 +128,7 @@ auto merge_p2p(View<Index<Metric>, Repository> element, MergeContext& context);
 
 // Common
 
-inline auto merge_p2p(View<Index<Variable>, Repository> element, MergeContext& context)
+inline auto merge_p2p(VariableView element, MergeContext& context)
 {
     auto variable_ptr = context.builder.template get_builder<Variable>();
     auto& variable = *variable_ptr;
@@ -140,7 +140,7 @@ inline auto merge_p2p(View<Index<Variable>, Repository> element, MergeContext& c
     return context.destination.get_or_create(variable, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Index<Object>, Repository> element, MergeContext& context)
+inline auto merge_p2p(ObjectView element, MergeContext& context)
 {
     auto object_ptr = context.builder.template get_builder<Object>();
     auto& object = *object_ptr;
@@ -152,7 +152,7 @@ inline auto merge_p2p(View<Index<Object>, Repository> element, MergeContext& con
     return context.destination.get_or_create(object, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Index<Binding>, Repository> element, MergeContext& context)
+inline auto merge_p2p(BindingView element, MergeContext& context)
 {
     auto binding_ptr = context.builder.template get_builder<Binding>();
     auto& binding = *binding_ptr;
@@ -164,7 +164,7 @@ inline auto merge_p2p(View<Index<Binding>, Repository> element, MergeContext& co
     return context.destination.get_or_create(binding, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Data<Term>, Repository> element, MergeContext& context)
+inline auto merge_p2p(TermView element, MergeContext& context)
 {
     return visit(
         [&](auto&& arg)
@@ -173,7 +173,7 @@ inline auto merge_p2p(View<Data<Term>, Repository> element, MergeContext& contex
 
             if constexpr (std::is_same_v<Alternative, ParameterIndex>)
                 return Data<Term>(arg);
-            else if constexpr (std::is_same_v<Alternative, View<Index<Object>, Repository>>)
+            else if constexpr (std::is_same_v<Alternative, ObjectView>)
                 return Data<Term>(merge_p2p(arg, context).first.get_index());
             else
                 static_assert(dependent_false<Alternative>::value, "Missing case");
@@ -184,7 +184,7 @@ inline auto merge_p2p(View<Data<Term>, Repository> element, MergeContext& contex
 // Propositional
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<Predicate<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(PredicateView<T> element, MergeContext& context)
 {
     auto predicate_ptr = context.builder.template get_builder<Predicate<T>>();
     auto& predicate = *predicate_ptr;
@@ -198,7 +198,7 @@ inline auto merge_p2p(View<Index<Predicate<T>>, Repository> element, MergeContex
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<Atom<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(AtomView<T> element, MergeContext& context)
 {
     auto atom_ptr = context.builder.template get_builder<Atom<T>>();
     auto& atom = *atom_ptr;
@@ -213,7 +213,7 @@ inline auto merge_p2p(View<Index<Atom<T>>, Repository> element, MergeContext& co
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<GroundAtom<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundAtomView<T> element, MergeContext& context)
 {
     auto atom_ptr = context.builder.template get_builder<GroundAtom<T>>();
     auto& atom = *atom_ptr;
@@ -226,7 +226,7 @@ inline auto merge_p2p(View<Index<GroundAtom<T>>, Repository> element, MergeConte
     return context.destination.get_or_create(atom, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Index<FDRVariable<FluentTag>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(FDRVariableView<FluentTag> element, MergeContext& context)
 {
     auto variable_ptr = context.builder.template get_builder<FDRVariable<FluentTag>>();
     auto& variable = *variable_ptr;
@@ -240,13 +240,13 @@ inline auto merge_p2p(View<Index<FDRVariable<FluentTag>>, Repository> element, M
     return context.destination.get_or_create(variable, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Data<FDRFact<FluentTag>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(FDRFactView<FluentTag> element, MergeContext& context)
 {
     return Data<FDRFact<FluentTag>>(merge_p2p(element.get_variable(), context).first.get_index(), element.get_value());
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<Literal<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(LiteralView<T> element, MergeContext& context)
 {
     auto literal_ptr = context.builder.template get_builder<Literal<T>>();
     auto& literal = *literal_ptr;
@@ -260,7 +260,7 @@ inline auto merge_p2p(View<Index<Literal<T>>, Repository> element, MergeContext&
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<GroundLiteral<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundLiteralView<T> element, MergeContext& context)
 {
     auto literal_ptr = context.builder.template get_builder<GroundLiteral<T>>();
     auto& literal = *literal_ptr;
@@ -276,7 +276,7 @@ inline auto merge_p2p(View<Index<GroundLiteral<T>>, Repository> element, MergeCo
 // Numeric
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<Function<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(FunctionView<T> element, MergeContext& context)
 {
     auto function_ptr = context.builder.template get_builder<Function<T>>();
     auto& function = *function_ptr;
@@ -290,7 +290,7 @@ inline auto merge_p2p(View<Index<Function<T>>, Repository> element, MergeContext
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<FunctionTerm<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(FunctionTermView<T> element, MergeContext& context)
 {
     auto fterm_ptr = context.builder.template get_builder<FunctionTerm<T>>();
     auto& fterm = *fterm_ptr;
@@ -305,7 +305,7 @@ inline auto merge_p2p(View<Index<FunctionTerm<T>>, Repository> element, MergeCon
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<GroundFunctionTerm<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundFunctionTermView<T> element, MergeContext& context)
 {
     auto fterm_ptr = context.builder.template get_builder<GroundFunctionTerm<T>>();
     auto& fterm = *fterm_ptr;
@@ -319,7 +319,7 @@ inline auto merge_p2p(View<Index<GroundFunctionTerm<T>>, Repository> element, Me
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Index<GroundFunctionTermValue<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundFunctionTermValueView<T> element, MergeContext& context)
 {
     auto fterm_value_ptr = context.builder.template get_builder<GroundFunctionTermValue<T>>();
     auto& fterm_value = *fterm_value_ptr;
@@ -332,7 +332,7 @@ inline auto merge_p2p(View<Index<GroundFunctionTermValue<T>>, Repository> elemen
     return context.destination.get_or_create(fterm_value, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Data<FunctionExpression>, Repository> element, MergeContext& context)
+inline auto merge_p2p(FunctionExpressionView element, MergeContext& context)
 {
     return visit(
         [&](auto&& arg)
@@ -341,7 +341,7 @@ inline auto merge_p2p(View<Data<FunctionExpression>, Repository> element, MergeC
 
             if constexpr (std::is_same_v<Alternative, float_t>)
                 return Data<FunctionExpression>(arg);
-            else if constexpr (std::is_same_v<Alternative, View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository>>)
+            else if constexpr (std::is_same_v<Alternative, LiftedArithmeticOperatorView>)
                 return Data<FunctionExpression>(merge_p2p(arg, context));
             else
                 return Data<FunctionExpression>(merge_p2p(arg, context).first.get_index());
@@ -349,7 +349,7 @@ inline auto merge_p2p(View<Data<FunctionExpression>, Repository> element, MergeC
         element.get_variant());
 }
 
-inline auto merge_p2p(View<Data<GroundFunctionExpression>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundFunctionExpressionView element, MergeContext& context)
 {
     return visit(
         [&](auto&& arg)
@@ -358,7 +358,7 @@ inline auto merge_p2p(View<Data<GroundFunctionExpression>, Repository> element, 
 
             if constexpr (std::is_same_v<Alternative, float_t>)
                 return Data<GroundFunctionExpression>(arg);
-            else if constexpr (std::is_same_v<Alternative, View<Data<ArithmeticOperator<Data<GroundFunctionExpression>>>, Repository>>)
+            else if constexpr (std::is_same_v<Alternative, GroundArithmeticOperatorView>)
                 return Data<GroundFunctionExpression>(merge_p2p(arg, context));
             else
                 return Data<GroundFunctionExpression>(merge_p2p(arg, context).first.get_index());
@@ -367,7 +367,7 @@ inline auto merge_p2p(View<Data<GroundFunctionExpression>, Repository> element, 
 }
 
 template<OpKind O, typename T>
-inline auto merge_p2p(View<Index<UnaryOperator<O, T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(UnaryOperatorView<O, T> element, MergeContext& context)
 {
     auto unary_ptr = context.builder.template get_builder<UnaryOperator<O, T>>();
     auto& unary = *unary_ptr;
@@ -380,7 +380,7 @@ inline auto merge_p2p(View<Index<UnaryOperator<O, T>>, Repository> element, Merg
 }
 
 template<OpKind O, typename T>
-inline auto merge_p2p(View<Index<BinaryOperator<O, T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(BinaryOperatorView<O, T> element, MergeContext& context)
 {
     auto binary_ptr = context.builder.template get_builder<BinaryOperator<O, T>>();
     auto& binary = *binary_ptr;
@@ -394,7 +394,7 @@ inline auto merge_p2p(View<Index<BinaryOperator<O, T>>, Repository> element, Mer
 }
 
 template<OpKind O, typename T>
-inline auto merge_p2p(View<Index<MultiOperator<O, T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(MultiOperatorView<O, T> element, MergeContext& context)
 {
     auto multi_ptr = context.builder.template get_builder<MultiOperator<O, T>>();
     auto& multi = *multi_ptr;
@@ -420,7 +420,7 @@ inline auto merge_p2p(View<Data<BooleanOperator<T>>, Repository> element, MergeC
 }
 
 template<NumericEffectOpKind O, FactKind T>
-inline auto merge_p2p(View<Index<NumericEffect<O, T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(NumericEffectView<O, T> element, MergeContext& context)
 {
     auto numeric_effect_ptr = context.builder.template get_builder<NumericEffect<O, T>>();
     auto& numeric_effect = *numeric_effect_ptr;
@@ -434,13 +434,13 @@ inline auto merge_p2p(View<Index<NumericEffect<O, T>>, Repository> element, Merg
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Data<NumericEffectOperator<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(NumericEffectOperatorView<T> element, MergeContext& context)
 {
     return visit([&](auto&& arg) { return Data<NumericEffectOperator<T>>(merge_p2p(arg, context).first.get_index()); }, element.get_variant());
 }
 
 template<NumericEffectOpKind O, FactKind T>
-inline auto merge_p2p(View<Index<GroundNumericEffect<O, T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundNumericEffectView<O, T> element, MergeContext& context)
 {
     auto numeric_effect_ptr = context.builder.template get_builder<GroundNumericEffect<O, T>>();
     auto& numeric_effect = *numeric_effect_ptr;
@@ -454,14 +454,14 @@ inline auto merge_p2p(View<Index<GroundNumericEffect<O, T>>, Repository> element
 }
 
 template<FactKind T>
-inline auto merge_p2p(View<Data<GroundNumericEffectOperator<T>>, Repository> element, MergeContext& context)
+inline auto merge_p2p(GroundNumericEffectOperatorView<T> element, MergeContext& context)
 {
     return visit([&](auto&& arg) { return Data<GroundNumericEffectOperator<T>>(merge_p2p(arg, context).first.get_index()); }, element.get_variant());
 }
 
 // Composite
 
-inline auto merge_p2p(View<Index<ConjunctiveCondition>, Repository> element, MergeContext& context)
+inline auto merge_p2p(ConjunctiveConditionView element, MergeContext& context)
 {
     auto conj_cond_ptr = context.builder.template get_builder<ConjunctiveCondition>();
     auto& conj_cond = *conj_cond_ptr;
@@ -482,7 +482,7 @@ inline auto merge_p2p(View<Index<ConjunctiveCondition>, Repository> element, Mer
     return context.destination.get_or_create(conj_cond, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Index<Axiom>, Repository> element, MergeContext& context)
+inline auto merge_p2p(AxiomView element, MergeContext& context)
 {
     auto axiom_ptr = context.builder.template get_builder<Axiom>();
     auto& axiom = *axiom_ptr;
@@ -497,7 +497,7 @@ inline auto merge_p2p(View<Index<Axiom>, Repository> element, MergeContext& cont
     return context.destination.get_or_create(axiom, context.builder.get_buffer());
 }
 
-inline auto merge_p2p(View<Index<Metric>, Repository> element, MergeContext& context)
+inline auto merge_p2p(MetricView element, MergeContext& context)
 {
     auto metric_ptr = context.builder.template get_builder<Metric>();
     auto& metric = *metric_ptr;

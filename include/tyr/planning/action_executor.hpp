@@ -33,12 +33,10 @@ public:
     ActionExecutor() = default;
 
     template<typename Task>
-    bool is_applicable(View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> action, const StateContext<Task>& state);
+    bool is_applicable(formalism::planning::GroundActionView action, const StateContext<Task>& state);
 
     template<typename Task>
-    Node<Task> apply_action(const StateContext<Task>& state_context,
-                            View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> action,
-                            StateRepository<Task>& state_repository);
+    Node<Task> apply_action(const StateContext<Task>& state_context, formalism::planning::GroundActionView action, StateRepository<Task>& state_repository);
 
 private:
     DataList<formalism::planning::FDRFact<formalism::FluentTag>> m_del_effects;

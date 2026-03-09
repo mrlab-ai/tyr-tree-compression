@@ -245,11 +245,11 @@ private:
                                                     const std::vector<std::vector<uint_t>>& vertex_partitions);
 
 public:
-    StaticConsistencyGraph(View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> rule,
-                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> condition,
-                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> unary_overapproximation_condition,
-                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> binary_overapproximation_condition,
-                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> static_binary_overapproximation_condition,
+    StaticConsistencyGraph(formalism::datalog::RuleView rule,
+                           formalism::datalog::ConjunctiveConditionView condition,
+                           formalism::datalog::ConjunctiveConditionView unary_overapproximation_condition,
+                           formalism::datalog::ConjunctiveConditionView binary_overapproximation_condition,
+                           formalism::datalog::ConjunctiveConditionView static_binary_overapproximation_condition,
                            const analysis::DomainListList& parameter_domains,
                            size_t num_objects,
                            size_t num_fluent_predicates,
@@ -271,8 +271,8 @@ public:
 
     size_t get_num_vertices() const noexcept;
 
-    View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> get_rule() const noexcept;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> get_condition() const noexcept;
+    formalism::datalog::RuleView get_rule() const noexcept;
+    formalism::datalog::ConjunctiveConditionView get_condition() const noexcept;
     const formalism::datalog::VariableDependencyGraph& get_variable_dependeny_graph() const noexcept;
     const std::vector<std::vector<uint_t>>& get_vertex_partitions() const noexcept;
     const std::vector<std::vector<uint_t>>& get_object_to_vertex_per_partition() const noexcept;
@@ -280,10 +280,10 @@ public:
     const kpkc::DeduplicatedAdjacencyMatrix& get_adjacency_matrix() const noexcept;
 
 private:
-    View<Index<formalism::datalog::Rule>, formalism::datalog::Repository> m_rule;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> m_condition;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> m_unary_overapproximation_condition;
-    View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> m_binary_overapproximation_condition;
+    formalism::datalog::RuleView m_rule;
+    formalism::datalog::ConjunctiveConditionView m_condition;
+    formalism::datalog::ConjunctiveConditionView m_unary_overapproximation_condition;
+    formalism::datalog::ConjunctiveConditionView m_binary_overapproximation_condition;
 
     formalism::datalog::VariableDependencyGraph m_binary_overapproximation_vdg;
 
@@ -308,23 +308,20 @@ private:
     details::LiteralToRuleInfos m_binary_overapproximation_predicate_to_anchors;
 };
 
-extern std::pair<View<Index<formalism::datalog::GroundConjunctiveCondition>, formalism::datalog::Repository>, bool>
-create_ground_nullary_condition(View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> condition,
-                                formalism::datalog::Repository& context);
+extern std::pair<formalism::datalog::GroundConjunctiveConditionView, bool>
+create_ground_nullary_condition(formalism::datalog::ConjunctiveConditionView condition, formalism::datalog::Repository& context);
 
-extern std::pair<View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository>, bool>
-create_overapproximation_conjunctive_condition(size_t k,
-                                               View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> condition,
-                                               formalism::datalog::Repository& context);
+extern std::pair<formalism::datalog::ConjunctiveConditionView, bool>
+create_overapproximation_conjunctive_condition(size_t k, formalism::datalog::ConjunctiveConditionView condition, formalism::datalog::Repository& context);
 
-extern std::pair<View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository>, bool>
+extern std::pair<formalism::datalog::ConjunctiveConditionView, bool>
 create_static_overapproximation_conjunctive_condition(size_t k,
-                                                      View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> condition,
+                                                      formalism::datalog::ConjunctiveConditionView condition,
                                                       formalism::datalog::Repository& context);
 
-extern std::pair<View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository>, bool>
+extern std::pair<formalism::datalog::ConjunctiveConditionView, bool>
 create_overapproximation_conflicting_conjunctive_condition(size_t k,
-                                                           View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> condition,
+                                                           formalism::datalog::ConjunctiveConditionView condition,
                                                            formalism::datalog::Repository& context);
 
 }

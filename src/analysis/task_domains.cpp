@@ -39,8 +39,9 @@ namespace fp = tyr::formalism::planning;
 
 namespace tyr::analysis
 {
-
-static DomainListListList to_list(const DomainSetListList& set)
+namespace
+{
+DomainListListList to_list(const DomainSetListList& set)
 {
     auto vec = DomainListListList();
     vec.reserve(set.size());
@@ -59,7 +60,7 @@ static DomainListListList to_list(const DomainSetListList& set)
     return vec;
 }
 
-static DomainListList to_list(const DomainSetList& set)
+DomainListList to_list(const DomainSetList& set)
 {
     auto vec = DomainListList();
     vec.reserve(set.size());
@@ -72,7 +73,7 @@ static DomainListList to_list(const DomainSetList& set)
     return vec;
 }
 
-static std::vector<std::pair<DomainListList, DomainListListList>> to_list(const std::vector<std::pair<DomainSetList, DomainSetListList>>& set)
+std::vector<std::pair<DomainListList, DomainListListList>> to_list(const std::vector<std::pair<DomainSetList, DomainSetListList>>& set)
 {
     auto vec = std::vector<std::pair<DomainListList, DomainListListList>>();
     vec.reserve(set.size());
@@ -83,8 +84,8 @@ static std::vector<std::pair<DomainListList, DomainListListList>> to_list(const 
     return vec;
 }
 
-template<f::FactKind T, fp::Context C>
-DomainSetListList initialize_predicate_domain_sets(View<IndexList<f::Predicate<T>>, C> predicates)
+template<f::FactKind T>
+DomainSetListList initialize_predicate_domain_sets(View<IndexList<f::Predicate<T>>, fp::Repository> predicates)
 {
     auto predicate_domain_sets = DomainSetListList(predicates.size());
 
@@ -94,8 +95,8 @@ DomainSetListList initialize_predicate_domain_sets(View<IndexList<f::Predicate<T
     return predicate_domain_sets;
 }
 
-template<f::FactKind T, fp::Context C>
-void insert_into_predicate_domain_sets(View<IndexList<fp::GroundAtom<T>>, C> atoms, DomainSetListList& predicate_domain_sets)
+template<f::FactKind T>
+void insert_into_predicate_domain_sets(View<IndexList<fp::GroundAtom<T>>, fp::Repository> atoms, DomainSetListList& predicate_domain_sets)
 {
     for (const auto atom : atoms)
     {
@@ -106,8 +107,8 @@ void insert_into_predicate_domain_sets(View<IndexList<fp::GroundAtom<T>>, C> ato
     }
 }
 
-template<f::FactKind T, fp::Context C>
-DomainSetListList initialize_function_domain_sets(View<IndexList<f::Function<T>>, C> functions)
+template<f::FactKind T>
+DomainSetListList initialize_function_domain_sets(View<IndexList<f::Function<T>>, fp::Repository> functions)
 {
     auto function_domain_sets = DomainSetListList(functions.size());
 
@@ -117,8 +118,8 @@ DomainSetListList initialize_function_domain_sets(View<IndexList<f::Function<T>>
     return function_domain_sets;
 }
 
-template<f::FactKind T, fp::Context C>
-void insert_into_function_domain_sets(View<IndexList<fp::GroundFunctionTermValue<T>>, C> fterm_values, DomainSetListList& function_domain_sets)
+template<f::FactKind T>
+void insert_into_function_domain_sets(View<IndexList<fp::GroundFunctionTermValue<T>>, fp::Repository> fterm_values, DomainSetListList& function_domain_sets)
 {
     for (const auto term_value : fterm_values)
     {
@@ -134,34 +135,32 @@ void insert_into_function_domain_sets(View<IndexList<fp::GroundFunctionTermValue
  * Insert constants
  */
 
-template<fp::Context C>
-void insert_constants_into_parameter_domain(View<Data<fp::FunctionExpression>, C> element, DomainSetListList& function_domain_sets);
+void insert_constants_into_parameter_domain(fp::FunctionExpressionView element, DomainSetListList& function_domain_sets);
 
 static void insert_constants_into_parameter_domain(float_t, DomainSetListList&) {}
 
-template<f::OpKind O, fp::Context C>
-void insert_constants_into_parameter_domain(View<Index<fp::UnaryOperator<O, Data<fp::FunctionExpression>>>, C> element, DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+void insert_constants_into_parameter_domain(fp::LiftedUnaryOperatorView<O> element, DomainSetListList& function_domain_sets)
 {
     insert_constants_into_parameter_domain(element.get_arg(), function_domain_sets);
 }
 
-template<f::OpKind O, fp::Context C>
-void insert_constants_into_parameter_domain(View<Index<fp::BinaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                                            DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+void insert_constants_into_parameter_domain(fp::LiftedBinaryOperatorView<O> element, DomainSetListList& function_domain_sets)
 {
     insert_constants_into_parameter_domain(element.get_lhs(), function_domain_sets);
     insert_constants_into_parameter_domain(element.get_rhs(), function_domain_sets);
 }
 
-template<f::OpKind O, fp::Context C>
-void insert_constants_into_parameter_domain(View<Index<fp::MultiOperator<O, Data<fp::FunctionExpression>>>, C> element, DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+void insert_constants_into_parameter_domain(fp::LiftedMultiOperatorView<O> element, DomainSetListList& function_domain_sets)
 {
     for (const auto arg : element.get_args())
         insert_constants_into_parameter_domain(arg, function_domain_sets);
 }
 
-template<f::FactKind T, fp::Context C>
-void insert_constants_into_parameter_domain(View<Index<fp::Atom<T>>, C> element, DomainSetListList& predicate_domain_sets)
+template<f::FactKind T>
+void insert_constants_into_parameter_domain(fp::AtomView<T> element, DomainSetListList& predicate_domain_sets)
 {
     const auto predicate = element.get_predicate();
 
@@ -173,7 +172,7 @@ void insert_constants_into_parameter_domain(View<Index<fp::Atom<T>>, C> element,
             {
                 using Alternative = std::decay_t<decltype(arg)>;
 
-                if constexpr (std::is_same_v<Alternative, View<Index<f::Object>, C>>)
+                if constexpr (std::is_same_v<Alternative, fp::ObjectView>)
                 {
                     auto& predicate_domain = predicate_domain_sets[predicate.get_index().value][pos];
                     predicate_domain.insert(arg.get_index());
@@ -189,8 +188,8 @@ void insert_constants_into_parameter_domain(View<Index<fp::Atom<T>>, C> element,
     }
 }
 
-template<f::FactKind T, fp::Context C>
-void insert_constants_into_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, DomainSetListList& function_domain_sets)
+template<f::FactKind T>
+void insert_constants_into_parameter_domain(fp::FunctionTermView<T> element, DomainSetListList& function_domain_sets)
 {
     const auto function = element.get_function();
 
@@ -202,7 +201,7 @@ void insert_constants_into_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> 
             {
                 using Alternative = std::decay_t<decltype(arg)>;
 
-                if constexpr (std::is_same_v<Alternative, View<Index<f::Object>, C>>)
+                if constexpr (std::is_same_v<Alternative, fp::ObjectView>)
                 {
                     auto& function_domain = function_domain_sets[function.get_index().value][pos];
                     function_domain.insert(arg.get_index());
@@ -218,27 +217,22 @@ void insert_constants_into_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> 
     }
 }
 
-template<fp::Context C>
-void insert_constants_into_parameter_domain(View<Index<fp::FunctionTerm<f::FluentTag>>, C> element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fp::FunctionTermView<f::FluentTag> element, DomainSetListList& function_domain_sets)
 {
     // Dont restrict for fluent fterm
 }
 
-template<fp::Context C>
-void insert_constants_into_parameter_domain(View<Data<fp::ArithmeticOperator<Data<fp::FunctionExpression>>>, C> element,
-                                            DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fp::LiftedArithmeticOperatorView element, DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
 }
 
-template<fp::Context C>
-void insert_constants_into_parameter_domain(View<Data<fp::FunctionExpression>, C> element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fp::FunctionExpressionView element, DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
 }
 
-template<fp::Context C>
-void insert_constants_into_parameter_domain(View<Data<fp::BooleanOperator<Data<fp::FunctionExpression>>>, C> element, DomainSetListList& function_domain_sets)
+void insert_constants_into_parameter_domain(fp::LiftedBooleanOperatorView element, DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
 }
@@ -247,80 +241,58 @@ void insert_constants_into_parameter_domain(View<Data<fp::BooleanOperator<Data<f
  * Restrict
  */
 
-static void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&);
+void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&);
 
-template<f::OpKind O, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::UnaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets);
+template<f::OpKind O>
+void restrict_parameter_domain(fp::LiftedUnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<f::OpKind O, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::BinaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets);
+template<f::OpKind O>
+void restrict_parameter_domain(fp::LiftedBinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<f::OpKind O, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::MultiOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets);
+template<f::OpKind O>
+void restrict_parameter_domain(fp::LiftedMultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::Atom<T>>, C> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
+template<f::FactKind T>
+void restrict_parameter_domain(fp::AtomView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::Literal<T>>, C> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
+template<f::FactKind T>
+void restrict_parameter_domain(fp::LiteralView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+template<f::FactKind T>
+void restrict_parameter_domain(fp::FunctionTermView<T> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Index<fp::FunctionTerm<f::FluentTag>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fp::FunctionTermView<f::FluentTag> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Data<fp::ArithmeticOperator<Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fp::LiftedArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Data<fp::FunctionExpression>, C> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fp::FunctionExpressionView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Data<fp::BooleanOperator<Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets);
+void restrict_parameter_domain(fp::LiftedBooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
 
-static void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&) {}
+void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&) {}
 
-template<f::OpKind O, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::UnaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+void restrict_parameter_domain(fp::LiftedUnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     restrict_parameter_domain(element.get_arg(), parameter_domains, function_domain_sets);
 }
 
-template<f::OpKind O, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::BinaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+void restrict_parameter_domain(fp::LiftedBinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     restrict_parameter_domain(element.get_lhs(), parameter_domains, function_domain_sets);
     restrict_parameter_domain(element.get_rhs(), parameter_domains, function_domain_sets);
 }
 
-template<f::OpKind O, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::MultiOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+void restrict_parameter_domain(fp::LiftedMultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     for (const auto arg : element.get_args())
         restrict_parameter_domain(arg, parameter_domains, function_domain_sets);
 }
 
-template<f::FactKind T, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::Atom<T>>, C> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets)
+template<f::FactKind T>
+void restrict_parameter_domain(fp::AtomView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets)
 {
     const auto predicate = element.get_predicate();
 
@@ -332,7 +304,7 @@ void restrict_parameter_domain(View<Index<fp::Atom<T>>, C> element, DomainSetLis
             {
                 using Alternative = std::decay_t<decltype(arg)>;
 
-                if constexpr (std::is_same_v<Alternative, View<Index<f::Object>, C>>)
+                if constexpr (std::is_same_v<Alternative, fp::ObjectView>)
                 {
                     // Cannot know parameter index such that there is nothing to be done.
                 }
@@ -354,8 +326,8 @@ void restrict_parameter_domain(View<Index<fp::Atom<T>>, C> element, DomainSetLis
     }
 }
 
-template<f::FactKind T, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::Literal<T>>, C> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets)
+template<f::FactKind T>
+void restrict_parameter_domain(fp::LiteralView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets)
 {
     if (!element.get_polarity())
         return;  // IMPORTANT: do NOT restrict from negated literals
@@ -363,8 +335,8 @@ void restrict_parameter_domain(View<Index<fp::Literal<T>>, C> element, DomainSet
     restrict_parameter_domain(element.get_atom(), parameter_domains, predicate_domain_sets);
 }
 
-template<f::FactKind T, fp::Context C>
-void restrict_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+template<f::FactKind T>
+void restrict_parameter_domain(fp::FunctionTermView<T> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     const auto function = element.get_function();
 
@@ -376,7 +348,7 @@ void restrict_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, Doma
             {
                 using Alternative = std::decay_t<decltype(arg)>;
 
-                if constexpr (std::is_same_v<Alternative, View<Index<f::Object>, C>>)
+                if constexpr (std::is_same_v<Alternative, fp::ObjectView>)
                 {
                     // Cannot know parameter index such that there is nothing to be done.
                 }
@@ -398,32 +370,22 @@ void restrict_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, Doma
     }
 }
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Index<fp::FunctionTerm<f::FluentTag>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fp::FunctionTermView<f::FluentTag> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     // Dont restrict for fluent fterm
 }
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Data<fp::ArithmeticOperator<Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fp::LiftedArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Data<fp::FunctionExpression>, C> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fp::FunctionExpressionView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-template<fp::Context C>
-void restrict_parameter_domain(View<Data<fp::BooleanOperator<Data<fp::FunctionExpression>>>, C> element,
-                               DomainSetList& parameter_domains,
-                               const DomainSetListList& function_domain_sets)
+void restrict_parameter_domain(fp::LiftedBooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
 {
     visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
@@ -432,102 +394,76 @@ void restrict_parameter_domain(View<Data<fp::BooleanOperator<Data<fp::FunctionEx
  * Lift
  */
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::FunctionExpression>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fp::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
 static bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&);
 
-template<f::OpKind O, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::UnaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+template<f::OpKind O>
+bool lift_parameter_domain(fp::LiftedUnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<f::OpKind O, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::BinaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+template<f::OpKind O>
+bool lift_parameter_domain(fp::LiftedBinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<f::OpKind O, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::MultiOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+template<f::OpKind O>
+bool lift_parameter_domain(fp::LiftedMultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<fp::NumericEffectOpKind Op, f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::NumericEffect<Op, T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+template<fp::NumericEffectOpKind Op, f::FactKind T>
+bool lift_parameter_domain(fp::NumericEffectView<Op, T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::Atom<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
+template<f::FactKind T>
+bool lift_parameter_domain(fp::AtomView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::Literal<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
+template<f::FactKind T>
+bool lift_parameter_domain(fp::LiteralView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+template<f::FactKind T>
+bool lift_parameter_domain(fp::FunctionTermView<T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Index<fp::FunctionTerm<f::StaticTag>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fp::FunctionTermView<f::StaticTag> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::ArithmeticOperator<Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fp::LiftedArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::FunctionExpression>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fp::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::BooleanOperator<Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fp::LiftedBooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Data<fp::NumericEffectOperator<T>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets);
+template<f::FactKind T>
+bool lift_parameter_domain(fp::NumericEffectOperatorView<T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::FunctionExpression>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
+bool lift_parameter_domain(fp::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
 
-static bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&) { return false; }
+bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&) { return false; }
 
-template<f::OpKind O, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::UnaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+bool lift_parameter_domain(fp::LiftedUnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return lift_parameter_domain(element.get_arg(), parameter_domains, function_domain_sets);
 }
 
-template<f::OpKind O, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::BinaryOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+bool lift_parameter_domain(fp::LiftedBinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return lift_parameter_domain(element.get_lhs(), parameter_domains, function_domain_sets)
            || lift_parameter_domain(element.get_rhs(), parameter_domains, function_domain_sets);
 }
 
-template<f::OpKind O, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::MultiOperator<O, Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets)
+template<f::OpKind O>
+bool lift_parameter_domain(fp::LiftedMultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return std::any_of(element.get_args().begin(),
                        element.get_args().end(),
                        [&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); });
 }
 
-template<fp::NumericEffectOpKind Op, f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::NumericEffect<Op, T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+template<fp::NumericEffectOpKind Op, f::FactKind T>
+bool lift_parameter_domain(fp::NumericEffectView<Op, T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return lift_parameter_domain(element.get_fterm(), parameter_domains, function_domain_sets)
            || lift_parameter_domain(element.get_fexpr(), parameter_domains, function_domain_sets);
 }
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::Atom<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets)
+template<f::FactKind T>
+bool lift_parameter_domain(fp::AtomView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets)
 {
     const auto predicate = element.get_predicate();
 
@@ -541,7 +477,7 @@ bool lift_parameter_domain(View<Index<fp::Atom<T>>, C> element, const DomainSetL
             {
                 using Alternative = std::decay_t<decltype(arg)>;
 
-                if constexpr (std::is_same_v<Alternative, View<Index<f::Object>, C>>)
+                if constexpr (std::is_same_v<Alternative, fp::ObjectView>)
                 {
                     auto& predicate_domain = predicate_domain_sets[predicate.get_index().value][pos];
                     size_t before = predicate_domain.size();
@@ -570,14 +506,14 @@ bool lift_parameter_domain(View<Index<fp::Atom<T>>, C> element, const DomainSetL
     return changed;
 }
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::Literal<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets)
+template<f::FactKind T>
+bool lift_parameter_domain(fp::LiteralView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets)
 {
     return lift_parameter_domain(element.get_atom(), parameter_domains, predicate_domain_sets);
 }
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+template<f::FactKind T>
+bool lift_parameter_domain(fp::FunctionTermView<T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     const auto function = element.get_function();
 
@@ -591,7 +527,7 @@ bool lift_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, const Do
             {
                 using Alternative = std::decay_t<decltype(arg)>;
 
-                if constexpr (std::is_same_v<Alternative, View<Index<f::Object>, C>>)
+                if constexpr (std::is_same_v<Alternative, fp::ObjectView>)
                 {
                     auto& function_domain = function_domain_sets[function.get_index().value][pos];
                     size_t before = function_domain.size();
@@ -620,43 +556,34 @@ bool lift_parameter_domain(View<Index<fp::FunctionTerm<T>>, C> element, const Do
     return changed;
 }
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Index<fp::FunctionTerm<f::StaticTag>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fp::FunctionTermView<f::StaticTag> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return false;
 }
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::ArithmeticOperator<Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fp::LiftedArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::FunctionExpression>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fp::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-template<fp::Context C>
-bool lift_parameter_domain(View<Data<fp::BooleanOperator<Data<fp::FunctionExpression>>>, C> element,
-                           const DomainSetList& parameter_domains,
-                           DomainSetListList& function_domain_sets)
+bool lift_parameter_domain(fp::LiftedBooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
 
-template<f::FactKind T, fp::Context C>
-bool lift_parameter_domain(View<Data<fp::NumericEffectOperator<T>>, C> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
+template<f::FactKind T>
+bool lift_parameter_domain(fp::NumericEffectOperatorView<T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
+}
 
-TaskVariableDomains compute_variable_domains(View<Index<fp::Task>, fp::Repository> task)
+TaskVariableDomains compute_variable_domains(fp::TaskView task)
 {
     auto objects = std::vector<Index<f::Object>> {};
     for (const auto object : task.get_domain().get_constants())

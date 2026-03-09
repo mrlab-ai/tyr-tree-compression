@@ -60,43 +60,31 @@ template<typename Task>
 inline float_t evaluate(float_t element, const StateContext<Task>& context);
 
 template<typename Task, formalism::ArithmeticOpKind O>
-inline float_t
-evaluate(View<Index<formalism::planning::UnaryOperator<O, Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundUnaryOperatorView<O> element, const StateContext<Task>& context);
 
 template<typename Task, formalism::OpKind O>
-inline float_t
-evaluate(View<Index<formalism::planning::BinaryOperator<O, Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundBinaryOperatorView<O> element, const StateContext<Task>& context);
 
 template<typename Task, formalism::ArithmeticOpKind O>
-inline float_t
-evaluate(View<Index<formalism::planning::MultiOperator<O, Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundMultiOperatorView<O> element, const StateContext<Task>& context);
 
 template<typename Task, formalism::FactKind T>
-inline float_t evaluate(View<Index<formalism::planning::GroundFunctionTerm<T>>, formalism::planning::Repository> element, const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundFunctionTermView<T> element, const StateContext<Task>& context);
 
 template<typename Task>
-inline float_t evaluate(View<Data<formalism::planning::GroundFunctionExpression>, formalism::planning::Repository> element, const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundFunctionExpressionView element, const StateContext<Task>& context);
 
 template<typename Task>
-inline float_t
-evaluate(View<Data<formalism::planning::ArithmeticOperator<Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundArithmeticOperatorView element, const StateContext<Task>& context);
 
 template<typename Task>
-inline bool
-evaluate(View<Data<formalism::planning::BooleanOperator<Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context);
+inline bool evaluate(formalism::planning::GroundBooleanOperatorView element, const StateContext<Task>& context);
 
 template<typename Task, formalism::planning::NumericEffectOpKind Op, formalism::FactKind T>
-inline float_t evaluate(View<Index<formalism::planning::GroundNumericEffect<Op, T>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundNumericEffectView<Op, T> element, const StateContext<Task>& context);
 
 template<typename Task, formalism::FactKind T>
-inline float_t evaluate(View<Data<formalism::planning::GroundNumericEffectOperator<T>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context);
+inline float_t evaluate(formalism::planning::GroundNumericEffectOperatorView<T> element, const StateContext<Task>& context);
 
 // Implementations
 
@@ -107,25 +95,19 @@ inline float_t evaluate(float_t element, const StateContext<Task>& context)
 }
 
 template<typename Task, formalism::ArithmeticOpKind O>
-inline float_t
-evaluate(View<Index<formalism::planning::UnaryOperator<O, Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundUnaryOperatorView<O> element, const StateContext<Task>& context)
 {
     return formalism::apply(O {}, evaluate(element.get_arg(), context));
 }
 
 template<typename Task, formalism::OpKind O>
-inline float_t
-evaluate(View<Index<formalism::planning::BinaryOperator<O, Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundBinaryOperatorView<O> element, const StateContext<Task>& context)
 {
     return formalism::apply(O {}, evaluate(element.get_lhs(), context), evaluate(element.get_rhs(), context));
 }
 
 template<typename Task, formalism::ArithmeticOpKind O>
-inline float_t
-evaluate(View<Index<formalism::planning::MultiOperator<O, Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundMultiOperatorView<O> element, const StateContext<Task>& context)
 {
     const auto child_fexprs = element.get_args();
 
@@ -137,58 +119,49 @@ evaluate(View<Index<formalism::planning::MultiOperator<O, Data<formalism::planni
 }
 
 template<typename Task>
-inline float_t evaluate(View<Index<formalism::planning::GroundFunctionTerm<formalism::StaticTag>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundFunctionTermView<formalism::StaticTag> element, const StateContext<Task>& context)
 {
     return context.task.get(element.get_index());
 }
 
 template<typename Task>
-inline float_t evaluate(View<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundFunctionTermView<formalism::FluentTag> element, const StateContext<Task>& context)
 {
     return context.unpacked_state.get(element.get_index());
 }
 
 template<typename Task>
-inline float_t evaluate(View<Index<formalism::planning::GroundFunctionTerm<formalism::AuxiliaryTag>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundFunctionTermView<formalism::AuxiliaryTag> element, const StateContext<Task>& context)
 {
     return context.auxiliary_value;
 }
 
 template<typename Task>
-inline float_t evaluate(View<Data<formalism::planning::GroundFunctionExpression>, formalism::planning::Repository> element, const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundFunctionExpressionView element, const StateContext<Task>& context)
 {
     return visit([&](auto&& arg) { return evaluate(arg, context); }, element.get_variant());
 }
 
 template<typename Task>
-inline float_t
-evaluate(View<Data<formalism::planning::ArithmeticOperator<Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundArithmeticOperatorView element, const StateContext<Task>& context)
 {
     return visit([&](auto&& arg) { return evaluate(arg, context); }, element.get_variant());
 }
 
 template<typename Task>
-inline bool
-evaluate(View<Data<formalism::planning::BooleanOperator<Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> element,
-         const StateContext<Task>& context)
+inline bool evaluate(formalism::planning::GroundBooleanOperatorView element, const StateContext<Task>& context)
 {
     return visit([&](auto&& arg) { return evaluate(arg, context); }, element.get_variant());
 }
 
 template<typename Task, formalism::planning::NumericEffectOpKind Op, formalism::FactKind T>
-inline float_t evaluate(View<Index<formalism::planning::GroundNumericEffect<Op, T>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundNumericEffectView<Op, T> element, const StateContext<Task>& context)
 {
     return formalism::planning::apply(Op {}, evaluate(element.get_fterm(), context), evaluate(element.get_fexpr(), context));
 }
 
 template<typename Task, formalism::FactKind T>
-inline float_t evaluate(View<Data<formalism::planning::GroundNumericEffectOperator<T>>, formalism::planning::Repository> element,
-                        const StateContext<Task>& context)
+inline float_t evaluate(formalism::planning::GroundNumericEffectOperatorView<T> element, const StateContext<Task>& context)
 {
     return visit([&](auto&& arg) { return evaluate(arg, context); }, element.get_variant());
 }
@@ -198,7 +171,7 @@ inline float_t evaluate(View<Data<formalism::planning::GroundNumericEffectOperat
  */
 
 template<typename Task>
-inline bool is_applicable_if_fires(View<Index<formalism::planning::GroundConditionalEffect>, formalism::planning::Repository> element,
+inline bool is_applicable_if_fires(formalism::planning::GroundConditionalEffectView element,
                                    const StateContext<Task>& context,
                                    formalism::planning::EffectFamilyList& ref_fluent_effect_families)
 {
@@ -214,15 +187,13 @@ inline bool is_applicable_if_fires(View<Index<formalism::planning::GroundConditi
  */
 
 template<typename Task>
-inline bool is_applicable(View<Index<formalism::planning::GroundLiteral<formalism::StaticTag>>, formalism::planning::Repository> element,
-                          const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundLiteralView<formalism::StaticTag> element, const StateContext<Task>& context)
 {
     return context.task.test(element.get_atom().get_index()) == element.get_polarity();
 }
 
 template<typename Task>
-inline bool is_applicable(View<Index<formalism::planning::GroundLiteral<formalism::DerivedTag>>, formalism::planning::Repository> element,
-                          const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundLiteralView<formalism::DerivedTag> element, const StateContext<Task>& context)
 {
     return context.unpacked_state.test(element.get_atom().get_index()) == element.get_polarity();
 }
@@ -234,8 +205,7 @@ inline bool is_applicable(View<IndexList<formalism::planning::GroundLiteral<T>>,
 }
 
 template<typename Task>
-inline bool is_applicable(View<Data<formalism::planning::FDRFact<formalism::FluentTag>>, formalism::planning::Repository> element,
-                          const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<Task>& context)
 {
     return context.unpacked_state.get(element.get_variable().get_index()) == element.get_value();
 }
@@ -256,7 +226,7 @@ inline bool is_applicable(
 }
 
 template<typename Task, formalism::planning::NumericEffectOpKind Op>
-inline bool is_applicable(View<Index<formalism::planning::GroundNumericEffect<Op, formalism::FluentTag>>, formalism::planning::Repository> element,
+inline bool is_applicable(formalism::planning::GroundNumericEffectView<Op, formalism::FluentTag> element,
                           const StateContext<Task>& context,
                           formalism::planning::EffectFamilyList& ref_fluent_effect_families)
 {
@@ -281,7 +251,7 @@ inline bool is_applicable(View<Index<formalism::planning::GroundNumericEffect<Op
 }
 
 template<typename Task>
-inline bool is_applicable(View<Data<formalism::planning::GroundNumericEffectOperator<formalism::FluentTag>>, formalism::planning::Repository> element,
+inline bool is_applicable(formalism::planning::GroundNumericEffectOperatorView<formalism::FluentTag> element,
                           const StateContext<Task>& context,
                           formalism::planning::EffectFamilyList& ref_fluent_effect_families)
 {
@@ -297,17 +267,15 @@ inline bool is_applicable(View<DataList<formalism::planning::GroundNumericEffect
 }
 
 template<typename Task>
-inline bool is_applicable(
-    View<Index<formalism::planning::GroundNumericEffect<formalism::planning::OpIncrease, formalism::AuxiliaryTag>>, formalism::planning::Repository> element,
-    const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundNumericEffectView<formalism::planning::OpIncrease, formalism::AuxiliaryTag> element,
+                          const StateContext<Task>& context)
 {
     // Check fexpr is well-defined in context
     return !std::isnan(evaluate(element.get_fexpr(), context));
 }
 
 template<typename Task>
-inline bool is_applicable(View<Data<formalism::planning::GroundNumericEffectOperator<formalism::AuxiliaryTag>>, formalism::planning::Repository> element,
-                          const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundNumericEffectOperatorView<formalism::AuxiliaryTag> element, const StateContext<Task>& context)
 {
     return visit([&](auto&& arg) { return is_applicable(arg, context); }, element.get_variant());
 }
@@ -315,8 +283,7 @@ inline bool is_applicable(View<Data<formalism::planning::GroundNumericEffectOper
 // GroundConjunctiveCondition
 
 template<typename Task>
-inline bool is_applicable(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> element,
-                          const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundConjunctiveConditionView element, const StateContext<Task>& context)
 {
     return is_applicable(element.template get_facts<formalism::StaticTag>(), context)      //
            && is_applicable(element.template get_facts<formalism::FluentTag>(), context)   //
@@ -327,7 +294,7 @@ inline bool is_applicable(View<Index<formalism::planning::GroundConjunctiveCondi
 // GroundConjunctiveEffect
 
 template<typename Task>
-inline bool is_applicable(View<Index<formalism::planning::GroundConjunctiveEffect>, formalism::planning::Repository> element,
+inline bool is_applicable(formalism::planning::GroundConjunctiveEffectView element,
                           const StateContext<Task>& context,
                           formalism::planning::EffectFamilyList& ref_fluent_effect_families)
 {
@@ -352,7 +319,7 @@ inline bool are_applicable_if_fires(View<IndexList<formalism::planning::GroundCo
 // GroundAction
 
 template<typename Task>
-inline bool is_applicable(View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> element,
+inline bool is_applicable(formalism::planning::GroundActionView element,
                           const StateContext<Task>& context,
                           formalism::planning::EffectFamilyList& out_fluent_effect_families)
 {
@@ -362,7 +329,7 @@ inline bool is_applicable(View<Index<formalism::planning::GroundAction>, formali
 // GroundAxiom
 
 template<typename Task>
-inline bool is_applicable(View<Index<formalism::planning::GroundAxiom>, formalism::planning::Repository> element, const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundAxiomView element, const StateContext<Task>& context)
 {
     return is_applicable(element.get_body(), context);
 }
@@ -371,8 +338,7 @@ inline bool is_applicable(View<Index<formalism::planning::GroundAxiom>, formalis
  * is_statically_applicable
  */
 
-inline bool is_statically_applicable(View<Index<formalism::planning::GroundLiteral<formalism::StaticTag>>, formalism::planning::Repository> element,
-                                     const boost::dynamic_bitset<>& static_atoms)
+inline bool is_statically_applicable(formalism::planning::GroundLiteralView<formalism::StaticTag> element, const boost::dynamic_bitset<>& static_atoms)
 {
     return tyr::test(uint_t(element.get_atom().get_index()), static_atoms) == element.get_polarity();
 }
@@ -385,24 +351,21 @@ inline bool is_statically_applicable(View<IndexList<formalism::planning::GroundL
 
 // GroundConjunctiveCondition
 
-inline bool is_statically_applicable(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> element,
-                                     const boost::dynamic_bitset<>& static_atoms)
+inline bool is_statically_applicable(formalism::planning::GroundConjunctiveConditionView element, const boost::dynamic_bitset<>& static_atoms)
 {
     return is_statically_applicable(element.template get_facts<formalism::StaticTag>(), static_atoms);
 }
 
 // GroundAction
 
-inline bool is_statically_applicable(View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> element,
-                                     const boost::dynamic_bitset<>& static_atoms)
+inline bool is_statically_applicable(formalism::planning::GroundActionView element, const boost::dynamic_bitset<>& static_atoms)
 {
     return is_statically_applicable(element.get_condition(), static_atoms);
 }
 
 // GroundAxiom
 
-inline bool is_statically_applicable(View<Index<formalism::planning::GroundAxiom>, formalism::planning::Repository> element,
-                                     const boost::dynamic_bitset<>& static_atoms)
+inline bool is_statically_applicable(formalism::planning::GroundAxiomView element, const boost::dynamic_bitset<>& static_atoms)
 {
     return is_statically_applicable(element.get_body(), static_atoms);
 }
@@ -414,8 +377,7 @@ inline bool is_statically_applicable(View<Index<formalism::planning::GroundAxiom
 // GroundConjunctiveCondition
 
 template<typename Task>
-inline bool is_dynamically_applicable(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> element,
-                                      const StateContext<Task>& context)
+inline bool is_dynamically_applicable(formalism::planning::GroundConjunctiveConditionView element, const StateContext<Task>& context)
 {
     return is_applicable(element.template get_facts<formalism::FluentTag>(), context)      //
            && is_applicable(element.template get_facts<formalism::DerivedTag>(), context)  //
@@ -428,7 +390,7 @@ inline bool is_dynamically_applicable(View<Index<formalism::planning::GroundConj
 
 // GroundConjunctiveCondition
 
-inline bool is_consistent(View<Index<formalism::planning::GroundConjunctiveCondition>, formalism::planning::Repository> element,
+inline bool is_consistent(formalism::planning::GroundConjunctiveConditionView element,
                           UnorderedMap<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::FDRValue>& fluent_assign,
                           UnorderedMap<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, bool>& derived_assign)
 {
@@ -453,7 +415,7 @@ inline bool is_consistent(View<Index<formalism::planning::GroundConjunctiveCondi
 
 // GroundAction
 
-inline bool is_consistent(View<Index<formalism::planning::GroundAction>, formalism::planning::Repository> element,
+inline bool is_consistent(formalism::planning::GroundActionView element,
                           UnorderedMap<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::FDRValue>& out_fluent_assign,
                           UnorderedMap<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, bool>& out_derived_assign)
 {
@@ -464,7 +426,7 @@ inline bool is_consistent(View<Index<formalism::planning::GroundAction>, formali
 
 // GroundAxiom
 
-inline bool is_consistent(View<Index<formalism::planning::GroundAxiom>, formalism::planning::Repository> element,
+inline bool is_consistent(formalism::planning::GroundAxiomView element,
                           UnorderedMap<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::FDRValue>& out_fluent_assign,
                           UnorderedMap<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, bool>& out_derived_assign)
 {

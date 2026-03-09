@@ -34,25 +34,25 @@ template<FactKind T>
 void collect_fterms(float_t element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 template<FactKind T1, FactKind T2>
-void collect_fterms(View<Index<FunctionTerm<T1>>, Repository> element, UnorderedSet<Index<FunctionTerm<T2>>>& result);
+void collect_fterms(FunctionTermView<T1> element, UnorderedSet<Index<FunctionTerm<T2>>>& result);
 
 template<FactKind T>
-void collect_fterms(View<Data<FunctionExpression>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
+void collect_fterms(FunctionExpressionView element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 template<FactKind T, ArithmeticOpKind O>
-void collect_fterms(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
+void collect_fterms(LiftedUnaryOperatorView<O> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 template<FactKind T, OpKind O>
-void collect_fterms(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
+void collect_fterms(LiftedBinaryOperatorView<O> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 template<FactKind T, ArithmeticOpKind O>
-void collect_fterms(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
+void collect_fterms(LiftedMultiOperatorView<O> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 template<FactKind T>
-void collect_fterms(View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
+void collect_fterms(LiftedArithmeticOperatorView element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 template<FactKind T>
-void collect_fterms(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result);
+void collect_fterms(LiftedBooleanOperatorView element, UnorderedSet<Index<FunctionTerm<T>>>& result);
 
 /**
  * Implementations
@@ -64,7 +64,7 @@ inline void collect_fterms(float_t element, UnorderedSet<Index<FunctionTerm<T>>>
 }
 
 template<FactKind T1, FactKind T2>
-inline void collect_fterms(View<Index<FunctionTerm<T1>>, Repository> element, UnorderedSet<Index<FunctionTerm<T2>>>& result)
+inline void collect_fterms(FunctionTermView<T1> element, UnorderedSet<Index<FunctionTerm<T2>>>& result)
 {
     if constexpr (std::same_as<T1, T2>)
     {
@@ -73,45 +73,45 @@ inline void collect_fterms(View<Index<FunctionTerm<T1>>, Repository> element, Un
 }
 
 template<FactKind T>
-inline void collect_fterms(View<Data<FunctionExpression>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
+inline void collect_fterms(FunctionExpressionView element, UnorderedSet<Index<FunctionTerm<T>>>& result)
 {
     visit([&](auto&& arg) { collect_fterms(arg, result); }, element.get_variant());
 }
 
 template<FactKind T, ArithmeticOpKind O>
-inline void collect_fterms(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
+inline void collect_fterms(LiftedUnaryOperatorView<O> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
 {
     collect_fterms(element.get_arg(), result);
 }
 
 template<FactKind T, OpKind O>
-inline void collect_fterms(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
+inline void collect_fterms(LiftedBinaryOperatorView<O> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
 {
     collect_fterms(element.get_lhs(), result);
     collect_fterms(element.get_rhs(), result);
 }
 
 template<FactKind T, ArithmeticOpKind O>
-inline void collect_fterms(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
+inline void collect_fterms(LiftedMultiOperatorView<O> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
 {
     for (const auto& arg : element.get_args())
         collect_fterms(arg, result);
 }
 
 template<FactKind T>
-inline void collect_fterms(View<Data<ArithmeticOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
+inline void collect_fterms(LiftedArithmeticOperatorView element, UnorderedSet<Index<FunctionTerm<T>>>& result)
 {
     visit([&](auto&& arg) { collect_fterms(arg, result); }, element.get_variant());
 }
 
 template<FactKind T>
-inline void collect_fterms(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element, UnorderedSet<Index<FunctionTerm<T>>>& result)
+inline void collect_fterms(LiftedBooleanOperatorView element, UnorderedSet<Index<FunctionTerm<T>>>& result)
 {
     visit([&](auto&& arg) { collect_fterms(arg, result); }, element.get_variant());
 }
 
 template<FactKind T>
-inline auto collect_fterms(View<Data<BooleanOperator<Data<FunctionExpression>>>, Repository> element)
+inline auto collect_fterms(LiftedBooleanOperatorView element)
 {
     auto result = UnorderedSet<Index<FunctionTerm<T>>> {};
     visit([&](auto&& arg) { collect_fterms(arg, result); }, element.get_variant());

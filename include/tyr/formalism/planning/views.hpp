@@ -57,6 +57,7 @@
 #include "tyr/formalism/planning/object_view.hpp"
 #include "tyr/formalism/planning/predicate_view.hpp"
 #include "tyr/formalism/planning/task_view.hpp"
+#include "tyr/formalism/planning/term_view.hpp"
 #include "tyr/formalism/planning/unary_operator_view.hpp"
 #include "tyr/formalism/planning/variable_view.hpp"
 #include "tyr/formalism/views.hpp"

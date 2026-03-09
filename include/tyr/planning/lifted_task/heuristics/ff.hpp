@@ -90,7 +90,7 @@ public:
 
     const UnorderedSet<Index<formalism::planning::GroundAction>>& get_preferred_actions() override { return m_preferred_actions; }
 
-    const UnorderedSet<View<Index<formalism::planning::GroundAction>, formalism::planning::Repository>>& get_preferred_action_views() override
+    const UnorderedSet<formalism::planning::GroundActionView>& get_preferred_action_views() override
     {
         if (m_preferred_action_views_dirty)
         {
@@ -172,7 +172,7 @@ private:
 
     UnorderedSet<Index<formalism::planning::GroundAction>> m_relaxed_plan;
     UnorderedSet<Index<formalism::planning::GroundAction>> m_preferred_actions;
-    UnorderedSet<View<Index<formalism::planning::GroundAction>, formalism::planning::Repository>> m_preferred_action_views;
+    UnorderedSet<formalism::planning::GroundActionView> m_preferred_action_views;
     bool m_preferred_action_views_dirty;
 };
 

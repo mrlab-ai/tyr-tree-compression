@@ -50,61 +50,44 @@ namespace tyr::datalog
 inline float_t evaluate(float_t element, const FactSets& fact_sets);
 
 template<formalism::ArithmeticOpKind O>
-inline auto
-evaluate(View<Index<formalism::datalog::UnaryOperator<O, Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets);
+inline auto evaluate(formalism::datalog::GroundUnaryOperatorView<O> element, const FactSets& fact_sets);
 
 template<formalism::OpKind O>
-inline auto
-evaluate(View<Index<formalism::datalog::BinaryOperator<O, Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets);
+inline auto evaluate(formalism::datalog::GroundBinaryOperatorView<O> element, const FactSets& fact_sets);
 
 template<formalism::ArithmeticOpKind O>
-inline auto
-evaluate(View<Index<formalism::datalog::MultiOperator<O, Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets);
+inline auto evaluate(formalism::datalog::GroundMultiOperatorView<O> element, const FactSets& fact_sets);
 
 template<formalism::FactKind T>
     requires(!std::is_same_v<T, formalism::AuxiliaryTag>)
-inline float_t evaluate(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> element, const FactSets& fact_sets);
+inline float_t evaluate(formalism::datalog::GroundFunctionTermView<T> element, const FactSets& fact_sets);
 
-inline float_t evaluate(View<Index<formalism::datalog::GroundFunctionTerm<formalism::AuxiliaryTag>>, formalism::datalog::Repository> element,
-                        const FactSets& fact_sets);
+inline float_t evaluate(formalism::datalog::GroundFunctionTermView<formalism::AuxiliaryTag> element, const FactSets& fact_sets);
 
-inline float_t evaluate(View<Data<formalism::datalog::GroundFunctionExpression>, formalism::datalog::Repository> element, const FactSets& fact_sets);
+inline float_t evaluate(formalism::datalog::GroundFunctionExpressionView element, const FactSets& fact_sets);
 
-inline float_t
-evaluate(View<Data<formalism::datalog::ArithmeticOperator<Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets);
+inline float_t evaluate(formalism::datalog::GroundArithmeticOperatorView element, const FactSets& fact_sets);
 
-inline bool
-evaluate(View<Data<formalism::datalog::BooleanOperator<Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets);
+inline bool evaluate(formalism::datalog::GroundBooleanOperatorView element, const FactSets& fact_sets);
 
 // Implementations
 
 inline float_t evaluate(float_t element, const FactSets& fact_sets) { return element; }
 
 template<formalism::ArithmeticOpKind O>
-inline auto
-evaluate(View<Index<formalism::datalog::UnaryOperator<O, Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets)
+inline auto evaluate(formalism::datalog::GroundUnaryOperatorView<O> element, const FactSets& fact_sets)
 {
     return formalism::apply(O {}, evaluate(element.get_arg(), fact_sets));
 }
 
 template<formalism::OpKind O>
-inline auto
-evaluate(View<Index<formalism::datalog::BinaryOperator<O, Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets)
+inline auto evaluate(formalism::datalog::GroundBinaryOperatorView<O> element, const FactSets& fact_sets)
 {
     return formalism::apply(O {}, evaluate(element.get_lhs(), fact_sets), evaluate(element.get_rhs(), fact_sets));
 }
 
 template<formalism::ArithmeticOpKind O>
-inline auto
-evaluate(View<Index<formalism::datalog::MultiOperator<O, Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets)
+inline auto evaluate(formalism::datalog::GroundMultiOperatorView<O> element, const FactSets& fact_sets)
 {
     const auto child_fexprs = element.get_args();
 
@@ -116,34 +99,29 @@ evaluate(View<Index<formalism::datalog::MultiOperator<O, Data<formalism::datalog
 
 template<formalism::FactKind T>
     requires(!std::is_same_v<T, formalism::AuxiliaryTag>)
-inline float_t evaluate(View<Index<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> element, const FactSets& fact_sets)
+inline float_t evaluate(formalism::datalog::GroundFunctionTermView<T> element, const FactSets& fact_sets)
 {
     if (!fact_sets.template get<T>().function.contains(element.get_index()))
         return std::numeric_limits<float_t>::quiet_NaN();
     return fact_sets.template get<T>().function[element.get_index()];
 }
 
-inline float_t evaluate(View<Index<formalism::datalog::GroundFunctionTerm<formalism::AuxiliaryTag>>, formalism::datalog::Repository> element,
-                        const FactSets& fact_sets)
+inline float_t evaluate(formalism::datalog::GroundFunctionTermView<formalism::AuxiliaryTag> element, const FactSets& fact_sets)
 {
     throw std::logic_error("Program does not contain auxiliary function terms.");
 }
 
-inline float_t evaluate(View<Data<formalism::datalog::GroundFunctionExpression>, formalism::datalog::Repository> element, const FactSets& fact_sets)
+inline float_t evaluate(formalism::datalog::GroundFunctionExpressionView element, const FactSets& fact_sets)
 {
     return visit([&](auto&& arg) { return evaluate(arg, fact_sets); }, element.get_variant());
 }
 
-inline float_t
-evaluate(View<Data<formalism::datalog::ArithmeticOperator<Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets)
+inline float_t evaluate(formalism::datalog::GroundArithmeticOperatorView element, const FactSets& fact_sets)
 {
     return visit([&](auto&& arg) { return evaluate(arg, fact_sets); }, element.get_variant());
 }
 
-inline bool
-evaluate(View<Data<formalism::datalog::BooleanOperator<Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> element,
-         const FactSets& fact_sets)
+inline bool evaluate(formalism::datalog::GroundBooleanOperatorView element, const FactSets& fact_sets)
 {
     return visit([&](auto&& arg) { return evaluate(arg, fact_sets); }, element.get_variant());
 }
@@ -158,45 +136,33 @@ inline float_t evaluate_into_buffer(float_t element, const FactSets& fact_sets, 
 
 template<formalism::ArithmeticOpKind O>
 inline auto
-evaluate_into_buffer(View<Index<formalism::datalog::UnaryOperator<O, Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context);
+evaluate_into_buffer(formalism::datalog::LiftedUnaryOperatorView<O> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
 
 template<formalism::OpKind O>
 inline auto
-evaluate_into_buffer(View<Index<formalism::datalog::BinaryOperator<O, Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context);
+evaluate_into_buffer(formalism::datalog::LiftedBinaryOperatorView<O> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
 
 template<formalism::ArithmeticOpKind O>
 inline auto
-evaluate_into_buffer(View<Index<formalism::datalog::MultiOperator<O, Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context);
+evaluate_into_buffer(formalism::datalog::LiftedMultiOperatorView<O> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
 
 template<formalism::FactKind T>
     requires(!std::is_same_v<T, formalism::AuxiliaryTag>)
-inline float_t evaluate_into_buffer(View<Index<formalism::datalog::FunctionTerm<T>>, formalism::datalog::Repository> element,
-                                    const FactSets& fact_sets,
-                                    formalism::datalog::ConstGrounderContext& context);
+inline float_t
+evaluate_into_buffer(formalism::datalog::FunctionTermView<T> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
 
-inline float_t evaluate_into_buffer(View<Index<formalism::datalog::FunctionTerm<formalism::AuxiliaryTag>>, formalism::datalog::Repository> element,
-                                    const FactSets& fact_sets,
-                                    formalism::datalog::ConstGrounderContext& context);
-
-inline float_t evaluate_into_buffer(View<Data<formalism::datalog::FunctionExpression>, formalism::datalog::Repository> element,
+inline float_t evaluate_into_buffer(formalism::datalog::FunctionTermView<formalism::AuxiliaryTag> element,
                                     const FactSets& fact_sets,
                                     formalism::datalog::ConstGrounderContext& context);
 
 inline float_t
-evaluate_into_buffer(View<Data<formalism::datalog::ArithmeticOperator<Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context);
+evaluate_into_buffer(formalism::datalog::FunctionExpressionView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
+
+inline float_t
+evaluate_into_buffer(formalism::datalog::LiftedArithmeticOperatorView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
 
 inline bool
-evaluate_into_buffer(View<Data<formalism::datalog::BooleanOperator<Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context);
+evaluate_into_buffer(formalism::datalog::LiftedBooleanOperatorView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context);
 
 // Implementations
 
@@ -204,27 +170,21 @@ inline float_t evaluate_into_buffer(float_t element, const FactSets& fact_sets, 
 
 template<formalism::ArithmeticOpKind O>
 inline auto
-evaluate_into_buffer(View<Index<formalism::datalog::UnaryOperator<O, Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context)
+evaluate_into_buffer(formalism::datalog::LiftedUnaryOperatorView<O> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return formalism::apply(O {}, evaluate_into_buffer(element.get_arg(), fact_sets, context));
 }
 
 template<formalism::OpKind O>
 inline auto
-evaluate_into_buffer(View<Index<formalism::datalog::BinaryOperator<O, Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context)
+evaluate_into_buffer(formalism::datalog::LiftedBinaryOperatorView<O> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return formalism::apply(O {}, evaluate_into_buffer(element.get_lhs(), fact_sets, context), evaluate_into_buffer(element.get_rhs(), fact_sets, context));
 }
 
 template<formalism::ArithmeticOpKind O>
 inline auto
-evaluate_into_buffer(View<Index<formalism::datalog::MultiOperator<O, Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context)
+evaluate_into_buffer(formalism::datalog::LiftedMultiOperatorView<O> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     const auto child_fexprs = element.get_args();
 
@@ -237,9 +197,8 @@ evaluate_into_buffer(View<Index<formalism::datalog::MultiOperator<O, Data<formal
 
 template<formalism::FactKind T>
     requires(!std::is_same_v<T, formalism::AuxiliaryTag>)
-inline float_t evaluate_into_buffer(View<Index<formalism::datalog::FunctionTerm<T>>, formalism::datalog::Repository> element,
-                                    const FactSets& fact_sets,
-                                    formalism::datalog::ConstGrounderContext& context)
+inline float_t
+evaluate_into_buffer(formalism::datalog::FunctionTermView<T> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     auto ground_fterm_ptr = context.builder.template get_builder<formalism::datalog::GroundFunctionTerm<T>>();
     auto& ground_fterm = *ground_fterm_ptr;
@@ -255,32 +214,27 @@ inline float_t evaluate_into_buffer(View<Index<formalism::datalog::FunctionTerm<
     return fact_sets.template get<T>().function[program_ground_fterm->get_index()];
 }
 
-inline float_t evaluate_into_buffer(View<Index<formalism::datalog::FunctionTerm<formalism::AuxiliaryTag>>, formalism::datalog::Repository> element,
+inline float_t evaluate_into_buffer(formalism::datalog::FunctionTermView<formalism::AuxiliaryTag> element,
                                     const FactSets& fact_sets,
                                     formalism::datalog::ConstGrounderContext& context)
 {
     throw std::logic_error("Program does not contain auxiliary function terms.");
 }
 
-inline float_t evaluate_into_buffer(View<Data<formalism::datalog::FunctionExpression>, formalism::datalog::Repository> element,
-                                    const FactSets& fact_sets,
-                                    formalism::datalog::ConstGrounderContext& context)
+inline float_t
+evaluate_into_buffer(formalism::datalog::FunctionExpressionView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return visit([&](auto&& arg) { return evaluate_into_buffer(arg, fact_sets, context); }, element.get_variant());
 }
 
 inline float_t
-evaluate_into_buffer(View<Data<formalism::datalog::ArithmeticOperator<Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context)
+evaluate_into_buffer(formalism::datalog::LiftedArithmeticOperatorView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return visit([&](auto&& arg) { return evaluate_into_buffer(arg, fact_sets, context); }, element.get_variant());
 }
 
 inline bool
-evaluate_into_buffer(View<Data<formalism::datalog::BooleanOperator<Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                     const FactSets& fact_sets,
-                     formalism::datalog::ConstGrounderContext& context)
+evaluate_into_buffer(formalism::datalog::LiftedBooleanOperatorView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return visit([&](auto&& arg) { return evaluate_into_buffer(arg, fact_sets, context); }, element.get_variant());
 }
@@ -290,7 +244,7 @@ evaluate_into_buffer(View<Data<formalism::datalog::BooleanOperator<Data<formalis
  */
 
 template<formalism::FactKind T>
-inline bool is_applicable(View<Index<formalism::datalog::GroundLiteral<T>>, formalism::datalog::Repository> element, const FactSets& fact_sets)
+inline bool is_applicable(formalism::datalog::GroundLiteralView<T> element, const FactSets& fact_sets)
 {
     return fact_sets.template get<T>().predicate.contains(element.get_atom().get_index()) == element.get_polarity();
 }
@@ -310,7 +264,7 @@ is_applicable(View<DataList<formalism::datalog::BooleanOperator<Data<formalism::
 
 // GroundConjunctiveCondition
 
-inline bool is_applicable(View<Index<formalism::datalog::GroundConjunctiveCondition>, formalism::datalog::Repository> element, const FactSets& fact_sets)
+inline bool is_applicable(formalism::datalog::GroundConjunctiveConditionView element, const FactSets& fact_sets)
 {
     return is_applicable(element.template get_literals<formalism::StaticTag>(), fact_sets)     //
            && is_applicable(element.template get_literals<formalism::FluentTag>(), fact_sets)  //
@@ -319,19 +273,14 @@ inline bool is_applicable(View<Index<formalism::datalog::GroundConjunctiveCondit
 
 // GroundRule
 
-inline bool is_applicable(View<Index<formalism::datalog::GroundRule>, formalism::datalog::Repository> element, const FactSets& fact_sets)
-{
-    return is_applicable(element.get_body(), fact_sets);
-}
+inline bool is_applicable(formalism::datalog::GroundRuleView element, const FactSets& fact_sets) { return is_applicable(element.get_body(), fact_sets); }
 
 /**
  * is_valid_binding
  */
 
 template<formalism::FactKind T>
-inline bool is_valid_binding(View<Index<formalism::datalog::Literal<T>>, formalism::datalog::Repository> element,
-                             const FactSets& fact_sets,
-                             formalism::datalog::ConstGrounderContext& context)
+inline bool is_valid_binding(formalism::datalog::LiteralView<T> element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     auto ground_atom_ptr = context.builder.template get_builder<formalism::datalog::GroundAtom<T>>();
     auto& ground_atom = *ground_atom_ptr;
@@ -351,9 +300,7 @@ inline bool is_valid_binding(View<IndexList<formalism::datalog::Literal<T>>, for
 }
 
 inline bool
-is_valid_binding(View<Data<formalism::datalog::BooleanOperator<Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> element,
-                 const FactSets& fact_sets,
-                 formalism::datalog::ConstGrounderContext& context)
+is_valid_binding(formalism::datalog::LiftedBooleanOperatorView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return visit([&](auto&& arg) { return evaluate_into_buffer(arg, fact_sets, context); }, element.get_variant());
 }
@@ -366,9 +313,7 @@ is_valid_binding(View<DataList<formalism::datalog::BooleanOperator<Data<formalis
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_valid_binding(arg, fact_sets, context); });
 }
 
-inline bool is_valid_binding(View<Index<formalism::datalog::ConjunctiveCondition>, formalism::datalog::Repository> element,
-                             const FactSets& fact_sets,
-                             formalism::datalog::ConstGrounderContext& context)
+inline bool is_valid_binding(formalism::datalog::ConjunctiveConditionView element, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return is_valid_binding(element.template get_literals<formalism::StaticTag>(), fact_sets, context)     //
            && is_valid_binding(element.template get_literals<formalism::FluentTag>(), fact_sets, context)  //

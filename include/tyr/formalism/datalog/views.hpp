@@ -40,6 +40,7 @@
 #include "tyr/formalism/datalog/predicate_view.hpp"
 #include "tyr/formalism/datalog/program_view.hpp"
 #include "tyr/formalism/datalog/rule_view.hpp"
+#include "tyr/formalism/datalog/term_view.hpp"
 #include "tyr/formalism/datalog/unary_operator_view.hpp"
 #include "tyr/formalism/datalog/variable_view.hpp"
 #include "tyr/formalism/views.hpp"

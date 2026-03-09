@@ -81,16 +81,13 @@ public:
         return fact;
     }
 
-    Data<FDRFact<FluentTag>> get_fact(View<Index<GroundAtom<FluentTag>>, Repository> atom) { return get_fact(atom.get_index()); }
+    Data<FDRFact<FluentTag>> get_fact(GroundAtomView<FluentTag> atom) { return get_fact(atom.get_index()); }
 
-    View<Data<FDRFact<FluentTag>>, Repository> get_fact_view(View<Index<GroundAtom<FluentTag>>, Repository> atom)
-    {
-        return make_view(get_fact(atom), m_context);
-    }
+    FDRFactView<FluentTag> get_fact_view(GroundAtomView<FluentTag> atom) { return make_view(get_fact(atom), m_context); }
 
     Data<FDRFact<FluentTag>> get_fact(Index<GroundLiteral<FluentTag>> literal) { return get_fact(make_view(literal, m_context)); }
 
-    Data<FDRFact<FluentTag>> get_fact(View<Index<GroundLiteral<FluentTag>>, Repository> literal)
+    Data<FDRFact<FluentTag>> get_fact(GroundLiteralView<FluentTag> literal)
     {
         auto pos_fact = this->get_fact(literal.get_atom().get_index());
 
@@ -100,10 +97,7 @@ public:
         return Data<FDRFact<FluentTag>>(make_view(pos_fact, m_context).get_variable().get_index(), FDRValue { 0 });
     }
 
-    View<Data<FDRFact<FluentTag>>, Repository> get_fact_view(View<Index<GroundLiteral<FluentTag>>, Repository> literal)
-    {
-        return make_view(get_fact(literal), m_context);
-    }
+    FDRFactView<FluentTag> get_fact_view(GroundLiteralView<FluentTag> literal) { return make_view(get_fact(literal), m_context); }
 
     View<IndexList<FDRVariable<FluentTag>>, Repository> get_variables() const { return make_view(m_variables, m_context); }
 
@@ -119,10 +113,7 @@ class GeneralFDRContext
 {
 public:
     // Create mapping based on mutexes.
-    GeneralFDRContext(const std::vector<std::vector<View<Index<GroundAtom<FluentTag>>, Repository>>>& mutexes, Repository& context) :
-        m_context(context),
-        m_variables(),
-        m_mapping()
+    GeneralFDRContext(const std::vector<std::vector<GroundAtomView<FluentTag>>>& mutexes, Repository& context) : m_context(context), m_variables(), m_mapping()
     {
         auto buffer = buffer::Buffer();
         auto variable = Data<FDRVariable<FluentTag>>();
@@ -143,16 +134,13 @@ public:
 
     Data<FDRFact<FluentTag>> get_fact(Index<GroundAtom<FluentTag>> atom) const { return m_mapping.at(atom); }
 
-    Data<FDRFact<FluentTag>> get_fact(View<Index<GroundAtom<FluentTag>>, Repository> atom) const { return get_fact(atom.get_index()); }
+    Data<FDRFact<FluentTag>> get_fact(GroundAtomView<FluentTag> atom) const { return get_fact(atom.get_index()); }
 
-    View<Data<FDRFact<FluentTag>>, Repository> get_fact_view(View<Index<GroundAtom<FluentTag>>, Repository> atom)
-    {
-        return make_view(get_fact(atom), m_context);
-    }
+    FDRFactView<FluentTag> get_fact_view(GroundAtomView<FluentTag> atom) { return make_view(get_fact(atom), m_context); }
 
     Data<FDRFact<FluentTag>> get_fact(Index<GroundLiteral<FluentTag>> literal) const { return get_fact(make_view(literal, m_context)); }
 
-    Data<FDRFact<FluentTag>> get_fact(View<Index<GroundLiteral<FluentTag>>, Repository> literal) const
+    Data<FDRFact<FluentTag>> get_fact(GroundLiteralView<FluentTag> literal) const
     {
         auto fact = this->get_fact(literal.get_atom().get_index());
 
@@ -163,10 +151,7 @@ public:
         return fact;
     }
 
-    View<Data<FDRFact<FluentTag>>, Repository> get_fact_view(View<Index<GroundLiteral<FluentTag>>, Repository> literal)
-    {
-        return make_view(get_fact(literal), m_context);
-    }
+    FDRFactView<FluentTag> get_fact_view(GroundLiteralView<FluentTag> literal) { return make_view(get_fact(literal), m_context); }
 
     View<IndexList<FDRVariable<FluentTag>>, Repository> get_variables() const { return make_view(m_variables, m_context); }
 

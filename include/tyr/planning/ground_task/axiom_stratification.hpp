@@ -40,7 +40,7 @@ struct GroundAxiomStrata
 /// Source: https://users.cecs.anu.edu.au/~thiebaux/papers/ijcai03.pdf
 /// @param task is the task
 /// @return is the GroundAxiomStrata
-extern GroundAxiomStrata compute_ground_axiom_stratification(View<Index<formalism::planning::FDRTask>, formalism::planning::Repository> task);
+extern GroundAxiomStrata compute_ground_axiom_stratification(formalism::planning::FDRTaskView task);
 }
 
 #endif

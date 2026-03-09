@@ -57,11 +57,11 @@ public:
      * IndexableViewStateConcept
      */
 
-    bool test(View<Index<formalism::planning::GroundAtom<formalism::StaticTag>>, formalism::planning::Repository> view) const;
-    float_t get(View<Index<formalism::planning::GroundFunctionTerm<formalism::StaticTag>>, formalism::planning::Repository> view) const;
-    formalism::planning::FDRValue get(View<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::Repository> view) const;
-    float_t get(View<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, formalism::planning::Repository> view) const;
-    bool test(View<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, formalism::planning::Repository> view) const;
+    bool test(formalism::planning::GroundAtomView<formalism::StaticTag> view) const;
+    float_t get(formalism::planning::GroundFunctionTermView<formalism::StaticTag> view) const;
+    formalism::planning::FDRValue get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const;
+    float_t get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const;
+    bool test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const;
 
     /**
      * IterableStateConcept
@@ -127,31 +127,18 @@ inline const std::shared_ptr<StateRepository<LiftedTask>>& State<LiftedTask>::ge
 
 inline const UnpackedState<LiftedTask>& State<LiftedTask>::get_unpacked_state() const noexcept { return *m_unpacked; }
 
-inline bool State<LiftedTask>::test(View<Index<formalism::planning::GroundAtom<formalism::StaticTag>>, formalism::planning::Repository> view) const
-{
-    return test(view.get_index());
-}
+inline bool State<LiftedTask>::test(formalism::planning::GroundAtomView<formalism::StaticTag> view) const { return test(view.get_index()); }
 
-inline float_t State<LiftedTask>::get(View<Index<formalism::planning::GroundFunctionTerm<formalism::StaticTag>>, formalism::planning::Repository> view) const
+inline float_t State<LiftedTask>::get(formalism::planning::GroundFunctionTermView<formalism::StaticTag> view) const { return get(view.get_index()); }
+
+inline formalism::planning::FDRValue State<LiftedTask>::get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const
 {
     return get(view.get_index());
 }
 
-inline formalism::planning::FDRValue
-State<LiftedTask>::get(View<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::Repository> view) const
-{
-    return get(view.get_index());
-}
+inline float_t State<LiftedTask>::get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const { return get(view.get_index()); }
 
-inline float_t State<LiftedTask>::get(View<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, formalism::planning::Repository> view) const
-{
-    return get(view.get_index());
-}
-
-inline bool State<LiftedTask>::test(View<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, formalism::planning::Repository> view) const
-{
-    return test(view.get_index());
-}
+inline bool State<LiftedTask>::test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const { return test(view.get_index()); }
 
 inline auto State<LiftedTask>::get_static_atoms_view() const noexcept
 {

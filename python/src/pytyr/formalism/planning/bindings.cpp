@@ -67,7 +67,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Object>, Repository>;
+        using V = ObjectView;
 
         nb::class_<V>(m, "Object")  //
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -78,7 +78,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Binding>, Repository>;
+        using V = BindingView;
 
         nb::class_<V>(m, "Binding")  //
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -89,7 +89,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Variable>, Repository>;
+        using V = VariableView;
 
         nb::class_<V>(m, "Variable")  //
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -102,7 +102,7 @@ void bind_module_definitions(nb::module_& m)
     bind_fixed_uint<ParameterIndex>(m, "ParameterIndex");
 
     {
-        using V = View<Data<Term>, Repository>;
+        using V = TermView;
 
         nb::class_<V>(m, "Term")  //
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -171,7 +171,7 @@ void bind_module_definitions(nb::module_& m)
     bind_boolean_operator<Data<FunctionExpression>>(m, "BooleanOperator");
 
     {
-        using V = View<Data<FunctionExpression>, Repository>;
+        using V = FunctionExpressionView;
 
         nb::class_<V>(m, "FunctionExpression")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -182,7 +182,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<ConjunctiveCondition>, Repository>;
+        using V = ConjunctiveConditionView;
 
         nb::class_<V>(m, "ConjunctiveCondition")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -208,7 +208,7 @@ void bind_module_definitions(nb::module_& m)
     bind_numeric_effect_operator<AuxiliaryTag>(m, "AuxiliaryNumericEffectOperator");
 
     {
-        using V = View<Index<ConjunctiveEffect>, Repository>;
+        using V = ConjunctiveEffectView;
 
         nb::class_<V>(m, "ConjunctiveEffect")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -221,7 +221,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<ConditionalEffect>, Repository>;
+        using V = ConditionalEffectView;
 
         nb::class_<V>(m, "ConditionalEffect")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -235,7 +235,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Action>, Repository>;
+        using V = ActionView;
 
         nb::class_<V>(m, "Action")  //
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -251,7 +251,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Axiom>, Repository>;
+        using V = AxiomView;
 
         nb::class_<V>(m, "Axiom")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -283,7 +283,7 @@ void bind_module_definitions(nb::module_& m)
     bind_boolean_operator<Data<GroundFunctionExpression>>(m, "GroundBooleanOperator");
 
     {
-        using V = View<Data<GroundFunctionExpression>, Repository>;
+        using V = GroundFunctionExpressionView;
 
         nb::class_<V>(m, "GroundFunctionExpression")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -294,7 +294,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<GroundConjunctiveCondition>, Repository>;
+        using V = GroundConjunctiveConditionView;
 
         nb::class_<V>(m, "GroundConjunctiveCondition")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -318,7 +318,7 @@ void bind_module_definitions(nb::module_& m)
     bind_ground_numeric_effect_operator<AuxiliaryTag>(m, "AuxiliaryGroundNumericEffectOperator");
 
     {
-        using V = View<Index<GroundConjunctiveEffect>, Repository>;
+        using V = GroundConjunctiveEffectView;
 
         nb::class_<V>(m, "GroundConjunctiveEffect")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -331,7 +331,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<GroundConditionalEffect>, Repository>;
+        using V = GroundConditionalEffectView;
 
         nb::class_<V>(m, "GroundConditionalEffect")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -343,7 +343,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<GroundAction>, Repository>;
+        using V = GroundActionView;
 
         nb::class_<V>(m, "GroundAction")  //
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -357,7 +357,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<GroundAxiom>, Repository>;
+        using V = GroundAxiomView;
 
         nb::class_<V>(m, "GroundAxiom")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -379,7 +379,7 @@ void bind_module_definitions(nb::module_& m)
         .def("__repr__", [](const Maximize& self) { return to_string(self); });
 
     {
-        using V = View<Index<Metric>, Repository>;
+        using V = MetricView;
 
         nb::class_<V>(m, "Metric")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -391,7 +391,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Domain>, Repository>;
+        using V = DomainView;
 
         nb::class_<V>(m, "Domain")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -411,7 +411,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<Task>, Repository>;
+        using V = TaskView;
 
         nb::class_<V>(m, "LiftedTask")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -433,7 +433,7 @@ void bind_module_definitions(nb::module_& m)
     }
 
     {
-        using V = View<Index<FDRTask>, Repository>;
+        using V = FDRTaskView;
 
         nb::class_<V>(m, "GroundTask")
             .def("__str__", [](const V& self) { return to_string(self); })
@@ -465,12 +465,12 @@ void bind_module_definitions(nb::module_& m)
     nb::class_<Repository>(m, "Repository");
 
     nb::class_<BinaryFDRContext>(m, "BinaryFDRContext")  //
-        .def("get_fact", nb::overload_cast<View<Index<GroundAtom<FluentTag>>, Repository>>(&BinaryFDRContext::get_fact_view), "atom"_a)
-        .def("get_fact", nb::overload_cast<View<Index<GroundLiteral<FluentTag>>, Repository>>(&BinaryFDRContext::get_fact_view), "literal"_a);
+        .def("get_fact", nb::overload_cast<GroundAtomView<FluentTag>>(&BinaryFDRContext::get_fact_view), "atom"_a)
+        .def("get_fact", nb::overload_cast<GroundLiteralView<FluentTag>>(&BinaryFDRContext::get_fact_view), "literal"_a);
 
     nb::class_<GeneralFDRContext>(m, "GeneralFDRContext")  //
-        .def("get_fact", nb::overload_cast<View<Index<GroundAtom<FluentTag>>, Repository>>(&GeneralFDRContext::get_fact_view), "atom"_a)
-        .def("get_fact", nb::overload_cast<View<Index<GroundLiteral<FluentTag>>, Repository>>(&GeneralFDRContext::get_fact_view), "literal"_a);
+        .def("get_fact", nb::overload_cast<GroundAtomView<FluentTag>>(&GeneralFDRContext::get_fact_view), "atom"_a)
+        .def("get_fact", nb::overload_cast<GroundLiteralView<FluentTag>>(&GeneralFDRContext::get_fact_view), "literal"_a);
 }
 
 }
