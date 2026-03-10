@@ -8,9 +8,7 @@ Tyr is designed to address several challenges in modern planning systems:
 
 3. **Support for expressive numeric planning formalisms** across both grounded and lifted reasoning paradigms (see [Supported PDDL Features](docs/PDDL_SUPPORT.md)).
 
-4. **Scalable reasoning** through a parallel architecture with memory management based on hierarchical arenas (domain ← tasks ← workers) and object pools for recycling frequently allocated objects such as states.
-
-5. **Integration of learning and reasoning** by supporting collections of planning tasks over a shared planning domain.
+4. **Integration of learning and reasoning** by supporting collections of planning tasks over a shared planning domain.
   
 # Getting Started
 
