@@ -199,7 +199,7 @@ inline bool is_applicable(formalism::planning::GroundLiteralView<formalism::Deri
 }
 
 template<typename Task, formalism::FactKind T>
-inline bool is_applicable(View<IndexList<formalism::planning::GroundLiteral<T>>, formalism::planning::Repository> elements, const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundLiteralListView<T> elements, const StateContext<Task>& context)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable(arg, context); });
 }
@@ -211,16 +211,13 @@ inline bool is_applicable(formalism::planning::FDRFactView<formalism::FluentTag>
 }
 
 template<typename Task>
-inline bool is_applicable(View<DataList<formalism::planning::FDRFact<formalism::FluentTag>>, formalism::planning::Repository> elements,
-                          const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::FDRFactListView<formalism::FluentTag> elements, const StateContext<Task>& context)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable(arg, context); });
 }
 
 template<typename Task>
-inline bool is_applicable(
-    View<DataList<formalism::planning::BooleanOperator<Data<formalism::planning::GroundFunctionExpression>>>, formalism::planning::Repository> elements,
-    const StateContext<Task>& context)
+inline bool is_applicable(formalism::planning::GroundBooleanOperatorListView elements, const StateContext<Task>& context)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return evaluate(arg, context); });
 }
@@ -259,7 +256,7 @@ inline bool is_applicable(formalism::planning::GroundNumericEffectOperatorView<f
 }
 
 template<typename Task>
-inline bool is_applicable(View<DataList<formalism::planning::GroundNumericEffectOperator<formalism::FluentTag>>, formalism::planning::Repository> elements,
+inline bool is_applicable(formalism::planning::GroundNumericEffectOperatorListView<formalism::FluentTag> elements,
                           const StateContext<Task>& context,
                           formalism::planning::EffectFamilyList& ref_fluent_effect_families)
 {
@@ -305,7 +302,7 @@ inline bool is_applicable(formalism::planning::GroundConjunctiveEffectView eleme
 // GroundConditionalEffectList
 
 template<typename Task>
-inline bool are_applicable_if_fires(View<IndexList<formalism::planning::GroundConditionalEffect>, formalism::planning::Repository> elements,
+inline bool are_applicable_if_fires(formalism::planning::GroundConditionalEffectListView elements,
                                     const StateContext<Task>& context,
                                     formalism::planning::EffectFamilyList& out_fluent_effect_families)
 {
@@ -343,8 +340,7 @@ inline bool is_statically_applicable(formalism::planning::GroundLiteralView<form
     return tyr::test(uint_t(element.get_atom().get_index()), static_atoms) == element.get_polarity();
 }
 
-inline bool is_statically_applicable(View<IndexList<formalism::planning::GroundLiteral<formalism::StaticTag>>, formalism::planning::Repository> elements,
-                                     const boost::dynamic_bitset<>& static_atoms)
+inline bool is_statically_applicable(formalism::planning::GroundLiteralListView<formalism::StaticTag> elements, const boost::dynamic_bitset<>& static_atoms)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_statically_applicable(arg, static_atoms); });
 }

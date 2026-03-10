@@ -85,7 +85,7 @@ std::vector<std::pair<DomainListList, DomainListListList>> to_list(const std::ve
 }
 
 template<f::FactKind T>
-DomainSetListList initialize_predicate_domain_sets(View<IndexList<f::Predicate<T>>, fp::Repository> predicates)
+DomainSetListList initialize_predicate_domain_sets(fp::PredicateListView<T> predicates)
 {
     auto predicate_domain_sets = DomainSetListList(predicates.size());
 
@@ -96,7 +96,7 @@ DomainSetListList initialize_predicate_domain_sets(View<IndexList<f::Predicate<T
 }
 
 template<f::FactKind T>
-void insert_into_predicate_domain_sets(View<IndexList<fp::GroundAtom<T>>, fp::Repository> atoms, DomainSetListList& predicate_domain_sets)
+void insert_into_predicate_domain_sets(fp::GroundAtomListView<T> atoms, DomainSetListList& predicate_domain_sets)
 {
     for (const auto atom : atoms)
     {
@@ -108,7 +108,7 @@ void insert_into_predicate_domain_sets(View<IndexList<fp::GroundAtom<T>>, fp::Re
 }
 
 template<f::FactKind T>
-DomainSetListList initialize_function_domain_sets(View<IndexList<f::Function<T>>, fp::Repository> functions)
+DomainSetListList initialize_function_domain_sets(fp::FunctionListView<T> functions)
 {
     auto function_domain_sets = DomainSetListList(functions.size());
 
@@ -119,7 +119,7 @@ DomainSetListList initialize_function_domain_sets(View<IndexList<f::Function<T>>
 }
 
 template<f::FactKind T>
-void insert_into_function_domain_sets(View<IndexList<fp::GroundFunctionTermValue<T>>, fp::Repository> fterm_values, DomainSetListList& function_domain_sets)
+void insert_into_function_domain_sets(fp::GroundFunctionTermValueListView<T> fterm_values, DomainSetListList& function_domain_sets)
 {
     for (const auto term_value : fterm_values)
     {

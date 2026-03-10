@@ -99,7 +99,7 @@ public:
 
     FDRFactView<FluentTag> get_fact_view(GroundLiteralView<FluentTag> literal) { return make_view(get_fact(literal), m_context); }
 
-    View<IndexList<FDRVariable<FluentTag>>, Repository> get_variables() const { return make_view(m_variables, m_context); }
+    FDRVariableListView<FluentTag> get_variables() const { return make_view(m_variables, m_context); }
 
 private:
     Repository& m_context;
@@ -153,7 +153,7 @@ public:
 
     FDRFactView<FluentTag> get_fact_view(GroundLiteralView<FluentTag> literal) { return make_view(get_fact(literal), m_context); }
 
-    View<IndexList<FDRVariable<FluentTag>>, Repository> get_variables() const { return make_view(m_variables, m_context); }
+    FDRVariableListView<FluentTag> get_variables() const { return make_view(m_variables, m_context); }
 
 private:
     Repository& m_context;

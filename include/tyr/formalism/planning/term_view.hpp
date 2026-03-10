@@ -24,6 +24,8 @@
 namespace tyr::formalism::planning
 {
 using TermView = View<Data<Term>, Repository>;
+
+using TermListView = View<DataList<Term>, Repository>;
 }
 
 #endif

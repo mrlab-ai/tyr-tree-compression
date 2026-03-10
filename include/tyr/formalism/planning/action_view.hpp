@@ -57,6 +57,8 @@ public:
 namespace formalism::planning
 {
 using ActionView = View<Index<Action>, Repository>;
+
+using ActionListView = View<IndexList<Action>, Repository>;
 }
 }
 

@@ -56,6 +56,13 @@ template<OpKind Op>
 using LiftedMultiOperatorView = View<Index<MultiOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<OpKind Op>
 using GroundMultiOperatorView = View<Index<MultiOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
+
+template<OpKind Op, typename T>
+using MultiOperatorListView = View<IndexList<MultiOperator<Op, T>>, Repository>;
+template<OpKind Op>
+using LiftedMultiOperatorListView = View<IndexList<MultiOperator<Op, Data<FunctionExpression>>>, Repository>;
+template<OpKind Op>
+using GroundMultiOperatorListView = View<IndexList<MultiOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }
 }
 

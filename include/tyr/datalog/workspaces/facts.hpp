@@ -37,13 +37,13 @@ struct FactsWorkspace
     PredicateFactSets<formalism::FluentTag> goal_fact_sets;
 
     FactsWorkspace() = default;
-    explicit FactsWorkspace(View<IndexList<formalism::Predicate<formalism::FluentTag>>, formalism::datalog::Repository> predicates,
-                            View<IndexList<formalism::Function<formalism::FluentTag>>, formalism::datalog::Repository> functions,
+    explicit FactsWorkspace(formalism::datalog::PredicateListView<formalism::FluentTag> predicates,
+                            formalism::datalog::FunctionListView<formalism::FluentTag> functions,
                             const analysis::DomainListListList& predicate_domains,
                             const analysis::DomainListListList& function_domains,
                             size_t num_objects,
-                            View<IndexList<formalism::datalog::GroundAtom<formalism::FluentTag>>, formalism::datalog::Repository> atoms,
-                            View<IndexList<formalism::datalog::GroundFunctionTermValue<formalism::FluentTag>>, formalism::datalog::Repository> fterm_values);
+                            formalism::datalog::GroundAtomListView<formalism::FluentTag> atoms,
+                            formalism::datalog::GroundFunctionTermValueListView<formalism::FluentTag> fterm_values);
 
     void reset();
 };
@@ -53,14 +53,13 @@ struct ConstFactsWorkspace
     const TaggedFactSets<formalism::StaticTag> fact_sets;
     const TaggedAssignmentSets<formalism::StaticTag> assignment_sets;
 
-    explicit ConstFactsWorkspace(
-        View<IndexList<formalism::Predicate<formalism::StaticTag>>, formalism::datalog::Repository> predicates,
-        View<IndexList<formalism::Function<formalism::StaticTag>>, formalism::datalog::Repository> functions,
-        const analysis::DomainListListList& predicate_domains,
-        const analysis::DomainListListList& function_domains,
-        size_t num_objects,
-        View<IndexList<formalism::datalog::GroundAtom<formalism::StaticTag>>, formalism::datalog::Repository> atoms,
-        View<IndexList<formalism::datalog::GroundFunctionTermValue<formalism::StaticTag>>, formalism::datalog::Repository> fterm_values);
+    explicit ConstFactsWorkspace(formalism::datalog::PredicateListView<formalism::StaticTag> predicates,
+                                 formalism::datalog::FunctionListView<formalism::StaticTag> functions,
+                                 const analysis::DomainListListList& predicate_domains,
+                                 const analysis::DomainListListList& function_domains,
+                                 size_t num_objects,
+                                 formalism::datalog::GroundAtomListView<formalism::StaticTag> atoms,
+                                 formalism::datalog::GroundFunctionTermValueListView<formalism::StaticTag> fterm_values);
 };
 
 }

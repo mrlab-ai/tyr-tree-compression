@@ -24,6 +24,8 @@
 namespace tyr::formalism::datalog
 {
 using TermView = View<Data<Term>, Repository>;
+
+using TermListView = View<DataList<Term>, Repository>;
 }
 
 #endif

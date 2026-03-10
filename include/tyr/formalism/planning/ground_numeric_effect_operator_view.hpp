@@ -48,6 +48,9 @@ namespace formalism::planning
 {
 template<FactKind T>
 using GroundNumericEffectOperatorView = View<Data<GroundNumericEffectOperator<T>>, Repository>;
+
+template<FactKind T>
+using GroundNumericEffectOperatorListView = View<DataList<GroundNumericEffectOperator<T>>, Repository>;
 }
 }
 

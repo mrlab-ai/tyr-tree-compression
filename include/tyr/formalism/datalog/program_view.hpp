@@ -74,6 +74,8 @@ public:
 namespace formalism::datalog
 {
 using ProgramView = View<Index<Program>, Repository>;
+
+using ProgramListView = View<IndexList<Program>, Repository>;
 }
 }
 

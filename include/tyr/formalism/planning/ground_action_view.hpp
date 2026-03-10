@@ -56,6 +56,8 @@ public:
 namespace formalism::planning
 {
 using GroundActionView = View<Index<GroundAction>, Repository>;
+
+using GroundActionListView = View<IndexList<GroundAction>, Repository>;
 }
 }
 

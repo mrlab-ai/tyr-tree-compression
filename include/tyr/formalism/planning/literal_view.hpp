@@ -51,6 +51,9 @@ namespace formalism::planning
 {
 template<FactKind T>
 using LiteralView = View<Index<Literal<T>>, Repository>;
+
+template<FactKind T>
+using LiteralListView = View<IndexList<Literal<T>>, Repository>;
 }
 }
 

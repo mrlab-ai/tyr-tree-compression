@@ -151,7 +151,7 @@ static auto create_ground_axiom(fp::GroundAxiomView element, fp::GeneralFDRConte
 }
 
 // TODO: create stronger mutex groups
-static auto create_mutex_groups(View<IndexList<fp::GroundAtom<f::FluentTag>>, fp::Repository> atoms, fp::MergeContext& context)
+static auto create_mutex_groups(fp::GroundAtomListView<f::FluentTag> atoms, fp::MergeContext& context)
 {
     auto mutex_groups = std::vector<std::vector<fp::GroundAtomView<f::FluentTag>>> {};
 
@@ -166,11 +166,11 @@ static auto create_mutex_groups(View<IndexList<fp::GroundAtom<f::FluentTag>>, fp
 }
 
 static auto create_fdr_task(const fp::PlanningTask& planning_task,
-                            View<IndexList<fp::GroundAtom<f::FluentTag>>, fp::Repository> fluent_atoms,
-                            View<IndexList<fp::GroundAtom<f::DerivedTag>>, fp::Repository> derived_atoms,
-                            View<IndexList<fp::GroundFunctionTerm<f::FluentTag>>, fp::Repository> fluent_fterms,
-                            View<IndexList<fp::GroundAction>, fp::Repository> actions,
-                            View<IndexList<fp::GroundAxiom>, fp::Repository> axioms)
+                            fp::GroundAtomListView<f::FluentTag> fluent_atoms,
+                            fp::GroundAtomListView<f::DerivedTag> derived_atoms,
+                            fp::GroundFunctionTermListView<f::FluentTag> fluent_fterms,
+                            fp::GroundActionListView actions,
+                            fp::GroundAxiomListView axioms)
 {
     auto task = planning_task.get_task();
     auto repository = std::make_shared<fp::Repository>(planning_task.get_domain().get_repository().get());

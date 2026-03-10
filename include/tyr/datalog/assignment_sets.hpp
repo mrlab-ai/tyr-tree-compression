@@ -199,9 +199,7 @@ private:
 public:
     PredicateAssignmentSets() = default;
 
-    PredicateAssignmentSets(View<IndexList<formalism::Predicate<T>>, formalism::datalog::Repository> predicates,
-                            const analysis::DomainListListList& predicate_domains,
-                            size_t num_objects) :
+    PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates, const analysis::DomainListListList& predicate_domains, size_t num_objects) :
         m_sets()
     {
         /* Validate inputs. */
@@ -221,7 +219,7 @@ public:
             set.reset();
     }
 
-    void insert(View<IndexList<formalism::datalog::GroundAtom<T>>, formalism::datalog::Repository> ground_atoms)
+    void insert(formalism::datalog::GroundAtomListView<T> ground_atoms)
     {
         for (const auto ground_atom : ground_atoms)
             insert(ground_atom);
@@ -315,9 +313,7 @@ private:
 public:
     FunctionAssignmentSets() = default;
 
-    FunctionAssignmentSets(View<IndexList<formalism::Function<T>>, formalism::datalog::Repository> functions,
-                           const analysis::DomainListListList& function_domains,
-                           size_t num_objects) :
+    FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions, const analysis::DomainListListList& function_domains, size_t num_objects) :
         m_sets()
     {
         /* Validate inputs. */
@@ -340,13 +336,13 @@ public:
         m_sets[function_term.get_function().get_index().get_value()].insert(function_term, value);
     }
 
-    void insert(View<IndexList<formalism::datalog::GroundFunctionTerm<T>>, formalism::datalog::Repository> function_terms, const std::vector<float_t>& values)
+    void insert(formalism::datalog::GroundFunctionTermListView<T> function_terms, const std::vector<float_t>& values)
     {
         for (size_t i = 0; i < function_terms.size(); ++i)
             m_sets[function_terms[i].get_function().get_index().get_value()].insert(function_terms[i], values[i]);
     }
 
-    void insert(View<IndexList<formalism::datalog::GroundFunctionTermValue<T>>, formalism::datalog::Repository> fterm_values)
+    void insert(formalism::datalog::GroundFunctionTermValueListView<T> fterm_values)
     {
         for (size_t i = 0; i < fterm_values.size(); ++i)
             m_sets[fterm_values[i].get_fterm().get_function().get_index().get_value()].insert(fterm_values[i]);
@@ -368,8 +364,8 @@ struct TaggedAssignmentSets
 
     TaggedAssignmentSets() = default;
 
-    TaggedAssignmentSets(View<IndexList<formalism::Predicate<T>>, formalism::datalog::Repository> predicates,
-                         View<IndexList<formalism::Function<T>>, formalism::datalog::Repository> functions,
+    TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
+                         formalism::datalog::FunctionListView<T> functions,
                          const analysis::DomainListListList& predicate_domains,
                          const analysis::DomainListListList& function_domains,
                          size_t num_objects) :
@@ -378,8 +374,8 @@ struct TaggedAssignmentSets
     {
     }
 
-    TaggedAssignmentSets(View<IndexList<formalism::Predicate<T>>, formalism::datalog::Repository> predicates,
-                         View<IndexList<formalism::Function<T>>, formalism::datalog::Repository> functions,
+    TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
+                         formalism::datalog::FunctionListView<T> functions,
                          const analysis::DomainListListList& predicate_domains,
                          const analysis::DomainListListList& function_domains,
                          size_t num_objects,

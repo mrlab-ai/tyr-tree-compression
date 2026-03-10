@@ -55,6 +55,8 @@ public:
 namespace formalism::datalog
 {
 using RuleView = View<Index<Rule>, Repository>;
+
+using RuleListView = View<IndexList<Rule>, Repository>;
 }
 }
 

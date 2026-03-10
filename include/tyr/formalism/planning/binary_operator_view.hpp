@@ -68,6 +68,13 @@ template<OpKind Op>
 using LiftedBinaryOperatorView = View<Index<BinaryOperator<Op, Data<FunctionExpression>>>, Repository>;
 template<OpKind Op>
 using GroundBinaryOperatorView = View<Index<BinaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
+
+template<OpKind Op, typename T>
+using BinaryOperatorListView = View<IndexList<BinaryOperator<Op, T>>, Repository>;
+template<OpKind Op>
+using LiftedBinaryOperatorListView = View<IndexList<BinaryOperator<Op, Data<FunctionExpression>>>, Repository>;
+template<OpKind Op>
+using GroundBinaryOperatorListView = View<IndexList<BinaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 }
 }
 

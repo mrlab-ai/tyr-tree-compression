@@ -58,6 +58,8 @@ public:
 namespace formalism::datalog
 {
 using ConjunctiveConditionView = View<Index<ConjunctiveCondition>, Repository>;
+
+using ConjunctiveConditionListView = View<IndexList<ConjunctiveCondition>, Repository>;
 }
 }
 

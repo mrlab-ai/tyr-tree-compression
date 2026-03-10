@@ -52,6 +52,9 @@ namespace formalism::planning
 {
 template<FactKind T>
 using GroundFunctionTermView = View<Index<GroundFunctionTerm<T>>, Repository>;
+
+template<FactKind T>
+using GroundFunctionTermListView = View<IndexList<GroundFunctionTerm<T>>, Repository>;
 }
 }
 

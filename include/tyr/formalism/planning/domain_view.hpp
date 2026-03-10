@@ -69,6 +69,8 @@ public:
 namespace formalism::planning
 {
 using DomainView = View<Index<Domain>, Repository>;
+
+using DomainListView = View<IndexList<Domain>, Repository>;
 }
 }
 

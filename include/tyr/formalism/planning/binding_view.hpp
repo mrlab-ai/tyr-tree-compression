@@ -24,6 +24,8 @@
 namespace tyr::formalism::planning
 {
 using BindingView = View<Index<Binding>, Repository>;
+
+using BindingListView = View<IndexList<Binding>, Repository>;
 }
 
 #endif

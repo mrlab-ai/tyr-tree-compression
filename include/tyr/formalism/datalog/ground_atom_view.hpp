@@ -52,6 +52,9 @@ namespace formalism::datalog
 {
 template<formalism::FactKind T>
 using GroundAtomView = View<Index<GroundAtom<T>>, Repository>;
+
+template<formalism::FactKind T>
+using GroundAtomListView = View<IndexList<GroundAtom<T>>, Repository>;
 }
 }
 

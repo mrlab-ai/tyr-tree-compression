@@ -55,6 +55,8 @@ public:
 namespace formalism::datalog
 {
 using GroundRuleView = View<Index<GroundRule>, Repository>;
+
+using GroundRuleListView = View<IndexList<GroundRule>, Repository>;
 }
 }
 

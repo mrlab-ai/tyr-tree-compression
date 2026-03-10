@@ -92,6 +92,8 @@ public:
 namespace formalism::planning
 {
 using FDRTaskView = View<Index<FDRTask>, Repository>;
+
+using FDRTaskListView = View<IndexList<FDRTask>, Repository>;
 }
 }
 

@@ -55,6 +55,8 @@ public:
 namespace formalism::planning
 {
 using GroundConjunctiveConditionView = View<Index<GroundConjunctiveCondition>, Repository>;
+
+using GroundConjunctiveConditionListView = View<IndexList<GroundConjunctiveCondition>, Repository>;
 }
 }
 

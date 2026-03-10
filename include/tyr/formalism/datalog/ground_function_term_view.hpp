@@ -52,6 +52,9 @@ namespace formalism::datalog
 {
 template<formalism::FactKind T>
 using GroundFunctionTermView = View<Index<GroundFunctionTerm<T>>, Repository>;
+
+template<formalism::FactKind T>
+using GroundFunctionTermListView = View<IndexList<GroundFunctionTerm<T>>, Repository>;
 }
 }
 

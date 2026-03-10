@@ -48,6 +48,8 @@ public:
 namespace formalism::datalog
 {
 using FunctionExpressionView = View<Data<FunctionExpression>, Repository>;
+
+using FunctionExpressionListView = View<DataList<FunctionExpression>, Repository>;
 }
 }
 

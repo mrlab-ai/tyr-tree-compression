@@ -25,6 +25,9 @@ namespace tyr::formalism::planning
 {
 template<FactKind T>
 using PredicateView = View<Index<Predicate<T>>, Repository>;
+
+template<FactKind T>
+using PredicateListView = View<IndexList<Predicate<T>>, Repository>;
 }
 
 #endif

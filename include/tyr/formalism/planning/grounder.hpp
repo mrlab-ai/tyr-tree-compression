@@ -39,7 +39,7 @@ struct GrounderContext
     IndexList<Object>& binding;
 };
 
-inline auto ground(View<DataList<Term>, Repository> element, GrounderContext& context)
+inline auto ground(TermListView element, GrounderContext& context)
 {
     // Fetch and clear
     auto binding_ptr = context.builder.template get_builder<Binding>();

@@ -24,13 +24,13 @@ namespace fd = tyr::formalism::datalog;
 namespace tyr::datalog
 {
 
-FactsWorkspace::FactsWorkspace(View<IndexList<f::Predicate<f::FluentTag>>, fd::Repository> predicates,
-                               View<IndexList<f::Function<f::FluentTag>>, fd::Repository> functions,
+FactsWorkspace::FactsWorkspace(fd::PredicateListView<f::FluentTag> predicates,
+                               fd::FunctionListView<f::FluentTag> functions,
                                const a::DomainListListList& predicate_domains,
                                const a::DomainListListList& function_domains,
                                size_t num_objects,
-                               View<IndexList<fd::GroundAtom<formalism::FluentTag>>, fd::Repository> atoms,
-                               View<IndexList<fd::GroundFunctionTermValue<formalism::FluentTag>>, fd::Repository> fterm_values) :
+                               fd::GroundAtomListView<formalism::FluentTag> atoms,
+                               fd::GroundFunctionTermValueListView<formalism::FluentTag> fterm_values) :
     fact_sets(predicates, functions, atoms, fterm_values),
     assignment_sets(predicates, functions, predicate_domains, function_domains, num_objects, fact_sets),
     delta_fact_sets(predicates, functions),
@@ -45,13 +45,13 @@ void FactsWorkspace::reset()
     delta_fact_sets.reset();
 }
 
-ConstFactsWorkspace::ConstFactsWorkspace(View<IndexList<f::Predicate<f::StaticTag>>, fd::Repository> predicates,
-                                         View<IndexList<f::Function<f::StaticTag>>, fd::Repository> functions,
+ConstFactsWorkspace::ConstFactsWorkspace(fd::PredicateListView<f::StaticTag> predicates,
+                                         fd::FunctionListView<f::StaticTag> functions,
                                          const a::DomainListListList& predicate_domains,
                                          const a::DomainListListList& function_domains,
                                          size_t num_objects,
-                                         View<IndexList<fd::GroundAtom<f::StaticTag>>, fd::Repository> atoms,
-                                         View<IndexList<fd::GroundFunctionTermValue<f::StaticTag>>, fd::Repository> fterm_values) :
+                                         fd::GroundAtomListView<f::StaticTag> atoms,
+                                         fd::GroundFunctionTermValueListView<f::StaticTag> fterm_values) :
     fact_sets(predicates, functions, atoms, fterm_values),
     assignment_sets(predicates, functions, predicate_domains, function_domains, num_objects, fact_sets)
 {

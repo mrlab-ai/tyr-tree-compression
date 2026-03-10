@@ -54,6 +54,8 @@ public:
 namespace formalism::planning
 {
 using AxiomView = View<Index<Axiom>, Repository>;
+
+using AxiomListView = View<IndexList<Axiom>, Repository>;
 }
 }
 

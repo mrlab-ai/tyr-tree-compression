@@ -53,6 +53,9 @@ namespace formalism::planning
 {
 template<formalism::FactKind T>
 using FDRFactView = View<Data<FDRFact<T>>, Repository>;
+
+template<formalism::FactKind T>
+using FDRFactListView = View<DataList<FDRFact<T>>, Repository>;
 }
 }
 

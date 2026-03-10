@@ -52,6 +52,9 @@ namespace formalism::datalog
 {
 template<formalism::FactKind T>
 using GroundLiteralView = View<Index<GroundLiteral<T>>, Repository>;
+
+template<formalism::FactKind T>
+using GroundLiteralListView = View<IndexList<GroundLiteral<T>>, Repository>;
 }
 }
 

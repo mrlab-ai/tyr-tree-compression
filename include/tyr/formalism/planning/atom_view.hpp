@@ -52,6 +52,9 @@ namespace formalism::planning
 {
 template<FactKind T>
 using AtomView = View<Index<Atom<T>>, Repository>;
+
+template<FactKind T>
+using AtomListView = View<IndexList<Atom<T>>, Repository>;
 }
 }
 

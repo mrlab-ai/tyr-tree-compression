@@ -92,7 +92,7 @@ void PredicateFactSet<T>::insert(fd::GroundAtomView<T> ground_atom)
 }
 
 template<f::FactKind T>
-void PredicateFactSet<T>::insert(View<IndexList<fd::GroundAtom<T>>, fd::Repository> ground_atoms)
+void PredicateFactSet<T>::insert(fd::GroundAtomListView<T> ground_atoms)
 {
     for (const auto ground_atom : ground_atoms)
         insert(ground_atom);
@@ -113,7 +113,7 @@ bool PredicateFactSet<T>::contains(fd::GroundAtomView<T> ground_atom) const noex
 }
 
 template<f::FactKind T>
-View<IndexList<fd::GroundAtom<T>>, fd::Repository> PredicateFactSet<T>::get_facts() const noexcept
+fd::GroundAtomListView<T> PredicateFactSet<T>::get_facts() const noexcept
 {
     return make_view(m_indices, m_context);
 }
@@ -167,7 +167,7 @@ void FunctionFactSet<T>::insert(fd::GroundFunctionTermView<T> function_term, flo
 }
 
 template<f::FactKind T>
-void FunctionFactSet<T>::insert(View<IndexList<fd::GroundFunctionTerm<T>>, fd::Repository> function_terms, const std::vector<float_t>& values)
+void FunctionFactSet<T>::insert(fd::GroundFunctionTermListView<T> function_terms, const std::vector<float_t>& values)
 {
     assert(function_terms.size() == values.size());
 
@@ -182,7 +182,7 @@ void FunctionFactSet<T>::insert(fd::GroundFunctionTermValueView<T> fterm_value)
 }
 
 template<f::FactKind T>
-void FunctionFactSet<T>::insert(View<IndexList<fd::GroundFunctionTermValue<T>>, fd::Repository> fterm_values)
+void FunctionFactSet<T>::insert(fd::GroundFunctionTermValueListView<T> fterm_values)
 {
     for (const auto fterm_value : fterm_values)
         insert(fterm_value);
@@ -207,7 +207,7 @@ float_t FunctionFactSet<T>::operator[](Index<fd::GroundFunctionTerm<T>> fterm) c
 }
 
 template<f::FactKind T>
-View<IndexList<fd::GroundFunctionTerm<T>>, fd::Repository> FunctionFactSet<T>::get_fterms() const noexcept
+fd::GroundFunctionTermListView<T> FunctionFactSet<T>::get_fterms() const noexcept
 {
     return make_view(m_indices, m_context);
 }

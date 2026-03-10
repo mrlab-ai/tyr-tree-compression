@@ -54,6 +54,8 @@ public:
 namespace formalism::planning
 {
 using ConjunctiveEffectView = View<Index<ConjunctiveEffect>, Repository>;
+
+using ConjunctiveEffectListView = View<IndexList<ConjunctiveEffect>, Repository>;
 }
 }
 

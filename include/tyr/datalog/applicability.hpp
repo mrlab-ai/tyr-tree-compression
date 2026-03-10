@@ -250,14 +250,12 @@ inline bool is_applicable(formalism::datalog::GroundLiteralView<T> element, cons
 }
 
 template<formalism::FactKind T>
-inline bool is_applicable(View<IndexList<formalism::datalog::GroundLiteral<T>>, formalism::datalog::Repository> elements, const FactSets& fact_sets)
+inline bool is_applicable(formalism::datalog::GroundLiteralListView<T> elements, const FactSets& fact_sets)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable(arg, fact_sets); });
 }
 
-inline bool
-is_applicable(View<DataList<formalism::datalog::BooleanOperator<Data<formalism::datalog::GroundFunctionExpression>>>, formalism::datalog::Repository> elements,
-              const FactSets& fact_sets)
+inline bool is_applicable(formalism::datalog::GroundBooleanOperatorListView elements, const FactSets& fact_sets)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return evaluate(arg, fact_sets); });
 }
@@ -292,9 +290,7 @@ inline bool is_valid_binding(formalism::datalog::LiteralView<T> element, const F
 }
 
 template<formalism::FactKind T>
-inline bool is_valid_binding(View<IndexList<formalism::datalog::Literal<T>>, formalism::datalog::Repository> elements,
-                             const FactSets& fact_sets,
-                             formalism::datalog::ConstGrounderContext& context)
+inline bool is_valid_binding(formalism::datalog::LiteralListView<T> elements, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_valid_binding(arg, fact_sets, context); });
 }
@@ -306,9 +302,7 @@ is_valid_binding(formalism::datalog::LiftedBooleanOperatorView element, const Fa
 }
 
 inline bool
-is_valid_binding(View<DataList<formalism::datalog::BooleanOperator<Data<formalism::datalog::FunctionExpression>>>, formalism::datalog::Repository> elements,
-                 const FactSets& fact_sets,
-                 formalism::datalog::ConstGrounderContext& context)
+is_valid_binding(formalism::datalog::LiftedBooleanOperatorListView elements, const FactSets& fact_sets, formalism::datalog::ConstGrounderContext& context)
 {
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_valid_binding(arg, fact_sets, context); });
 }

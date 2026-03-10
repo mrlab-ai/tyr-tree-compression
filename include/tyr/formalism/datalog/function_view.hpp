@@ -25,6 +25,9 @@ namespace tyr::formalism::datalog
 {
 template<FactKind T>
 using FunctionView = View<Index<Function<T>>, Repository>;
+
+template<FactKind T>
+using FunctionListView = View<IndexList<Function<T>>, Repository>;
 }
 
 #endif

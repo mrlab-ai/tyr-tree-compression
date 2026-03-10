@@ -55,6 +55,8 @@ public:
 namespace formalism::planning
 {
 using GroundAxiomView = View<Index<GroundAxiom>, Repository>;
+
+using GroundAxiomListView = View<IndexList<GroundAxiom>, Repository>;
 }
 }
 

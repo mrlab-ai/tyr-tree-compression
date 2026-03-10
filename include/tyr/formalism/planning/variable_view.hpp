@@ -24,6 +24,8 @@
 namespace tyr::formalism::planning
 {
 using VariableView = View<Index<Variable>, Repository>;
+
+using VariableListView = View<IndexList<Variable>, Repository>;
 }
 
 #endif

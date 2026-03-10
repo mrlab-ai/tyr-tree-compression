@@ -51,6 +51,8 @@ public:
 namespace formalism::planning
 {
 using MetricView = View<Index<Metric>, Repository>;
+
+using MetricListView = View<IndexList<Metric>, Repository>;
 }
 }
 

@@ -58,6 +58,8 @@ public:
 namespace formalism::planning
 {
 using ConjunctiveConditionView = View<Index<ConjunctiveCondition>, Repository>;
+
+using ConjunctiveConditionListView = View<IndexList<ConjunctiveCondition>, Repository>;
 }
 }
 

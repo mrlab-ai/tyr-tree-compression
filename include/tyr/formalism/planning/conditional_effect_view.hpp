@@ -54,6 +54,8 @@ public:
 namespace formalism::planning
 {
 using ConditionalEffectView = View<Index<ConditionalEffect>, Repository>;
+
+using ConditionalEffectListView = View<IndexList<ConditionalEffect>, Repository>;
 }
 }
 

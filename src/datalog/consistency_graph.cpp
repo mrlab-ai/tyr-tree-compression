@@ -449,7 +449,7 @@ inline bool consistent_numeric_constraint(fd::LiftedBooleanOperatorView element,
 }
 
 inline bool consistent_numeric_constraints(const Vertex& vertex,
-                                           View<DataList<fd::BooleanOperator<Data<fd::FunctionExpression>>>, fd::Repository> numeric_constraints,
+                                           fd::LiftedBooleanOperatorListView numeric_constraints,
                                            const RuleToRuleToConstraintInfos& indexed_constraints,
                                            const AssignmentSets& assignment_sets) noexcept
 {
@@ -606,7 +606,7 @@ consistent_literals(const Edge& edge, const TaggedRuleToLiteralInfos<T>& indexed
 }
 
 inline bool consistent_numeric_constraints(const Edge& edge,
-                                           View<DataList<fd::BooleanOperator<Data<fd::FunctionExpression>>>, fd::Repository> numeric_constraints,
+                                           fd::LiftedBooleanOperatorListView numeric_constraints,
                                            const RuleToRuleToConstraintInfos& indexed_constraints,
                                            const AssignmentSets& assignment_sets) noexcept
 {
@@ -723,7 +723,7 @@ kpkc::DeduplicatedAdjacencyMatrix StaticConsistencyGraph::compute_edges(const de
 }
 
 template<f::FactKind T>
-static auto compute_tagged_indexed_literals(View<IndexList<fd::Literal<T>>, fd::Repository> literals, size_t arity)
+static auto compute_tagged_indexed_literals(fd::LiteralListView<T> literals, size_t arity)
 {
     auto result = details::TaggedRuleToLiteralInfos<T> {};
 
@@ -810,7 +810,7 @@ static auto compute_tagged_indexed_literals(View<IndexList<fd::Literal<T>>, fd::
 }
 
 template<f::FactKind T>
-static auto compute_tagged_indexed_fterms(View<IndexList<fd::FunctionTerm<T>>, fd::Repository> fterms, size_t arity)
+static auto compute_tagged_indexed_fterms(fd::FunctionTermListView<T> fterms, size_t arity)
 {
     auto result = details::TaggedRuleToFunctionTermInfos<T> {};
 

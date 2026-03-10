@@ -55,6 +55,8 @@ public:
 namespace formalism::planning
 {
 using GroundConjunctiveEffectView = View<Index<GroundConjunctiveEffect>, Repository>;
+
+using GroundConjunctiveEffectListView = View<IndexList<GroundConjunctiveEffect>, Repository>;
 }
 }
 

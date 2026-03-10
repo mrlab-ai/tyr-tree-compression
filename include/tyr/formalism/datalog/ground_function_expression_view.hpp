@@ -49,6 +49,8 @@ public:
 namespace formalism::datalog
 {
 using GroundFunctionExpressionView = View<Data<GroundFunctionExpression>, Repository>;
+
+using GroundFunctionExpressionListView = View<DataList<GroundFunctionExpression>, Repository>;
 }
 }
 

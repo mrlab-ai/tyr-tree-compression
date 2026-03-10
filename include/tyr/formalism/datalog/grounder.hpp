@@ -50,7 +50,7 @@ struct ConstGrounderContext
  * ground
  */
 
-auto ground(View<DataList<Term>, Repository> element, GrounderContext& context);
+auto ground(TermListView element, GrounderContext& context);
 
 auto ground(const IndexList<Object>& element, GrounderContext& context);
 
@@ -60,13 +60,13 @@ auto ground(FunctionTermView<T> element, GrounderContext& context);
 auto ground(FunctionExpressionView element, GrounderContext& context);
 
 template<OpKind O>
-auto ground(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element, GrounderContext& context);
+auto ground(LiftedUnaryOperatorView<O> element, GrounderContext& context);
 
 template<OpKind O>
-auto ground(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element, GrounderContext& context);
+auto ground(LiftedBinaryOperatorView<O> element, GrounderContext& context);
 
 template<OpKind O>
-auto ground(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element, GrounderContext& context);
+auto ground(LiftedMultiOperatorView<O> element, GrounderContext& context);
 
 auto ground(LiftedBooleanOperatorView element, GrounderContext& context);
 
@@ -78,9 +78,9 @@ auto ground(AtomView<T> element, GrounderContext& context);
 template<FactKind T>
 auto ground(LiteralView<T> element, GrounderContext& context);
 
-auto ground(View<Index<ConjunctiveCondition>, Repository> element, GrounderContext& context);
+auto ground(ConjunctiveConditionView element, GrounderContext& context);
 
-auto ground(View<Index<Rule>, Repository> element, GrounderContext& context);
+auto ground(RuleView element, GrounderContext& context);
 
 /**
  * ground_into_buffer
@@ -104,13 +104,13 @@ bool is_ground(FunctionTermView<T> element);
 bool is_ground(FunctionExpressionView element);
 
 template<OpKind O>
-bool is_ground(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element);
+bool is_ground(LiftedUnaryOperatorView<O> element);
 
 template<OpKind O>
-bool is_ground(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element);
+bool is_ground(LiftedBinaryOperatorView<O> element);
 
 template<OpKind O>
-bool is_ground(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element);
+bool is_ground(LiftedMultiOperatorView<O> element);
 
 bool is_ground(LiftedBooleanOperatorView element);
 
@@ -130,7 +130,7 @@ bool is_ground(LiteralView<T> element);
  * ground
  */
 
-inline auto ground(View<DataList<Term>, Repository> element, GrounderContext& context)
+inline auto ground(TermListView element, GrounderContext& context)
 {
     // Fetch and clear
     auto binding_ptr = context.builder.template get_builder<Binding>();
@@ -225,7 +225,7 @@ inline auto ground(FunctionExpressionView element, GrounderContext& context)
 }
 
 template<OpKind O>
-inline auto ground(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element, GrounderContext& context)
+inline auto ground(LiftedUnaryOperatorView<O> element, GrounderContext& context)
 {
     // Fetch and clear
     auto unary_ptr = context.builder.template get_builder<UnaryOperator<O, Data<GroundFunctionExpression>>>();
@@ -241,7 +241,7 @@ inline auto ground(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repos
 }
 
 template<OpKind O>
-inline auto ground(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element, GrounderContext& context)
+inline auto ground(LiftedBinaryOperatorView<O> element, GrounderContext& context)
 {
     // Fetch and clear
     auto binary_ptr = context.builder.template get_builder<BinaryOperator<O, Data<GroundFunctionExpression>>>();
@@ -258,7 +258,7 @@ inline auto ground(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repo
 }
 
 template<OpKind O>
-inline auto ground(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element, GrounderContext& context)
+inline auto ground(LiftedMultiOperatorView<O> element, GrounderContext& context)
 {
     // Fetch and clear
     auto multi_ptr = context.builder.template get_builder<MultiOperator<O, Data<GroundFunctionExpression>>>();
@@ -335,7 +335,7 @@ inline auto ground(LiteralView<T> element, GrounderContext& context)
     return context.destination.get_or_create(ground_literal, context.builder.get_buffer());
 }
 
-inline auto ground(View<Index<ConjunctiveCondition>, Repository> element, GrounderContext& context)
+inline auto ground(ConjunctiveConditionView element, GrounderContext& context)
 {
     // Fetch and clear
     auto conj_cond_ptr = context.builder.template get_builder<GroundConjunctiveCondition>();
@@ -355,7 +355,7 @@ inline auto ground(View<Index<ConjunctiveCondition>, Repository> element, Ground
     return context.destination.get_or_create(conj_cond, context.builder.get_buffer());
 }
 
-inline auto ground(View<Index<Rule>, Repository> element, GrounderContext& context)
+inline auto ground(RuleView element, GrounderContext& context)
 {
     // Fetch and clear
     auto rule_ptr = context.builder.template get_builder<GroundRule>();
@@ -479,19 +479,19 @@ inline bool is_ground(FunctionExpressionView element)
 }
 
 template<OpKind O>
-inline bool is_ground(View<Index<UnaryOperator<O, Data<FunctionExpression>>>, Repository> element)
+inline bool is_ground(LiftedUnaryOperatorView<O> element)
 {
     return is_ground(element.get_arg());
 }
 
 template<OpKind O>
-inline bool is_ground(View<Index<BinaryOperator<O, Data<FunctionExpression>>>, Repository> element)
+inline bool is_ground(LiftedBinaryOperatorView<O> element)
 {
     return is_ground(element.get_lhs()) && is_ground(element.get_rhs());
 }
 
 template<OpKind O>
-inline bool is_ground(View<Index<MultiOperator<O, Data<FunctionExpression>>>, Repository> element)
+inline bool is_ground(LiftedMultiOperatorView<O> element)
 {
     const auto args = element.get_args();
     return std::all_of(args.begin(), args.end(), [](auto&& arg) { return is_ground(arg); });

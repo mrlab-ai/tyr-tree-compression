@@ -51,6 +51,8 @@ public:
 namespace formalism::planning
 {
 using GroundConditionalEffectView = View<Index<GroundConditionalEffect>, Repository>;
+
+using GroundConditionalEffectListView = View<IndexList<GroundConditionalEffect>, Repository>;
 }
 }
 
