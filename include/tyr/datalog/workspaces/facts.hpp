@@ -36,7 +36,6 @@ struct FactsWorkspace
 
     PredicateFactSets<formalism::FluentTag> goal_fact_sets;
 
-    FactsWorkspace() = default;
     explicit FactsWorkspace(formalism::datalog::PredicateListView<formalism::FluentTag> predicates,
                             formalism::datalog::FunctionListView<formalism::FluentTag> functions,
                             const analysis::DomainListListList& predicate_domains,

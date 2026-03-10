@@ -591,8 +591,6 @@ public:
         auto buffer = buffer::Buffer {};
         auto result_context = GetResultContext { *m_context, buffer };
 
-        auto num_nodes = size_t(0);
-
         // iterative post-order dfs
         while (!stack.empty())
         {
@@ -625,8 +623,6 @@ public:
             }
 
             assert(produced);
-
-            ++num_nodes;
 
             stack.pop_back();
 

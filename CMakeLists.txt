@@ -87,10 +87,17 @@ else()
         # Release: prefer ThinLTO for much lower compile/link cost than full LTO
         set(CMAKE_CXX_FLAGS_RELEASE
             "${CMAKE_CXX_FLAGS_RELEASE} -flto=thin")
-        set(CMAKE_EXE_LINKER_FLAGS_RELEASE
-            "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--thinlto-jobs=4")
-        set(CMAKE_SHARED_LINKER_FLAGS_RELEASE
-            "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,--thinlto-jobs=4")
+        if(APPLE)
+            set(CMAKE_EXE_LINKER_FLAGS_RELEASE
+                "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,-mllvm,-threads=4")
+            set(CMAKE_SHARED_LINKER_FLAGS_RELEASE
+                "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-mllvm,-threads=4")
+        else()
+            set(CMAKE_EXE_LINKER_FLAGS_RELEASE
+                "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--thinlto-jobs=4")
+            set(CMAKE_SHARED_LINKER_FLAGS_RELEASE
+                "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,--thinlto-jobs=4")
+        endif()
 
         # RelWithDebInfo: cheap debug info
         set(CMAKE_CXX_FLAGS_RELWITHDEBINFO

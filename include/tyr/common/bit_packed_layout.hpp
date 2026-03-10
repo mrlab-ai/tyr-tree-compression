@@ -162,7 +162,7 @@ BitPackedArrayLayout<Block> create_bit_packed_array_layout(const std::vector<Blo
 {
     constexpr size_t W = std::numeric_limits<Block>::digits;
 
-    auto mask_n_bits = [W](size_t n) -> Block
+    auto mask_n_bits = [](size_t n) -> Block
     {
         if (n == 0)
             return Block { 0 };
