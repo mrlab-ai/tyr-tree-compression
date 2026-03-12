@@ -120,6 +120,48 @@ constexpr Block read_int(const Block* word, uint8_t offset, const uint8_t len)
     else
         return w1 & lo_set<Block>[len];
 }
+
+template<typename Encoder, typename Block>
+concept BlockCoder = std::unsigned_integral<Block> && requires(Block block, typename Encoder::value_type value) {
+    { Encoder::decode(block) } -> std::convertible_to<typename Encoder::value_type>;
+    { Encoder::encode(value) } -> std::convertible_to<Block>;
+};
+
+template<std::unsigned_integral Block>
+struct ForwardingBlockCoder
+{
+    using value_type = Block;
+
+    static Block decode(Block block) noexcept { return block; }
+    static Block encode(value_type value) noexcept { return value; }
+};
+
+static_assert(BlockCoder<ForwardingBlockCoder<uint32_t>, uint32_t>);
+
+template<std::unsigned_integral Block, typename Coder = bits::ForwardingBlockCoder<Block>>
+    requires BlockCoder<Coder, Block>
+class int_reference
+{
+public:
+    using value_type = typename Coder::value_type;
+
+    constexpr int_reference(Block* word, uint8_t offset, uint8_t len) noexcept : m_word(word), m_offset(offset), m_len(len) {}
+
+    constexpr int_reference& operator=(const value_type& value)
+    {
+        bits::write_int(m_word, Coder::encode(value), m_offset, m_len);
+        return *this;
+    }
+
+    constexpr int_reference& operator=(const int_reference& other) { return (*this = static_cast<value_type>(other)); }
+
+    constexpr operator value_type() const { return Coder::decode(bits::read_int(m_word, m_offset, m_len)); }
+
+private:
+    Block* m_word;
+    uint8_t m_offset;
+    uint8_t m_len;
+};
 }
 }
 
