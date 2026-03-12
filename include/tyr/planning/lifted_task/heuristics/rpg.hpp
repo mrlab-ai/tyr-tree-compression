@@ -65,10 +65,7 @@ public:
 
         auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.repository };
 
-        insert_fluent_atoms_to_fact_set(state.get_unpacked_state().get_atoms<formalism::FluentTag>(),
-                                        *m_task->get_repository(),
-                                        merge_context,
-                                        m_workspace.facts.fact_sets);
+        insert_fluent_atoms_to_fact_set(state.get_unpacked_state(), *m_task->get_repository(), merge_context, m_workspace.facts.fact_sets);
 
         auto ctx = datalog::ProgramExecutionContext(m_workspace, m_task->get_rpg_program().get_const_program_workspace());
         ctx.clear();

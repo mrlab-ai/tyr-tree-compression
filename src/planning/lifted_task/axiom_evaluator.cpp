@@ -54,10 +54,11 @@ static void insert_unextended_state(const UnpackedState<LiftedTask>& unpacked_st
                                     d::TaggedAssignmentSets<f::FluentTag>& assignment_sets)
 {
     fact_sets.reset();
+    assignment_sets.reset();
 
-    insert_fluent_atoms_to_fact_set(unpacked_state.get_atoms<f::FluentTag>(), atoms_context, merge_context, fact_sets);
+    insert_fluent_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
 
-    insert_fact_sets_into_assignment_sets(fact_sets, assignment_sets);
+    assignment_sets.insert(fact_sets);
 }
 
 static void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram& axiom_program,

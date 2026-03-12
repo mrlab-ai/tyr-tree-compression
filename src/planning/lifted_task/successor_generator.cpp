@@ -38,6 +38,24 @@ namespace df = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
+namespace
+{
+void insert_extended_state(const UnpackedState<LiftedTask>& unpacked_state,
+                           const fp::Repository& atoms_context,
+                           fp::MergeDatalogContext& merge_context,
+                           datalog::TaggedFactSets<f::FluentTag>& fact_sets,
+                           datalog::TaggedAssignmentSets<f::FluentTag>& assignment_sets)
+{
+    fact_sets.reset();
+    assignment_sets.reset();
+
+    insert_fluent_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
+    insert_derived_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
+    insert_numeric_variables_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
+
+    assignment_sets.insert(fact_sets);
+}
+}
 
 SuccessorGenerator<LiftedTask>::SuccessorGenerator(std::shared_ptr<LiftedTask> task) :
     m_task(std::move(task)),

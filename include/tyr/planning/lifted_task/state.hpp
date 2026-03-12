@@ -91,13 +91,13 @@ public:
     const std::shared_ptr<StateRepository<LiftedTask>>& get_state_repository() const noexcept;
     const UnpackedState<LiftedTask>& get_unpacked_state() const noexcept;
 
+private:
     template<formalism::FactKind T>
     const boost::dynamic_bitset<>& get_atoms() const noexcept;
 
     template<formalism::FactKind T>
     const std::vector<float_t>& get_numeric_variables() const noexcept;
 
-private:
     std::shared_ptr<StateRepository<LiftedTask>> m_state_repository;
     SharedObjectPoolPtr<UnpackedState<LiftedTask>> m_unpacked;
 };

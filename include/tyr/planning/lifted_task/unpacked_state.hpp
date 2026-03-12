@@ -22,12 +22,12 @@
 #include "tyr/common/dynamic_bitset.hpp"
 #include "tyr/common/vector.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
-#include "tyr/formalism/planning/fdr_fact_data.hpp"
-#include "tyr/formalism/planning/fdr_variable_index.hpp"
-#include "tyr/formalism/planning/ground_atom_index.hpp"
-#include "tyr/formalism/planning/ground_function_term_index.hpp"
+#include "tyr/formalism/planning/repository.hpp"
+#include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/lifted_task/state_iterators.hpp"
 #include "tyr/planning/state_index.hpp"
+#include "tyr/planning/state_iterators.hpp"
 #include "tyr/planning/unpacked_state.hpp"
 
 #include <boost/dynamic_bitset.hpp>
@@ -43,26 +43,39 @@ public:
 
     UnpackedState() = default;
 
-    /**
-     * UnpackedStateConcept
-     */
-
     StateIndex get_index() const;
     void set(StateIndex index);
-
-    formalism::planning::FDRValue get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const;
-    void set(Data<formalism::planning::FDRFact<formalism::FluentTag>> fact);
-
-    float_t get(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index) const;
-    void set(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index, float_t value);
-
-    bool test(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index) const;
-    void set(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index);
 
     void clear();
     void clear_unextended_part();
     void clear_extended_part();
     void assign_unextended_part(const UnpackedState<LiftedTask>& other);
+
+    /**
+     * UnpackedStateConcept
+     */
+
+    formalism::planning::FDRValue get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const;
+    void set(Data<formalism::planning::FDRFact<formalism::FluentTag>> fact);
+    float_t get(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index) const;
+    void set(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index, float_t value);
+    bool test(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index) const;
+    void set(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index);
+
+    formalism::planning::FDRValue get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const;
+    void set(formalism::planning::FDRFactView<formalism::FluentTag> view);
+    float_t get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const;
+    void set(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view, float_t value);
+    bool test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const;
+    void set(formalism::planning::GroundAtomView<formalism::DerivedTag> view);
+
+    auto get_fluent_facts() const noexcept;
+    auto get_derived_atoms() const noexcept;
+    auto get_fluent_fterm_values() const noexcept;
+
+    auto get_fluent_facts_view(const formalism::planning::Repository& repository) const noexcept;
+    auto get_derived_atoms_view(const formalism::planning::Repository& repository) const noexcept;
+    auto get_fluent_fterm_values_view(const formalism::planning::Repository& repository) const noexcept;
 
     /**
      * For LiftedTask
@@ -128,6 +141,27 @@ inline void UnpackedState<LiftedTask>::set(Index<formalism::planning::GroundAtom
     tyr::set(uint_t(index), true, m_derived_atoms);
 }
 
+// Fluent facts
+inline formalism::planning::FDRValue UnpackedState<LiftedTask>::get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const
+{
+    return get(view.get_index());
+}
+
+inline void UnpackedState<LiftedTask>::set(formalism::planning::FDRFactView<formalism::FluentTag> view) { set(view.get_data()); }
+
+// Fluent numeric variables
+inline float_t UnpackedState<LiftedTask>::get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const { return get(view.get_index()); }
+
+inline void UnpackedState<LiftedTask>::set(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view, float_t value)
+{
+    set(view.get_index(), value);
+}
+
+// Derived atoms
+inline bool UnpackedState<LiftedTask>::test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const { return test(view.get_index()); }
+
+inline void UnpackedState<LiftedTask>::set(formalism::planning::GroundAtomView<formalism::DerivedTag> view) { set(view.get_index()); }
+
 inline void UnpackedState<LiftedTask>::clear()
 {
     clear_unextended_part();
@@ -146,6 +180,34 @@ inline void UnpackedState<LiftedTask>::assign_unextended_part(const UnpackedStat
 {
     m_fluent_atoms = other.m_fluent_atoms;
     m_numeric_variables = other.m_numeric_variables;
+}
+
+inline auto UnpackedState<LiftedTask>::get_fluent_facts() const noexcept
+{
+    return FDRFactRange<LiftedTask, formalism::FluentTag>(get_atoms<formalism::FluentTag>());
+}
+
+inline auto UnpackedState<LiftedTask>::get_derived_atoms() const noexcept { return AtomRange<formalism::DerivedTag>(get_atoms<formalism::DerivedTag>()); }
+
+inline auto UnpackedState<LiftedTask>::get_fluent_fterm_values() const noexcept
+{
+    return FunctionTermValueRange<formalism::FluentTag>(get_numeric_variables());
+}
+
+inline auto UnpackedState<LiftedTask>::get_fluent_facts_view(const formalism::planning::Repository& repository_) const noexcept
+{
+    return get_fluent_facts() | std::views::transform([repository = &repository_](auto id) { return make_view(id, *repository); });
+}
+
+inline auto UnpackedState<LiftedTask>::get_derived_atoms_view(const formalism::planning::Repository& repository_) const noexcept
+{
+    return get_derived_atoms() | std::views::transform([repository = &repository_](auto id) { return make_view(id, *repository); });
+}
+
+inline auto UnpackedState<LiftedTask>::get_fluent_fterm_values_view(const formalism::planning::Repository& repository_) const noexcept
+{
+    return get_fluent_fterm_values()
+           | std::views::transform([repository = &repository_](auto&& pair) { return std::make_pair(make_view(pair.first, *repository), pair.second); });
 }
 
 /**
