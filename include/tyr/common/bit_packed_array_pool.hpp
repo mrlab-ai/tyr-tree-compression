@@ -31,8 +31,8 @@
 namespace tyr
 {
 
-/// Stores fixed-length arrays as bit-packed unsigned integer codes.
-/// The exposed value type is obtained via Encoder::decode.
+/// Stores fixed-length arrays as bit-packed unsigned integer codes with stable references.
+/// Values are encoded and decoded via Coder.
 template<std::unsigned_integral Block, typename Coder = bit::ForwardingBlockCoder<Block>, size_t FirstSegmentSize = 1>
     requires bit::BlockCoder<Coder, Block>
 class BitPackedArrayPool
