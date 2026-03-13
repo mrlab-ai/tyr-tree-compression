@@ -21,7 +21,7 @@
 #include <bit>
 #include <cassert>
 #include <cstddef>
-#include <tyr/common/bits.hpp>
+#include <tyr/common/bit.hpp>
 #include <vector>
 
 namespace tyr
