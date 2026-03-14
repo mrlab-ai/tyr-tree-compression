@@ -133,7 +133,7 @@ public:
     }
 
     template<typename T>
-    std::optional<Index<Binding2>> find_with_hash(Index<T> g, const IndexList<Object>& builder, size_t h) const noexcept
+    std::optional<Index<Binding>> find_with_hash(Index<T> g, const IndexList<Object>& builder, size_t h) const noexcept
     {
         const auto& entry = std::get<Entry<T>>(m_repository);
 
@@ -147,13 +147,13 @@ public:
             return m_parent ? m_parent->template find_with_hash<T>(g, builder, h) : std::nullopt;
 
         if (auto row_or_nullopt = slot.container->find_with_hash(builder, h))  /// container exists here
-            return Index<Binding2>(slot.parent_size + *row_or_nullopt);
+            return Index<Binding>(slot.parent_size + *row_or_nullopt);
 
         return m_parent ? m_parent->template find_with_hash<T>(g, builder, h) : std::nullopt;
     }
 
     template<typename T>
-    std::optional<Index<Binding2>> find(Index<T> g, const IndexList<Object>& builder) const noexcept
+    std::optional<Index<Binding>> find(Index<T> g, const IndexList<Object>& builder) const noexcept
     {
         const auto& entry = std::get<Entry<T>>(m_repository);
         const auto& slots = entry.slots;
@@ -171,7 +171,7 @@ public:
     }
 
     template<typename T>
-    std::pair<Index<Binding2>, bool> get_or_create(Index<T> g, size_t arity, uint8_t width, const IndexList<Object>& builder)
+    std::pair<Index<Binding>, bool> get_or_create(Index<T> g, size_t arity, uint8_t width, const IndexList<Object>& builder)
     {
         auto& slot = get_or_create_slot(g);
         // Note: this creates the local container even if the element was found in the parent.
@@ -183,16 +183,16 @@ public:
                 return { *ptr, false };
 
         const auto [row, success] = container.insert_with_hash(h, builder);
-        return { Index<Binding2>(slot.parent_size + row), success };
+        return { Index<Binding>(slot.parent_size + row), success };
     }
 
     template<typename T>
-    ConstViewType operator[](std::pair<Index<T>, Index<Binding2>> index) const noexcept
+    ConstViewType operator[](std::pair<Index<T>, Index<Binding>> index) const noexcept
     {
         const auto& [g, row] = index;
 
         assert(g != Index<T>::max() && "Unassigned index.");
-        assert(row != Index<Binding2>::max() && "Unassigned index.");
+        assert(row != Index<Binding>::max() && "Unassigned index.");
 
         const auto& entry = std::get<Entry<T>>(m_repository);
         const auto it = entry.slots.find(g);
@@ -238,7 +238,7 @@ public:
     void clear() noexcept { clear_entries(); }
 
     template<typename T>
-    const RelationTableRepository& get_canonical_context(std::pair<Index<T>, Index<Binding2>> index) const noexcept
+    const RelationTableRepository& get_canonical_context(std::pair<Index<T>, Index<Binding>> index) const noexcept
     {
         const auto& [g, row] = index;
 

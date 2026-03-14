@@ -27,9 +27,9 @@ namespace tyr::formalism::datalog
 {
 using BindingView = View<Index<Binding>, Repository>;
 template<FactKind T>
-using PredicateBindingView = View<std::pair<Index<Predicate<T>>, Index<Binding2>>, Repository>;
+using PredicateBindingView = View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>;
 template<FactKind T>
-using FunctionBindingView = View<std::pair<Index<Function<T>>, Index<Binding2>>, Repository>;
+using FunctionBindingView = View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>;
 
 }
 

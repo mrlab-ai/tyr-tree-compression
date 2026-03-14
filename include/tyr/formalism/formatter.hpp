@@ -80,10 +80,10 @@ template<typename C>
 inline std::ostream& operator<<(std::ostream& os, const View<Index<Binding>, C>& el);
 
 template<FactKind T, typename C>
-inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Predicate<T>>, Index<Binding2>>, C>& el);
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Predicate<T>>, Index<Binding>>, C>& el);
 
 template<FactKind T, typename C>
-inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Function<T>>, Index<Binding2>>, C>& el);
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Function<T>>, Index<Binding>>, C>& el);
 
 inline std::ostream& operator<<(std::ostream& os, const Data<Term>& el);
 
@@ -214,14 +214,14 @@ inline std::ostream& print(std::ostream& os, const View<Index<formalism::Binding
 }
 
 template<formalism::FactKind T, typename C>
-inline std::ostream& print(std::ostream& os, const View<std::pair<Index<formalism::Predicate<T>>, Index<formalism::Binding2>>, C>& el)
+inline std::ostream& print(std::ostream& os, const View<std::pair<Index<formalism::Predicate<T>>, Index<formalism::Binding>>, C>& el)
 {
     fmt::print(os, "{}", fmt::join(to_strings(el.get_objects()), " "));
     return os;
 }
 
 template<formalism::FactKind T, typename C>
-inline std::ostream& print(std::ostream& os, const View<std::pair<Index<formalism::Function<T>>, Index<formalism::Binding2>>, C>& el)
+inline std::ostream& print(std::ostream& os, const View<std::pair<Index<formalism::Function<T>>, Index<formalism::Binding>>, C>& el)
 {
     fmt::print(os, "{}", fmt::join(to_strings(el.get_objects()), " "));
     return os;
@@ -317,13 +317,13 @@ inline std::ostream& operator<<(std::ostream& os, const View<Index<Binding>, C>&
 }
 
 template<FactKind T, typename C>
-inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Predicate<T>>, Index<Binding2>>, C>& el)
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Predicate<T>>, Index<Binding>>, C>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T, typename C>
-inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Function<T>>, Index<Binding2>>, C>& el)
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Function<T>>, Index<Binding>>, C>& el)
 {
     return tyr::print(os, el);
 }

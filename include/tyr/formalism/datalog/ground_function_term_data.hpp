@@ -34,10 +34,10 @@ struct Data<formalism::datalog::GroundFunctionTerm<T>>
 {
     Index<formalism::datalog::GroundFunctionTerm<T>> index;
     Index<formalism::Function<T>> function;
-    Index<formalism::Binding2> row;
+    Index<formalism::Binding> row;
 
     Data() = default;
-    Data(Index<formalism::datalog::GroundFunctionTerm<T>> index, Index<formalism::Function<T>> function, Index<formalism::Binding2> row) :
+    Data(Index<formalism::datalog::GroundFunctionTerm<T>> index, Index<formalism::Function<T>> function, Index<formalism::Binding> row) :
         index(index),
         function(function),
         row(row)

@@ -290,7 +290,7 @@ public:
      */
 
     template<FactKind T>
-    std::optional<View<std::pair<Index<Predicate<T>>, Index<Binding2>>, Repository>>
+    std::optional<View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>>
     find_with_hash(Index<Predicate<T>> g, const IndexList<Object>& builder, size_t h) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find_with_hash(g, builder, h);
@@ -300,8 +300,7 @@ public:
     }
 
     template<FactKind T>
-    std::optional<View<std::pair<Index<Predicate<T>>, Index<Binding2>>, Repository>> find(Index<Predicate<T>> g,
-                                                                                          const IndexList<Object>& builder) const noexcept
+    std::optional<View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>> find(Index<Predicate<T>> g, const IndexList<Object>& builder) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find(g, builder);
         if (row_or_nullopt)
@@ -310,8 +309,8 @@ public:
     }
 
     template<FactKind T>
-    std::pair<View<std::pair<Index<Predicate<T>>, Index<Binding2>>, Repository>, bool> get_or_create(View<Index<Predicate<T>>, Repository> g,
-                                                                                                     const IndexList<Object>& builder)
+    std::pair<View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>, bool> get_or_create(View<Index<Predicate<T>>, Repository> g,
+                                                                                                    const IndexList<Object>& builder)
     {
         const auto [row, success] =
             m_relation_repository.get_or_create(g.get_index(), g.get_arity(), std::max<uint8_t>(1, std::bit_width(m_num_objects)), builder);
@@ -320,7 +319,7 @@ public:
     }
 
     template<FactKind T>
-    auto operator[](std::pair<Index<Predicate<T>>, Index<Binding2>> index) const noexcept
+    auto operator[](std::pair<Index<Predicate<T>>, Index<Binding>> index) const noexcept
     {
         return m_relation_repository[index];
     }
@@ -332,7 +331,7 @@ public:
     }
 
     template<FactKind T>
-    const RelationTableRepository& get_canonical_context(std::pair<Index<Predicate<T>>, Index<Binding2>> index) const noexcept
+    const RelationTableRepository& get_canonical_context(std::pair<Index<Predicate<T>>, Index<Binding>> index) const noexcept
     {
         return m_relation_repository.get_canonical_context(index);
     }
@@ -342,7 +341,7 @@ public:
      */
 
     template<FactKind T>
-    std::optional<View<std::pair<Index<Function<T>>, Index<Binding2>>, Repository>>
+    std::optional<View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>>
     find_with_hash(Index<Function<T>> g, const IndexList<Object>& builder, size_t h) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find_with_hash(g, builder, h);
@@ -352,7 +351,7 @@ public:
     }
 
     template<FactKind T>
-    std::optional<View<std::pair<Index<Function<T>>, Index<Binding2>>, Repository>> find(Index<Function<T>> g, const IndexList<Object>& builder) const noexcept
+    std::optional<View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>> find(Index<Function<T>> g, const IndexList<Object>& builder) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find(g, builder);
         if (row_or_nullopt)
@@ -361,8 +360,8 @@ public:
     }
 
     template<FactKind T>
-    std::pair<View<std::pair<Index<Function<T>>, Index<Binding2>>, Repository>, bool> get_or_create(View<Index<Function<T>>, Repository> g,
-                                                                                                    const IndexList<Object>& builder)
+    std::pair<View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>, bool> get_or_create(View<Index<Function<T>>, Repository> g,
+                                                                                                   const IndexList<Object>& builder)
     {
         const auto [row, success] =
             m_relation_repository.get_or_create(g.get_index(), g.get_arity(), std::max<uint8_t>(1, std::bit_width(m_num_objects)), builder);
@@ -371,7 +370,7 @@ public:
     }
 
     template<FactKind T>
-    auto operator[](std::pair<Index<Function<T>>, Index<Binding2>> index) const noexcept
+    auto operator[](std::pair<Index<Function<T>>, Index<Binding>> index) const noexcept
     {
         return m_relation_repository[index];
     }
@@ -383,7 +382,7 @@ public:
     }
 
     template<FactKind T>
-    const RelationTableRepository& get_canonical_context(std::pair<Index<Function<T>>, Index<Binding2>> index) const noexcept
+    const RelationTableRepository& get_canonical_context(std::pair<Index<Function<T>>, Index<Binding>> index) const noexcept
     {
         return m_relation_repository.get_canonical_context(index);
     }

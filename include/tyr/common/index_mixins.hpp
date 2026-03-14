@@ -36,8 +36,8 @@ struct IndexMixin
 
     static constexpr uint_t MAX = std::numeric_limits<uint_t>::max();
 
-    IndexMixin() noexcept : value(MAX) {}
-    explicit IndexMixin(uint_t value) noexcept : value(value) {}
+    constexpr IndexMixin() noexcept : value(MAX) {}
+    constexpr explicit IndexMixin(uint_t value) noexcept : value(value) {}
 
     static constexpr Derived max() noexcept { return Derived(MAX); }
 
@@ -54,7 +54,7 @@ struct IndexMixin
 
     explicit constexpr operator uint_t() const noexcept { return value; }
 
-    uint_t get_value() const noexcept { return value; }
+    constexpr uint_t get_value() const noexcept { return value; }
 
     auto cista_members() const noexcept { return std::tie(value); }
     auto identifying_members() const noexcept { return std::tie(value); }

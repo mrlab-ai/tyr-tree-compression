@@ -33,10 +33,10 @@ struct Data<formalism::datalog::GroundAtom<T>>
 {
     Index<formalism::datalog::GroundAtom<T>> index;
     Index<formalism::Predicate<T>> predicate;
-    Index<formalism::Binding2> row;
+    Index<formalism::Binding> row;
 
     Data() = default;
-    Data(Index<formalism::datalog::GroundAtom<T>> index, Index<formalism::Function<T>> predicate, Index<formalism::Binding2> row) :
+    Data(Index<formalism::datalog::GroundAtom<T>> index, Index<formalism::Function<T>> predicate, Index<formalism::Binding> row) :
         index(index),
         predicate(predicate),
         row(row)
