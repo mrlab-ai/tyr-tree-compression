@@ -20,6 +20,7 @@
 
 #include "tyr/formalism/binding_view.hpp"
 #include "tyr/formalism/datalog/declarations.hpp"
+#include "tyr/formalism/datalog/rule_index.hpp"
 #include "tyr/formalism/function_index.hpp"
 #include "tyr/formalism/predicate_index.hpp"
 
@@ -30,6 +31,7 @@ template<FactKind T>
 using PredicateBindingView = View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>;
 template<FactKind T>
 using FunctionBindingView = View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>;
+using RuleBindingView = View<std::pair<Index<Rule>, Index<Binding>>, Repository>;
 
 }
 

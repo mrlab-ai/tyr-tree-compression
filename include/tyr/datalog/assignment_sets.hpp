@@ -225,6 +225,12 @@ public:
             insert(ground_atom);
     }
 
+    void insert(const std::vector<formalism::datalog::GroundAtomView<T>>& ground_atoms)
+    {
+        for (const auto ground_atom : ground_atoms)
+            insert(ground_atom);
+    }
+
     void insert(formalism::datalog::GroundAtomView<T> ground_atom) { m_sets[uint_t(ground_atom.get_predicate().get_index())].insert(ground_atom); }
 
     const PredicateAssignmentSet<T>& get_set(Index<formalism::Predicate<T>> index) const noexcept { return m_sets[uint_t(index)]; }

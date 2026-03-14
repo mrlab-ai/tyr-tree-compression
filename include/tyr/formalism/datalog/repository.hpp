@@ -130,33 +130,10 @@ private:
         entry.slot.parent_size = m_parent ? m_parent->template size<T>() : size_t { 0 };
     }
 
-    template<FactKind T>
-    void clear_entry(RepositoryEntry<Predicate<T>>& entry) noexcept
-    {
-        // Never clear
-    }
-
-    template<FactKind T>
-    void clear_entry(RepositoryEntry<Function<T>>& entry) noexcept
-    {
-        // Never clear
-    }
-
-    void clear_entry(RepositoryEntry<Object>& entry) noexcept
-    {
-        // Never clear
-    }
-
     void clear_entries() noexcept
     {
         std::apply([&](auto&... entry) { (clear_entry(entry), ...); }, m_repository);
     }
-
-    void copy_objects(const Repository& other);
-
-    void copy_predicates(const Repository& other);
-
-    void copy_functions(const Repository& other);
 
 public:
     Repository(size_t num_objects, const Repository* parent = nullptr) :
@@ -169,7 +146,7 @@ public:
         clear_entries();
     }
 
-    void copy_fundamental_structures(const Repository& other);
+    auto get_num_objects() const noexcept { return m_num_objects; }
 
     template<typename T>
     std::optional<View<Index<T>, Repository>> find_with_hash(const Data<T>& builder, size_t h) const noexcept
@@ -286,12 +263,11 @@ public:
     }
 
     /**
-     * Predicate relation table
+     * Predicate tables
      */
 
-    template<FactKind T>
-    std::optional<View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>>
-    find_with_hash(Index<Predicate<T>> g, const IndexList<Object>& builder, size_t h) const noexcept
+    template<IndexConcept I>
+    std::optional<View<std::pair<I, Index<Binding>>, Repository>> find_with_hash(I g, const IndexList<Object>& builder, size_t h) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find_with_hash(g, builder, h);
         if (row_or_nullopt)
@@ -299,8 +275,8 @@ public:
         return std::nullopt;
     }
 
-    template<FactKind T>
-    std::optional<View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>> find(Index<Predicate<T>> g, const IndexList<Object>& builder) const noexcept
+    template<IndexConcept I>
+    std::optional<View<std::pair<I, Index<Binding>>, Repository>> find(I g, const IndexList<Object>& builder) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find(g, builder);
         if (row_or_nullopt)
@@ -308,9 +284,8 @@ public:
         return std::nullopt;
     }
 
-    template<FactKind T>
-    std::pair<View<std::pair<Index<Predicate<T>>, Index<Binding>>, Repository>, bool> get_or_create(View<Index<Predicate<T>>, Repository> g,
-                                                                                                    const IndexList<Object>& builder)
+    template<IndexConcept I>
+    std::pair<View<std::pair<I, Index<Binding>>, Repository>, bool> get_or_create(View<I, Repository> g, const IndexList<Object>& builder)
     {
         const auto [row, success] =
             m_relation_repository.get_or_create(g.get_index(), g.get_arity(), std::max<uint8_t>(1, std::bit_width(m_num_objects)), builder);
@@ -318,71 +293,20 @@ public:
         return { make_view(std::make_pair(g.get_index(), row), *this), success };
     }
 
-    template<FactKind T>
-    auto operator[](std::pair<Index<Predicate<T>>, Index<Binding>> index) const noexcept
+    template<IndexConcept I>
+    auto operator[](std::pair<I, Index<Binding>> index) const noexcept
     {
         return m_relation_repository[index];
     }
 
-    template<FactKind T>
-    size_t size(Index<Predicate<T>> g) const noexcept
+    template<IndexConcept I>
+    size_t size(I g) const noexcept
     {
         return m_relation_repository.size(g);
     }
 
-    template<FactKind T>
-    const RelationTableRepository& get_canonical_context(std::pair<Index<Predicate<T>>, Index<Binding>> index) const noexcept
-    {
-        return m_relation_repository.get_canonical_context(index);
-    }
-
-    /**
-     * Function relation table
-     */
-
-    template<FactKind T>
-    std::optional<View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>>
-    find_with_hash(Index<Function<T>> g, const IndexList<Object>& builder, size_t h) const noexcept
-    {
-        const auto row_or_nullopt = m_relation_repository.find_with_hash(g, builder, h);
-        if (row_or_nullopt)
-            return make_view(std::make_pair(g.get_index(), *row_or_nullopt), *this);
-        return std::nullopt;
-    }
-
-    template<FactKind T>
-    std::optional<View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>> find(Index<Function<T>> g, const IndexList<Object>& builder) const noexcept
-    {
-        const auto row_or_nullopt = m_relation_repository.find(g, builder);
-        if (row_or_nullopt)
-            return make_view(std::make_pair(g.get_index(), *row_or_nullopt), *this);
-        return std::nullopt;
-    }
-
-    template<FactKind T>
-    std::pair<View<std::pair<Index<Function<T>>, Index<Binding>>, Repository>, bool> get_or_create(View<Index<Function<T>>, Repository> g,
-                                                                                                   const IndexList<Object>& builder)
-    {
-        const auto [row, success] =
-            m_relation_repository.get_or_create(g.get_index(), g.get_arity(), std::max<uint8_t>(1, std::bit_width(m_num_objects)), builder);
-
-        return { make_view(std::make_pair(g.get_index(), row), *this), success };
-    }
-
-    template<FactKind T>
-    auto operator[](std::pair<Index<Function<T>>, Index<Binding>> index) const noexcept
-    {
-        return m_relation_repository[index];
-    }
-
-    template<FactKind T>
-    size_t size(Index<Function<T>> g) const noexcept
-    {
-        return m_relation_repository.size(g);
-    }
-
-    template<FactKind T>
-    const RelationTableRepository& get_canonical_context(std::pair<Index<Function<T>>, Index<Binding>> index) const noexcept
+    template<IndexConcept I>
+    const RelationTableRepository& get_canonical_context(std::pair<I, Index<Binding>> index) const noexcept
     {
         return m_relation_repository.get_canonical_context(index);
     }

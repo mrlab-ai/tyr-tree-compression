@@ -50,7 +50,7 @@ public:
     {
         m_workspace.facts.goal_fact_sets.reset();
 
-        auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.repository };
+        auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
 
         for (const auto fact : goal.get_facts<formalism::FluentTag>())
         {
@@ -63,7 +63,7 @@ public:
     {
         m_workspace.facts.reset();
 
-        auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.repository };
+        auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
 
         insert_fluent_atoms_to_fact_set(state.get_unpacked_state(), *m_task->get_repository(), merge_context, m_workspace.facts.fact_sets);
 

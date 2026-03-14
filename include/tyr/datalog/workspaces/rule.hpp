@@ -160,7 +160,9 @@ struct RuleWorkspace
 {
     struct Common
     {
-        explicit Common(const formalism::datalog::Repository& program_repository, const StaticConsistencyGraph& static_consistency_graph);
+        explicit Common(const formalism::datalog::Repository& program_repository,
+                        const formalism::datalog::Repository& workspace_repository,
+                        const StaticConsistencyGraph& static_consistency_graph);
 
         void initialize_iteration(const StaticConsistencyGraph& static_consistency_graph,
                                   const TaggedFactSets<formalism::FluentTag>& delta_fact_sets,
@@ -170,6 +172,7 @@ struct RuleWorkspace
 
         /// Program repository to ground witnesses for which ground entities must already exist and we can simply call find.
         const formalism::datalog::Repository& program_repository;
+        const formalism::datalog::Repository& workspace_repository;
 
         /// KPKC
         kpkc::DeltaKPKC kpkc;
@@ -189,12 +192,12 @@ struct RuleWorkspace
         void clear() noexcept;
 
         /// Merge stage into rule execution context
-        formalism::datalog::Repository program_overlay_repository;
+        formalism::datalog::Repository workspace_overlay_repository;
 
         /// Heads
         UnorderedSet<Index<formalism::datalog::GroundAtom<formalism::FluentTag>>> heads;
 
-        // Annotations stored in stage_repository
+        // Annotations stored in program_overlay_repository
         AndAnnotationsMap and_annot;
 
         /// KPKC
@@ -203,14 +206,17 @@ struct RuleWorkspace
 
     struct Solve
     {
-        explicit Solve(size_t num_objects, const formalism::datalog::Repository& program_repository, const AndAP& and_ap);
+        explicit Solve(size_t num_objects,
+                       const formalism::datalog::Repository& program_repository,
+                       const formalism::datalog::Repository& workspace_repository,
+                       const AndAP& and_ap);
 
         void clear() noexcept;
 
         AndAP and_ap;
 
         /// Persistent memory
-        formalism::datalog::Repository stage_repository;
+        formalism::datalog::Repository program_overlay_repository;
 
         /// In debug mode, we accumulate all bindings to verify the correctness of delta-kpkc
         UnorderedSet<IndexList<formalism::Object>> seen_bindings_dbg;
@@ -225,7 +231,11 @@ struct RuleWorkspace
 
     struct Worker
     {
-        explicit Worker(size_t num_objects, const formalism::datalog::Repository& program_repository, const Common& common, const AndAP& and_ap);
+        explicit Worker(size_t num_objects,
+                        const formalism::datalog::Repository& program_repository,
+                        const formalism::datalog::Repository& workspace_repository,
+                        const Common& common,
+                        const AndAP& and_ap);
 
         void clear() noexcept;
 
@@ -236,7 +246,11 @@ struct RuleWorkspace
         Solve solve;
     };
 
-    RuleWorkspace(size_t num_objects, const formalism::datalog::Repository& program_repository, const ConstRuleWorkspace& cws, const AndAP& and_ap);
+    RuleWorkspace(size_t num_objects,
+                  const formalism::datalog::Repository& program_repository,
+                  const formalism::datalog::Repository& workspace_repository,
+                  const ConstRuleWorkspace& cws,
+                  const AndAP& and_ap);
     RuleWorkspace(const RuleWorkspace& other) = delete;
     RuleWorkspace& operator=(const RuleWorkspace& other) = delete;
     RuleWorkspace(RuleWorkspace&& other) = delete;
@@ -285,8 +299,11 @@ private:
  */
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Common::Common(const formalism::datalog::Repository& program_repository, const StaticConsistencyGraph& static_consistency_graph) :
+RuleWorkspace<AndAP>::Common::Common(const formalism::datalog::Repository& program_repository,
+                                     const formalism::datalog::Repository& workspace_repository,
+                                     const StaticConsistencyGraph& static_consistency_graph) :
     program_repository(program_repository),
+    workspace_repository(workspace_repository),
     kpkc(static_consistency_graph),
     statistics()
 {
@@ -308,7 +325,7 @@ void RuleWorkspace<AndAP>::Common::initialize_iteration(const StaticConsistencyG
 
 template<typename AndAP>
 RuleWorkspace<AndAP>::Iteration::Iteration(size_t num_objects, const Common& common) :
-    program_overlay_repository(num_objects, &common.program_repository),
+    workspace_overlay_repository(num_objects, &common.workspace_repository),
     heads(),
     and_annot(),
     kpkc_workspace(common.kpkc.get_graph_layout())
@@ -318,37 +335,43 @@ RuleWorkspace<AndAP>::Iteration::Iteration(size_t num_objects, const Common& com
 template<typename AndAP>
 void RuleWorkspace<AndAP>::Iteration::clear() noexcept
 {
-    program_overlay_repository.clear();
+    workspace_overlay_repository.clear();
     heads.clear();
     and_annot.clear();
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Solve::Solve(size_t num_objects, const formalism::datalog::Repository& program_repository, const AndAP& and_ap) :
+RuleWorkspace<AndAP>::Solve::Solve(size_t num_objects,
+                                   const formalism::datalog::Repository& program_repository,
+                                   const formalism::datalog::Repository& workspace_repository,
+                                   const AndAP& and_ap) :
     and_ap(and_ap),
-    stage_repository(num_objects),
+    program_overlay_repository(num_objects, &program_repository),
     seen_bindings_dbg(),
     applicability_check_pool(),
     pending_rules(),
     statistics()
 {
-    stage_repository.copy_fundamental_structures(program_repository);
 }
 
 template<typename AndAP>
 void RuleWorkspace<AndAP>::Solve::clear() noexcept
 {
-    stage_repository.clear();
+    program_overlay_repository.clear();
     seen_bindings_dbg.clear();
     pending_rules.clear();
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Worker::Worker(size_t num_objects, const formalism::datalog::Repository& program_repository, const Common& common, const AndAP& and_ap) :
+RuleWorkspace<AndAP>::Worker::Worker(size_t num_objects,
+                                     const formalism::datalog::Repository& program_repository,
+                                     const formalism::datalog::Repository& workspace_repository,
+                                     const Common& common,
+                                     const AndAP& and_ap) :
     builder(),
     binding(),
     iteration(num_objects, common),
-    solve(num_objects, program_repository, and_ap)
+    solve(num_objects, program_repository, workspace_repository, and_ap)
 {
 }
 
@@ -362,10 +385,12 @@ void RuleWorkspace<AndAP>::Worker::clear() noexcept
 template<typename AndAP>
 RuleWorkspace<AndAP>::RuleWorkspace(size_t num_objects,
                                     const formalism::datalog::Repository& program_repository,
+                                    const formalism::datalog::Repository& workspace_repository,
                                     const ConstRuleWorkspace& cws,
                                     const AndAP& and_ap) :
-    common(program_repository, cws.get_static_consistency_graph()),
-    worker([this, repo = &program_repository, and_ap, num_objects] { return Worker(num_objects, *repo, this->common, and_ap); })
+    common(program_repository, workspace_repository, cws.get_static_consistency_graph()),
+    worker([this, program_repo = &program_repository, workspace_repo = &workspace_repository, and_ap, num_objects]
+           { return Worker(num_objects, *program_repo, *workspace_repo, this->common, and_ap); })
 {
 }
 

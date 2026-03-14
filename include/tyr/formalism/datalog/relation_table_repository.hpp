@@ -65,7 +65,8 @@ private:
         slot_type slots;
     };
 
-    using RepositoryStorage = std::tuple<Entry<Predicate<StaticTag>>, Entry<Predicate<FluentTag>>, Entry<Function<StaticTag>>, Entry<Function<FluentTag>>>;
+    using RepositoryStorage =
+        std::tuple<Entry<Predicate<StaticTag>>, Entry<Predicate<FluentTag>>, Entry<Function<StaticTag>>, Entry<Function<FluentTag>>, Entry<Rule>>;
 
     const RelationTableRepository* m_parent;
     RepositoryStorage m_repository;
@@ -97,21 +98,6 @@ private:
     template<typename T>
     void clear_entry(Entry<T>& entry) noexcept
     {
-        // First, ensure we have slots for all parent relations of this type.
-        if (m_parent)
-        {
-            const auto& parent_entry = std::get<Entry<T>>(m_parent->m_repository);
-            for (const auto& [g, parent_slot] : parent_entry.slots)
-            {
-                auto [it, inserted] = entry.slots.try_emplace(g);
-                it->second.parent_size = m_parent->template size<T>(g);
-
-                if (it->second.container)
-                    it->second.container->clear();
-            }
-        }
-
-        // Then refresh all local slots, including those not present in parent.
         for (auto& [g, slot] : entry.slots)
         {
             if (slot.container)
@@ -174,13 +160,13 @@ public:
     std::pair<Index<Binding>, bool> get_or_create(Index<T> g, size_t arity, uint8_t width, const IndexList<Object>& builder)
     {
         auto& slot = get_or_create_slot(g);
-        // Note: this creates the local container even if the element was found in the parent.
-        auto& container = get_or_create_container(arity, width, slot);
-        const auto h = container.hash(builder);
 
         if (m_parent)
-            if (auto ptr = m_parent->template find_with_hash<T>(g, builder, h))
+            if (auto ptr = m_parent->template find<T>(g, builder))
                 return { *ptr, false };
+
+        auto& container = get_or_create_container(arity, width, slot);
+        const auto h = container.hash(builder);
 
         const auto [row, success] = container.insert_with_hash(h, builder);
         return { Index<Binding>(slot.parent_size + row), success };

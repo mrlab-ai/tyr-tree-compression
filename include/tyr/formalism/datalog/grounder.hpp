@@ -345,7 +345,7 @@ inline auto ground(RuleView element, GrounderContext& context)
 
     // Fill data
     rule.rule = element.get_index();
-    rule.binding = ground(context.binding, context).first.get_index();
+    rule.row = context.destination.get_or_create(element, context.binding).first.get_index().second;
     rule.body = ground(element.get_body(), context).first.get_index();
     rule.head = ground(element.get_head(), context).first.get_index();
 

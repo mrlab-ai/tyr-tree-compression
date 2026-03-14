@@ -122,7 +122,9 @@ private:
 template<typename OrAP, typename AndAP, typename TP>
 struct ProgramWorkspace
 {
-    formalism::datalog::Repository& repository;
+    const formalism::datalog::Repository& program_repository;
+    formalism::datalog::Repository& workspace_repository;
+
     FactsWorkspace facts;
 
     OrAP or_ap;
@@ -162,7 +164,8 @@ struct ConstProgramWorkspace
 
 template<typename OrAP, typename AndAP, typename TP>
 ProgramWorkspace<OrAP, AndAP, TP>::ProgramWorkspace(ProgramContext& context, const ConstProgramWorkspace& cws, OrAP or_ap, AndAP and_ap, TP tp) :
-    repository(context.get_repository()),
+    program_repository(context.get_program_repository()),
+    workspace_repository(context.get_workspace_repository()),
     facts(context.get_program().get_predicates<formalism::FluentTag>(),
           context.get_program().get_functions<formalism::FluentTag>(),
           context.get_domains().fluent_predicate_domains,
@@ -178,12 +181,13 @@ ProgramWorkspace<OrAP, AndAP, TP>::ProgramWorkspace(ProgramContext& context, con
     d2p(),
     planning_builder(),
     datalog_builder(),
-    schedulers(create_schedulers(context.get_strata(), context.get_listeners(), context.get_repository())),
+    schedulers(create_schedulers(context.get_strata(), context.get_listeners(), program_repository)),
     cost_buckets(),
     statistics()
 {
     for (uint_t i = 0; i < context.get_program().get_rules().size(); ++i)
-        rules.emplace_back(std::make_unique<RuleWorkspace<AndAP>>(context.get_program().get_objects().size(), context.get_repository(), cws.rules[i], and_ap));
+        rules.emplace_back(
+            std::make_unique<RuleWorkspace<AndAP>>(context.get_program().get_objects().size(), program_repository, workspace_repository, cws.rules[i], and_ap));
 }
 
 }

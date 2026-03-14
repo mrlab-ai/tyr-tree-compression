@@ -31,30 +31,33 @@ class ProgramContext
 {
 public:
     ProgramContext(formalism::datalog::ProgramView program,
-                   formalism::datalog::RepositoryPtr repository,
+                   formalism::datalog::RepositoryPtr program_repository,
                    analysis::ProgramVariableDomains domains,
                    analysis::RuleStrata strata,
                    analysis::ListenerStrata listeners) :
-        program(program),
-        repository(std::move(repository)),
-        domains(std::move(domains)),
-        strata(std::move(strata)),
-        listeners(std::move(listeners))
+        m_program(program),
+        m_program_repository(std::move(program_repository)),
+        m_workspace_repository(std::make_shared<formalism::datalog::Repository>(m_program_repository->get_num_objects(), m_program_repository.get())),
+        m_domains(std::move(domains)),
+        m_strata(std::move(strata)),
+        m_listeners(std::move(listeners))
     {
     }
-    auto get_program() const noexcept { return program; }
-    auto& get_repository() noexcept { return *repository; }
-    const auto& get_repository() const noexcept { return *repository; }
-    const auto& get_domains() const noexcept { return domains; }
-    const auto& get_strata() const noexcept { return strata; }
-    const auto& get_listeners() const noexcept { return listeners; }
+    auto get_program() const noexcept { return m_program; }
+    const auto& get_program_repository() const noexcept { return *m_program_repository; }
+    auto& get_workspace_repository() noexcept { return *m_workspace_repository; }
+    const auto& get_workspace_repository() const noexcept { return *m_workspace_repository; }
+    const auto& get_domains() const noexcept { return m_domains; }
+    const auto& get_strata() const noexcept { return m_strata; }
+    const auto& get_listeners() const noexcept { return m_listeners; }
 
 private:
-    formalism::datalog::ProgramView program;
-    formalism::datalog::RepositoryPtr repository;
-    analysis::ProgramVariableDomains domains;
-    analysis::RuleStrata strata;
-    analysis::ListenerStrata listeners;
+    formalism::datalog::ProgramView m_program;
+    formalism::datalog::RepositoryPtr m_program_repository;
+    formalism::datalog::RepositoryPtr m_workspace_repository;
+    analysis::ProgramVariableDomains m_domains;
+    analysis::RuleStrata m_strata;
+    analysis::ListenerStrata m_listeners;
 };
 }
 #endif

@@ -416,7 +416,7 @@ void solve_bottom_up_for_stratum(StratumExecutionContext<OrAP, AndAP, TP>& ctx)
             for (const auto rule_index : active_rules)
             {
                 const auto i = uint_t(rule_index);
-                auto merge_context = fd::MergeContext { ws.datalog_builder, ws.repository };
+                auto merge_context = fd::MergeContext { ws.datalog_builder, ws.workspace_repository };
                 const auto& ws_rule = ws.rules[i];
 
                 for (const auto& worker : ws_rule->worker)
@@ -424,7 +424,7 @@ void solve_bottom_up_for_stratum(StratumExecutionContext<OrAP, AndAP, TP>& ctx)
                     for (const auto worker_head : worker.iteration.heads)
                     {
                         // Merge head from delta into the program
-                        const auto program_head = fd::merge_d2d(make_view(worker_head, worker.solve.stage_repository), merge_context).first;
+                        const auto program_head = fd::merge_d2d(make_view(worker_head, worker.solve.program_overlay_repository), merge_context).first;
 
                         // std::cout << make_view(program_head, ws.repository) << std::endl;
 

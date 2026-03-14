@@ -48,15 +48,15 @@ public:
     auto identifying_members() const noexcept { return std::tie(m_context, m_handle); }
 };
 
-template<formalism::FactKind T, typename C>
-class View<std::pair<Index<formalism::Predicate<T>>, Index<formalism::Binding>>, C>
+template<IndexConcept I, typename C>
+class View<std::pair<I, Index<formalism::Binding>>, C>
 {
 private:
     const C* m_context;
-    std::pair<Index<formalism::Predicate<T>>, Index<formalism::Binding>> m_handle;
+    std::pair<I, Index<formalism::Binding>> m_handle;
 
 public:
-    View(std::pair<Index<formalism::Predicate<T>>, Index<formalism::Binding>> handle, const C& context) noexcept : m_context(&context), m_handle(handle) {}
+    View(std::pair<I, Index<formalism::Binding>> handle, const C& context) noexcept : m_context(&context), m_handle(handle) {}
 
     // This will return an ArrayView aleady
     auto get_data() const noexcept { return get_repository(*m_context)[m_handle]; }
@@ -64,33 +64,12 @@ public:
     const auto& get_handle() const noexcept { return m_handle; }
 
     auto get_index() const noexcept { return m_handle; }
-    auto get_predicate() const noexcept { return make_view(m_handle.first, *m_context); }
+    auto get_relation() const noexcept { return make_view(m_handle.first, *m_context); }
     auto get_objects() const noexcept { return make_view(get_data(), *m_context); }
 
     auto identifying_members() const noexcept { return std::tie(m_context, m_handle); }
 };
 
-template<formalism::FactKind T, typename C>
-class View<std::pair<Index<formalism::Function<T>>, Index<formalism::Binding>>, C>
-{
-private:
-    const C* m_context;
-    std::pair<Index<formalism::Function<T>>, Index<formalism::Binding>> m_handle;
-
-public:
-    View(std::pair<Index<formalism::Function<T>>, Index<formalism::Binding>> handle, const C& context) noexcept : m_context(&context), m_handle(handle) {}
-
-    // This will return an ArrayView aleady
-    auto get_data() const noexcept { return get_repository(*m_context)[m_handle]; }
-    const auto& get_context() const noexcept { return *m_context; }
-    const auto& get_handle() const noexcept { return m_handle; }
-
-    auto get_index() const noexcept { return m_handle; }
-    auto get_function() const noexcept { return make_view(m_handle.first, *m_context); }
-    auto get_objects() const noexcept { return make_view(get_data(), *m_context); }
-
-    auto identifying_members() const noexcept { return std::tie(m_context, m_handle); }
-};
 }
 
 #endif

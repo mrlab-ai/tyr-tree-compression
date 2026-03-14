@@ -33,50 +33,30 @@ namespace tyr::datalog
  */
 
 template<f::FactKind T>
-PredicateFactSet<T>::PredicateFactSet(fd::PredicateView<T> predicate) :
-    m_predicate(predicate.get_index()),
-    m_context(predicate.get_context()),
-    m_indices(),
-    m_bitset()
+PredicateFactSet<T>::PredicateFactSet(fd::PredicateView<T> predicate) : m_predicate(predicate), m_views(), m_bitset()
 {
 }
 
 template<f::FactKind T>
 void PredicateFactSet<T>::reset()
 {
-    m_indices.clear();
+    m_views.clear();
     m_bitset.reset();
-}
-
-template<f::FactKind T>
-void PredicateFactSet<T>::insert(Index<formalism::datalog::GroundAtom<T>> ground_atom)
-{
-    if (ground_atom.value >= m_bitset.size())
-        m_bitset.resize(ground_atom.value + 1, false);
-
-    if (m_bitset.test(ground_atom.value))
-        return;
-
-    m_indices.push_back(ground_atom);
-    m_bitset.set(ground_atom.value);
 }
 
 template<f::FactKind T>
 void PredicateFactSet<T>::insert(fd::GroundAtomView<T> ground_atom)
 {
-    if (&m_context != &ground_atom.get_context())
-        throw std::runtime_error("Incompatible contexts.");
+    const auto ground_atom_index = uint_t(ground_atom.get_index());
 
-    const auto ground_atom_index = ground_atom.get_index();
+    if (ground_atom_index >= m_bitset.size())
+        m_bitset.resize(ground_atom_index + 1, false);
 
-    if (ground_atom_index.value >= m_bitset.size())
-        m_bitset.resize(ground_atom_index.value + 1, false);
-
-    if (m_bitset.test(ground_atom_index.value))
+    if (m_bitset.test(ground_atom_index))
         return;
 
-    m_indices.push_back(ground_atom_index);
-    m_bitset.set(ground_atom_index.value);
+    m_views.push_back(ground_atom);
+    m_bitset.set(ground_atom_index);
 }
 
 template<f::FactKind T>
@@ -87,29 +67,22 @@ void PredicateFactSet<T>::insert(fd::GroundAtomListView<T> ground_atoms)
 }
 
 template<f::FactKind T>
-bool PredicateFactSet<T>::contains(Index<fd::GroundAtom<T>> ground_atom) const noexcept
+void PredicateFactSet<T>::insert(const std::vector<formalism::datalog::GroundAtomView<T>>& ground_atoms)
 {
-    if (ground_atom.get_value() >= m_bitset.size())
-        return false;
-    return m_bitset.test(ground_atom.get_value());
+    for (const auto ground_atom : ground_atoms)
+        insert(ground_atom);
 }
 
 template<f::FactKind T>
 bool PredicateFactSet<T>::contains(fd::GroundAtomView<T> ground_atom) const noexcept
 {
-    return contains(ground_atom.get_index());
+    return tyr::test(uint_t(ground_atom.get_index()), m_bitset);
 }
 
 template<f::FactKind T>
-fd::GroundAtomListView<T> PredicateFactSet<T>::get_facts() const noexcept
+const std::vector<fd::GroundAtomView<T>>& PredicateFactSet<T>::get_facts() const noexcept
 {
-    return make_view(m_indices, m_context);
-}
-
-template<f::FactKind T>
-const boost::dynamic_bitset<>& PredicateFactSet<T>::get_bitset() const noexcept
-{
-    return m_bitset;
+    return m_views;
 }
 
 template class PredicateFactSet<f::StaticTag>;

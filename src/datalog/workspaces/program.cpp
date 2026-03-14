@@ -36,7 +36,7 @@ ConstProgramWorkspace::ConstProgramWorkspace(ProgramContext& context) :
     rules.reserve(context.get_program().get_rules().size());  // Ensure enough space to avoid move on reallocation
     for (uint_t i = 0; i < context.get_program().get_rules().size(); ++i)
         rules.emplace_back(context.get_program().get_rules()[i],
-                           context.get_repository(),
+                           context.get_workspace_repository(),
                            context.get_domains().rule_domains[i],
                            context.get_program().get_objects().size(),
                            context.get_program().get_predicates<formalism::FluentTag>().size(),

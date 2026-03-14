@@ -32,35 +32,30 @@ template<formalism::FactKind T>
 class PredicateFactSet
 {
 private:
-    Index<formalism::Predicate<T>> m_predicate;
+    formalism::datalog::PredicateView<T> m_predicate;
 
-    const formalism::datalog::Repository& m_context;
-    IndexList<formalism::datalog::GroundAtom<T>> m_indices;
+    std::vector<formalism::datalog::GroundAtomView<T>> m_views;
 
     boost::dynamic_bitset<> m_bitset;
 
 public:
     explicit PredicateFactSet(formalism::datalog::PredicateView<T> predicate);
 
-    auto get_predicate() const noexcept { return make_view(m_predicate, m_context); }
+    auto get_predicate() const noexcept { return m_predicate; }
 
     void insert(const PredicateFactSet<T>& other) { insert(other.get_facts()); }
 
     void reset();
 
-    void insert(Index<formalism::datalog::GroundAtom<T>> ground_atom);
-
     void insert(formalism::datalog::GroundAtomView<T> ground_atom);
 
     void insert(formalism::datalog::GroundAtomListView<T> ground_atoms);
 
-    bool contains(Index<formalism::datalog::GroundAtom<T>> ground_atom) const noexcept;
+    void insert(const std::vector<formalism::datalog::GroundAtomView<T>>& ground_atoms);
 
     bool contains(formalism::datalog::GroundAtomView<T> ground_atom) const noexcept;
 
-    formalism::datalog::GroundAtomListView<T> get_facts() const noexcept;
-
-    const boost::dynamic_bitset<>& get_bitset() const noexcept;
+    const std::vector<formalism::datalog::GroundAtomView<T>>& get_facts() const noexcept;
 };
 
 template<formalism::FactKind T>
@@ -95,7 +90,7 @@ public:
             set.reset();
     }
 
-    void insert(formalism::datalog::GroundAtomView<T> ground_atom) { m_sets[uint_t(ground_atom.get_predicate().get_index())].insert(ground_atom.get_index()); }
+    void insert(formalism::datalog::GroundAtomView<T> ground_atom) { m_sets[uint_t(ground_atom.get_predicate().get_index())].insert(ground_atom); }
 
     void insert(formalism::datalog::GroundAtomListView<T> ground_atoms)
     {
@@ -105,7 +100,7 @@ public:
 
     bool contains(formalism::datalog::GroundAtomView<T> ground_atom) const noexcept
     {
-        return m_sets[uint_t(ground_atom.get_predicate().get_index())].contains(ground_atom.get_index());
+        return m_sets[uint_t(ground_atom.get_predicate().get_index())].contains(ground_atom);
     }
 
     const std::vector<PredicateFactSet<T>>& get_sets() const noexcept { return m_sets; }

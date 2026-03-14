@@ -100,7 +100,7 @@ void SuccessorGenerator<LiftedTask>::get_labeled_successor_nodes(const Node<Lift
 
     const auto state = node.get_state();
 
-    auto merge_context = fp::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.repository };
+    auto merge_context = fp::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
 
     insert_extended_state(state.get_unpacked_state(), *m_task->get_repository(), merge_context, m_workspace.facts.fact_sets, m_workspace.facts.assignment_sets);
 

@@ -154,7 +154,7 @@ private:
         for (const auto literal : witness.get_witness_condition().get_literals<formalism::FluentTag>())
         {
             // The atom is part of the program but the literal is not, hence, literal.get_data().atom
-            extract_relaxed_plan_and_preferred_actions(make_view(literal.get_data().atom, m_workspace.repository), state_context, grounder_context);
+            extract_relaxed_plan_and_preferred_actions(make_view(literal.get_data().atom, m_workspace.workspace_repository), state_context, grounder_context);
         }
     }
 
