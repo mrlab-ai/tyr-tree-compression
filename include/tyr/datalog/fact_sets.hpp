@@ -23,6 +23,7 @@
 #include "tyr/formalism/datalog/views.hpp"
 
 #include <boost/dynamic_bitset.hpp>
+#include <iostream>
 
 namespace tyr::datalog
 {
@@ -174,6 +175,7 @@ public:
 
     void insert(const FunctionFactSets& other)
     {
+        std::cout << m_sets.size() << " " << other.m_sets.size() << std::endl;
         assert(m_sets.size() == other.m_sets.size());
 
         for (uint_t i = 0; i < m_sets.size(); ++i)

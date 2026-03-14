@@ -203,7 +203,7 @@ struct RuleWorkspace
 
     struct Solve
     {
-        explicit Solve(size_t num_objects, const AndAP& and_ap);
+        explicit Solve(size_t num_objects, const formalism::datalog::Repository& program_repository, const AndAP& and_ap);
 
         void clear() noexcept;
 
@@ -225,7 +225,7 @@ struct RuleWorkspace
 
     struct Worker
     {
-        explicit Worker(size_t num_objects, const Common& common, const AndAP& and_ap);
+        explicit Worker(size_t num_objects, const formalism::datalog::Repository& program_repository, const Common& common, const AndAP& and_ap);
 
         void clear() noexcept;
 
@@ -324,7 +324,7 @@ void RuleWorkspace<AndAP>::Iteration::clear() noexcept
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Solve::Solve(size_t num_objects, const AndAP& and_ap) :
+RuleWorkspace<AndAP>::Solve::Solve(size_t num_objects, const formalism::datalog::Repository& program_repository, const AndAP& and_ap) :
     and_ap(and_ap),
     stage_repository(num_objects),
     seen_bindings_dbg(),
@@ -332,6 +332,7 @@ RuleWorkspace<AndAP>::Solve::Solve(size_t num_objects, const AndAP& and_ap) :
     pending_rules(),
     statistics()
 {
+    stage_repository.copy_fundamental_structures(program_repository);
 }
 
 template<typename AndAP>
@@ -343,11 +344,11 @@ void RuleWorkspace<AndAP>::Solve::clear() noexcept
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Worker::Worker(size_t num_objects, const Common& common, const AndAP& and_ap) :
+RuleWorkspace<AndAP>::Worker::Worker(size_t num_objects, const formalism::datalog::Repository& program_repository, const Common& common, const AndAP& and_ap) :
     builder(),
     binding(),
     iteration(num_objects, common),
-    solve(num_objects, and_ap)
+    solve(num_objects, program_repository, and_ap)
 {
 }
 
@@ -364,7 +365,7 @@ RuleWorkspace<AndAP>::RuleWorkspace(size_t num_objects,
                                     const ConstRuleWorkspace& cws,
                                     const AndAP& and_ap) :
     common(program_repository, cws.get_static_consistency_graph()),
-    worker([this, and_ap, num_objects] { return Worker(num_objects, this->common, and_ap); })
+    worker([this, repo = &program_repository, and_ap, num_objects] { return Worker(num_objects, *repo, this->common, and_ap); })
 {
 }
 

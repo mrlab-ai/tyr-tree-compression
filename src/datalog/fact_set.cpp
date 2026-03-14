@@ -128,7 +128,7 @@ void FunctionFactSet<T>::reset()
 {
     m_indices.clear();
     m_unique.clear();
-    std::fill(m_values.begin(), m_values.end(), std::numeric_limits<float_t>::quiet_NaN());
+    m_values.clear();
 }
 
 template<f::FactKind T>
@@ -144,11 +144,15 @@ void FunctionFactSet<T>::insert(fd::GroundFunctionTermView<T> function_term, flo
     if (fterm_index.get_value() >= m_values.size())
         m_values.resize(fterm_index.get_value() + 1, std::numeric_limits<float_t>::quiet_NaN());
     m_values[fterm_index.get_value()] = value;
+
+    std::cout << "Insert: " << fterm_index.get_value() << " " << value << std::endl;
 }
 
 template<f::FactKind T>
 void FunctionFactSet<T>::insert(fd::GroundFunctionTermListView<T> function_terms, const std::vector<float_t>& values)
 {
+    std::cout << function_terms.size() << " " << values.size() << std::endl;
+
     assert(function_terms.size() == values.size());
 
     for (uint_t i = 0; i < function_terms.size(); ++i)

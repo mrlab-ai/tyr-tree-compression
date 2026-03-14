@@ -130,10 +130,33 @@ private:
         entry.slot.parent_size = m_parent ? m_parent->template size<T>() : size_t { 0 };
     }
 
+    template<FactKind T>
+    void clear_entry(RepositoryEntry<Predicate<T>>& entry) noexcept
+    {
+        // Never clear
+    }
+
+    template<FactKind T>
+    void clear_entry(RepositoryEntry<Function<T>>& entry) noexcept
+    {
+        // Never clear
+    }
+
+    void clear_entry(RepositoryEntry<Object>& entry) noexcept
+    {
+        // Never clear
+    }
+
     void clear_entries() noexcept
     {
         std::apply([&](auto&... entry) { (clear_entry(entry), ...); }, m_repository);
     }
+
+    void copy_objects(const Repository& other);
+
+    void copy_predicates(const Repository& other);
+
+    void copy_functions(const Repository& other);
 
 public:
     Repository(size_t num_objects, const Repository* parent = nullptr) :
@@ -145,6 +168,8 @@ public:
     {
         clear_entries();
     }
+
+    void copy_fundamental_structures(const Repository& other);
 
     template<typename T>
     std::optional<View<Index<T>, Repository>> find_with_hash(const Data<T>& builder, size_t h) const noexcept

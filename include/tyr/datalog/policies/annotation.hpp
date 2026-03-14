@@ -312,13 +312,17 @@ private:
         auto& ground_conj_cond = *ground_conj_cond_ptr;
         ground_conj_cond.clear();
 
+        auto ground_literal_ptr = delta_context.builder.get_builder<formalism::datalog::GroundLiteral<formalism::FluentTag>>();
+        auto& ground_literal = *ground_literal_ptr;
+
         for (const auto literal : witness_condition.get_literals<formalism::FluentTag>())
         {
             assert(literal.get_polarity());
 
-            const auto [program_ground_literal, inserted] = formalism::datalog::ground(literal, iteration_context);
+            const auto [program_ground_atom, inserted] = formalism::datalog::ground(literal.get_atom(), iteration_context);
+            assert(!inserted);  ///< must exist in program because the precondition is applicable in program fact set.
 
-            const auto program_ground_atom_cost = fetch_atom_cost(program_ground_literal.get_atom(), or_annot);
+            const auto program_ground_atom_cost = fetch_atom_cost(program_ground_atom, or_annot);
             assert(program_ground_atom_cost != std::numeric_limits<uint_t>::max());
 
             body_cost = agg(body_cost, program_ground_atom_cost);
@@ -326,7 +330,13 @@ private:
             if (best_cost <= body_cost + rule_cost)
                 return std::nullopt;  ///< No local or global improvement
 
-            ground_conj_cond.fluent_literals.push_back(program_ground_literal.get_index());
+            // TODO: we could get rid of grounding literals by having strictly positive rules
+            ground_literal.clear();
+            ground_literal.atom = program_ground_atom.get_index();
+            ground_literal.polarity = literal.get_polarity();
+
+            ground_conj_cond.fluent_literals.push_back(
+                delta_context.destination.get_or_create(ground_literal, delta_context.builder.get_buffer()).first.get_index());
         }
         const auto witness_cost = body_cost + rule_cost;
 

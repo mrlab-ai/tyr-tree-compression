@@ -79,12 +79,6 @@ public:
         for (const auto atom : m_workspace.tp.get_atoms())
             extract_relaxed_plan_and_preferred_actions(atom, state_context, grounder_context);
 
-        // std::cout << "Num pref: " << m_preferred_actions.size() << " h: " << m_relaxed_plan.size() << std::endl;
-        // for (const auto& action : m_preferred_actions)
-        // {
-        //     std::cout << std::make_pair(make_view(action, *this->m_task->get_repository()), formalism::planning::PlanFormatting()) << std::endl;
-        // }
-
         return m_relaxed_plan.size();
     }
 
@@ -159,8 +153,8 @@ private:
         // Divide case: recursively call for preconditions.
         for (const auto literal : witness.get_witness_condition().get_literals<formalism::FluentTag>())
         {
-            // The atoms itself is part of the program
-            extract_relaxed_plan_and_preferred_actions(make_view(literal.get_atom().get_index(), m_workspace.repository), state_context, grounder_context);
+            // The atom is part of the program but the literal is not, hence, literal.get_data().atom
+            extract_relaxed_plan_and_preferred_actions(make_view(literal.get_data().atom, m_workspace.repository), state_context, grounder_context);
         }
     }
 
