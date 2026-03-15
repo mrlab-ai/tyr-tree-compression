@@ -25,6 +25,7 @@
 #include "tyr/formalism/planning/canonicalization.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/fdr_context.hpp"
+#include "tyr/formalism/planning/formatter.hpp"
 #include "tyr/formalism/planning/grounder.hpp"
 #include "tyr/formalism/planning/merge.hpp"
 #include "tyr/formalism/planning/repository.hpp"
@@ -412,6 +413,20 @@ inline auto ground(ConditionalEffectView element, GrounderContext& context, Unor
     return context.destination.get_or_create(cond_effect, context.builder.get_buffer());
 }
 
+inline auto ground(ActionView action, GrounderContext& context)
+{
+    auto binding_ptr = context.builder.template get_builder<Binding>();
+    auto& binding = *binding_ptr;
+    binding.clear();
+
+    for (uint_t i = 0; i < action.get_arity(); ++i)
+        binding.objects.push_back(context.binding[i]);
+
+    // Canonicalize and Serialize
+    canonicalize(binding);
+    return context.destination.get_or_create(action, binding.objects);
+}
+
 template<typename FDR>
     requires FDRContext<FDR>
 inline auto ground(ActionView element,
@@ -428,7 +443,7 @@ inline auto ground(ActionView element,
 
     // Fill data
     action.action = element.get_index();
-    action.row = context.destination.get_or_create(element, context.binding).first.get_index().second;
+    action.row = ground(element, context).first.get_index().second;
     action.condition = ground(element.get_condition(), context, fdr).first.get_index();
 
     auto binding_size = context.binding.size();

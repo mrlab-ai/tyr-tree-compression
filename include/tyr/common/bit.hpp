@@ -171,6 +171,29 @@ private:
     uint8_t m_len;
 };
 
+template<std::unsigned_integral Block, typename Coder = bit::ForwardingBlockCoder<Block>>
+    requires BlockCoder<Coder, Block>
+class block_reference
+{
+public:
+    using value_type = typename Coder::value_type;
+
+    constexpr explicit block_reference(Block* ptr) noexcept : m_ptr(ptr) {}
+
+    constexpr block_reference& operator=(const value_type& value)
+    {
+        *m_ptr = Coder::encode(value);
+        return *this;
+    }
+
+    constexpr block_reference& operator=(const block_reference& other) { return (*this = static_cast<value_type>(other)); }
+
+    constexpr operator value_type() const { return Coder::decode(*m_ptr); }
+
+private:
+    Block* m_ptr;
+};
+
 }
 
 #endif

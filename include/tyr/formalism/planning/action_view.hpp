@@ -46,7 +46,7 @@ public:
     auto get_index() const noexcept { return m_handle; }
     const auto& get_name() const noexcept { return get_data().name; }
     auto get_original_arity() const noexcept { return get_data().original_arity; }
-    auto get_arity() const noexcept { return get_condition().get_arity(); }
+    auto get_arity() const noexcept { return get_variables().size(); }
     auto get_variables() const noexcept { return make_view(get_data().variables, *m_context); }
     auto get_condition() const noexcept { return make_view(get_data().condition, *m_context); }
     auto get_effects() const noexcept { return make_view(get_data().effects, *m_context); }

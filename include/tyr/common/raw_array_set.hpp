@@ -15,13 +15,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_COMMON_SEGMENTED_ARRAY_REPOSITORY_HPP_
-#define TYR_COMMON_SEGMENTED_ARRAY_REPOSITORY_HPP_
+#ifndef TYR_COMMON_RAW_ARRAY_SET_HPP_
+#define TYR_COMMON_RAW_ARRAY_SET_HPP_
 
 #include "tyr/common/declarations.hpp"
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
-#include "tyr/common/segmented_array_pool.hpp"
+#include "tyr/common/raw_array_pool.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -35,19 +35,19 @@ namespace tyr
 {
 
 template<typename T, size_t ArraysPerSegment = 1024>
-class SegmentedArrayRepository
+class RawArraySet
 {
 public:
-    explicit SegmentedArrayRepository(size_t array_size) :
-        m_pool(std::make_shared<SegmentedArrayPool<T, ArraysPerSegment>>(array_size)),
+    explicit RawArraySet(size_t array_size) :
+        m_pool(std::make_shared<RawArrayPool<T, ArraysPerSegment>>(array_size)),
         m_array_size(array_size),
         m_set(0, IndexableHash(m_pool, array_size), IndexableEqualTo(m_pool, array_size))
     {
     }
-    SegmentedArrayRepository(const SegmentedArrayRepository& other) = delete;
-    SegmentedArrayRepository& operator=(const SegmentedArrayRepository& other) = delete;
-    SegmentedArrayRepository(SegmentedArrayRepository&& other) = default;
-    SegmentedArrayRepository& operator=(SegmentedArrayRepository&& other) = default;
+    RawArraySet(const RawArraySet& other) = delete;
+    RawArraySet& operator=(const RawArraySet& other) = delete;
+    RawArraySet(RawArraySet&& other) = default;
+    RawArraySet& operator=(RawArraySet&& other) = default;
 
     std::optional<uint_t> find(const std::vector<T>& value) const
     {
@@ -84,13 +84,11 @@ private:
     {
         using is_transparent = void;
 
-        std::shared_ptr<SegmentedArrayPool<T, ArraysPerSegment>> pool;
+        std::shared_ptr<RawArrayPool<T, ArraysPerSegment>> pool;
         size_t array_size;
 
         IndexableHash() noexcept : pool(nullptr) {}
-        explicit IndexableHash(std::shared_ptr<SegmentedArrayPool<T, ArraysPerSegment>> pool, size_t array_size) noexcept : pool(pool), array_size(array_size)
-        {
-        }
+        explicit IndexableHash(std::shared_ptr<RawArrayPool<T, ArraysPerSegment>> pool, size_t array_size) noexcept : pool(pool), array_size(array_size) {}
 
         static size_t hash(const T* arr, size_t len) noexcept
         {
@@ -112,15 +110,11 @@ private:
     {
         using is_transparent = void;
 
-        std::shared_ptr<SegmentedArrayPool<T, ArraysPerSegment>> pool;
+        std::shared_ptr<RawArrayPool<T, ArraysPerSegment>> pool;
         size_t array_size;
 
         IndexableEqualTo() noexcept : pool(nullptr) {}
-        explicit IndexableEqualTo(std::shared_ptr<SegmentedArrayPool<T, ArraysPerSegment>> pool, size_t array_size) noexcept :
-            pool(pool),
-            array_size(array_size)
-        {
-        }
+        explicit IndexableEqualTo(std::shared_ptr<RawArrayPool<T, ArraysPerSegment>> pool, size_t array_size) noexcept : pool(pool), array_size(array_size) {}
 
         static bool equal_to(const T* lhs, const T* rhs, size_t len) { return std::equal(lhs, lhs + len, rhs); }
 
@@ -144,7 +138,7 @@ private:
         }
     };
 
-    std::shared_ptr<SegmentedArrayPool<T, ArraysPerSegment>> m_pool;
+    std::shared_ptr<RawArrayPool<T, ArraysPerSegment>> m_pool;
     size_t m_array_size;
     gtl::flat_hash_set<uint_t, IndexableHash, IndexableEqualTo> m_set;
 };

@@ -15,8 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_COMMON_SEGMENTED_ARRAY_POOL_HPP_
-#define TYR_COMMON_SEGMENTED_ARRAY_POOL_HPP_
+#ifndef TYR_COMMON_RAW_ARRAY_POOL_HPP_
+#define TYR_COMMON_RAW_ARRAY_POOL_HPP_
 
 #include <bit>
 #include <cassert>
@@ -28,7 +28,7 @@ namespace tyr
 {
 
 template<typename T, size_t ArraysPerSegment = 1024>
-class SegmentedArrayPool
+class RawArrayPool
 {
     static_assert(bit::is_power_of_two(ArraysPerSegment));
 
@@ -61,14 +61,7 @@ private:
     }
 
 public:
-    explicit SegmentedArrayPool(size_t array_size) :
-        m_array_size(array_size),
-        m_segment_size(ArraysPerSegment * array_size),
-        m_cur_seg(0),
-        m_cur_pos(0),
-        m_size(0)
-    {
-    }
+    explicit RawArrayPool(size_t array_size) : m_array_size(array_size), m_segment_size(ArraysPerSegment * array_size), m_cur_seg(0), m_cur_pos(0), m_size(0) {}
 
     T* allocate()
     {

@@ -23,12 +23,12 @@
 #include "tyr/planning/ground_task/unpacked_state.hpp"
 //
 
-#include "tyr/common/bit_packed_layout.hpp"           // for BitPackedArra...
-#include "tyr/common/config.hpp"                      // for uint_t, float_t
-#include "tyr/common/indexed_hash_set.hpp"            // for IndexedHashSet
-#include "tyr/common/segmented_array_repository.hpp"  // for SegmentedArra...
-#include "tyr/common/shared_object_pool.hpp"          // for SharedObjectPool
-#include "tyr/planning/declarations.hpp"              // for GroundTask
+#include "tyr/common/bit_packed_layout.hpp"   // for BitPackedArra...
+#include "tyr/common/config.hpp"              // for uint_t, float_t
+#include "tyr/common/indexed_hash_set.hpp"    // for IndexedHashSet
+#include "tyr/common/raw_array_set.hpp"       // for SegmentedArra...
+#include "tyr/common/shared_object_pool.hpp"  // for SharedObjectPool
+#include "tyr/planning/declarations.hpp"      // for GroundTask
 #include "tyr/planning/state_index.hpp"
 
 #include <memory>  // for shared_ptr
@@ -73,8 +73,8 @@ private:
     valla::IndexedHashSet<float_t, uint_t> m_float_nodes;
     std::vector<uint_t> m_nodes_buffer;
     IndexedHashSet<PackedState<GroundTask>, StateIndex> m_packed_states;
-    SegmentedArrayRepository<uint_t> m_fluent_repository;
-    SegmentedArrayRepository<uint_t> m_derived_repository;
+    RawArraySet<uint_t> m_fluent_repository;
+    RawArraySet<uint_t> m_derived_repository;
     std::vector<uint_t> m_fluent_buffer;
     std::vector<uint_t> m_derived_buffer;
     SharedObjectPool<UnpackedState<GroundTask>> m_unpacked_state_pool;

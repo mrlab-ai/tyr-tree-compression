@@ -18,7 +18,7 @@
 #ifndef TYR_FORMALISM_RELATION_REPOSITORY_HPP_
 #define TYR_FORMALISM_RELATION_REPOSITORY_HPP_
 
-#include "tyr/common/bit_packed_array_set.hpp"
+#include "tyr/common/block_array_set.hpp"
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
 #include "tyr/common/tuple.hpp"
@@ -49,7 +49,7 @@ private:
 
     struct Slot
     {
-        std::optional<BitPackedArraySet<uint_t, Coder<uint_t>>> container;
+        std::optional<BlockArraySet<uint_t, Coder<uint_t>>> container;
         size_t parent_size = 0;
     };
 
@@ -83,10 +83,10 @@ private:
         return it->second;
     }
 
-    auto& get_or_create_container(size_t arity, uint8_t width, Slot& slot)
+    auto& get_or_create_container(size_t arity, Slot& slot)
     {
         if (!slot.container)
-            slot.container.emplace(arity, width);
+            slot.container.emplace(arity);
         return *slot.container;
     }
 
@@ -108,7 +108,8 @@ private:
     }
 
 public:
-    using ConstViewType = BasicBitPackedArrayView<const uint_t, Coder<uint_t>>;
+    using container_type = BlockArraySet<uint_t, Coder<uint_t>>;
+    using ConstViewType = typename container_type::ConstArrayView;
 
     RelationRepository(size_t num_objects, const RelationRepository* parent = nullptr) : m_parent(parent), m_repository(), m_num_objects(num_objects)
     {
@@ -159,8 +160,7 @@ public:
     }
 
     template<typename T>
-    std::pair<View<std::pair<Index<T>, Index<Binding>>, RelationRepository>, bool>
-    get_or_create(Index<T> g, size_t arity, uint8_t width, const IndexList<Object>& builder)
+    std::pair<View<std::pair<Index<T>, Index<Binding>>, RelationRepository>, bool> get_or_create(Index<T> g, size_t arity, const IndexList<Object>& builder)
     {
         auto& slot = get_or_create_slot(g);
 
@@ -168,7 +168,7 @@ public:
             if (auto ptr = m_parent->template find<T>(g, builder))
                 return { *ptr, false };
 
-        auto& container = get_or_create_container(arity, width, slot);
+        auto& container = get_or_create_container(arity, slot);
         const auto h = container.hash(builder);
 
         const auto [row, success] = container.insert_with_hash(h, builder);
@@ -288,10 +288,10 @@ public:
     }
 
     template<typename T>
-    std::pair<Index<Binding>, bool> get_or_create_local(Index<T> g, size_t arity, uint8_t width, const IndexList<Object>& builder)
+    std::pair<Index<Binding>, bool> get_or_create_local(Index<T> g, size_t arity, const IndexList<Object>& builder)
     {
         auto& slot = get_or_create_slot(g);
-        auto& container = get_or_create_container(arity, width, slot);
+        auto& container = get_or_create_container(arity, slot);
         const auto h = container.hash(builder);
 
         if (auto row_or_nullopt = container.find_with_hash(builder, h))

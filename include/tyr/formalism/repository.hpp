@@ -174,8 +174,7 @@ public:
             if (auto ptr = m_parent->find(g.get_index(), builder))
                 return { *ptr, false };
 
-        const auto [row, success] =
-            m_relation_repository.get_or_create_local(g.get_index(), g.get_arity(), std::max<uint8_t>(1, std::bit_width(m_num_objects)), builder);
+        const auto [row, success] = m_relation_repository.get_or_create_local(g.get_index(), g.get_arity(), builder);
 
         return { View<std::pair<I, Index<Binding>>, Repository>(std::make_pair(g.get_index(), row), *this), success };
     }
