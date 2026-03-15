@@ -246,6 +246,22 @@ public:
 
         return *this;
     }
+
+    template<typename T>
+    bool is_local(std::pair<Index<T>, Index<Binding>> index) const noexcept
+    {
+        const auto& [g, row] = index;
+        assert(g != Index<T>::max() && "Unassigned index.");
+        assert(row != Index<T>::max() && "Unassigned index.");
+
+        const auto& entry = std::get<Entry<T>>(m_repository);
+
+        const auto it = entry.slots.find(g);
+        if (it == entry.slots.end())
+            return false;
+
+        return uint_t(row) >= it->second.parent_size;
+    }
 };
 }
 

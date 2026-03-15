@@ -30,6 +30,7 @@
 #include "tyr/common/tuple.hpp"
 #include "tyr/formalism/datalog/declarations.hpp"
 #include "tyr/formalism/datalog/relation_table_repository.hpp"
+#include "tyr/formalism/datalog/serialization_repository.hpp"
 #include "tyr/formalism/function_view.hpp"
 #include "tyr/formalism/predicate_view.hpp"
 
@@ -45,225 +46,90 @@ namespace tyr::formalism::datalog
 class Repository
 {
 private:
-    template<typename T>
-    struct Slot
-    {
-        buffer::IndexedHashSet<T> container {};
-        size_t parent_size = 0;
-    };
-
-    template<typename T>
-    struct RepositoryEntry
-    {
-        using slot_type = Slot<T>;
-
-        slot_type slot;
-    };
-
-    using RepositoryStorage = std::tuple<RepositoryEntry<Variable>,
-                                         RepositoryEntry<Object>,
-                                         RepositoryEntry<Binding>,
-                                         RepositoryEntry<Predicate<StaticTag>>,
-                                         RepositoryEntry<Predicate<FluentTag>>,
-                                         RepositoryEntry<Atom<StaticTag>>,
-                                         RepositoryEntry<Atom<FluentTag>>,
-                                         RepositoryEntry<GroundAtom<StaticTag>>,
-                                         RepositoryEntry<GroundAtom<FluentTag>>,
-                                         RepositoryEntry<Literal<StaticTag>>,
-                                         RepositoryEntry<Literal<FluentTag>>,
-                                         RepositoryEntry<GroundLiteral<StaticTag>>,
-                                         RepositoryEntry<GroundLiteral<FluentTag>>,
-                                         RepositoryEntry<Function<StaticTag>>,
-                                         RepositoryEntry<Function<FluentTag>>,
-                                         RepositoryEntry<FunctionTerm<StaticTag>>,
-                                         RepositoryEntry<FunctionTerm<FluentTag>>,
-                                         RepositoryEntry<GroundFunctionTerm<StaticTag>>,
-                                         RepositoryEntry<GroundFunctionTerm<FluentTag>>,
-                                         RepositoryEntry<GroundFunctionTermValue<StaticTag>>,
-                                         RepositoryEntry<GroundFunctionTermValue<FluentTag>>,
-                                         RepositoryEntry<UnaryOperator<OpSub, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpAdd, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpSub, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpMul, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpDiv, Data<FunctionExpression>>>,
-                                         RepositoryEntry<MultiOperator<OpAdd, Data<FunctionExpression>>>,
-                                         RepositoryEntry<MultiOperator<OpMul, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpEq, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpNe, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpLe, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpLt, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpGe, Data<FunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpGt, Data<FunctionExpression>>>,
-                                         RepositoryEntry<UnaryOperator<OpSub, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpAdd, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpSub, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpMul, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpDiv, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<MultiOperator<OpAdd, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<MultiOperator<OpMul, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpEq, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpNe, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpLe, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpLt, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpGe, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<BinaryOperator<OpGt, Data<GroundFunctionExpression>>>,
-                                         RepositoryEntry<ConjunctiveCondition>,
-                                         RepositoryEntry<Rule>,
-                                         RepositoryEntry<GroundConjunctiveCondition>,
-                                         RepositoryEntry<GroundRule>,
-                                         RepositoryEntry<Program>>;
-
     const Repository* m_parent;
-    RepositoryStorage m_repository;
-    buffer::SegmentedBuffer m_arena;
+    SerializationRepository m_serialization_repository;
     RelationTableRepository m_relation_repository;
     size_t m_num_objects;
-
-    /**
-     * Clear
-     */
-
-    template<typename T>
-    void clear_entry(RepositoryEntry<T>& entry) noexcept
-    {
-        entry.slot.container.clear();
-        entry.slot.parent_size = m_parent ? m_parent->template size<T>() : size_t { 0 };
-    }
-
-    void clear_entries() noexcept
-    {
-        std::apply([&](auto&... entry) { (clear_entry(entry), ...); }, m_repository);
-    }
 
 public:
     Repository(size_t num_objects, const Repository* parent = nullptr) :
         m_parent(parent),
-        m_repository(),
-        m_arena(),
+        m_serialization_repository(m_parent ? &m_parent->m_serialization_repository : nullptr),
         m_relation_repository(num_objects, m_parent ? &m_parent->m_relation_repository : nullptr),
         m_num_objects(num_objects)
     {
-        clear_entries();
+        clear();
     }
 
     auto get_num_objects() const noexcept { return m_num_objects; }
 
+    /**
+     * SerializationRepository forwarding.
+     */
+
     template<typename T>
     std::optional<View<Index<T>, Repository>> find_with_hash(const Data<T>& builder, size_t h) const noexcept
     {
-        const auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-        const auto& container = entry.slot.container;
-        assert(h == container.hash(builder) && "The given hash does not match container internal's hash.");
-
-        if (auto ptr = container.find_with_hash(builder, h))
-            return View<Index<T>, Repository>(ptr->index, *this);
-
-        return m_parent ? m_parent->template find_with_hash<T>(builder, h) : std::nullopt;
+        const auto index_or_nullopt = m_serialization_repository.find_with_hash(builder, h);
+        if (index_or_nullopt)
+            return make_view(*index_or_nullopt, *this);
+        return std::nullopt;
     }
 
     template<typename T>
     std::optional<View<Index<T>, Repository>> find(const Data<T>& builder) const noexcept
     {
-        const auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-        const auto& container = entry.slot.container;
-        const auto h = container.hash(builder);
-
-        return find_with_hash<T>(builder, h);
+        const auto index_or_nullopt = m_serialization_repository.find(builder);
+        if (index_or_nullopt)
+            return make_view(*index_or_nullopt, *this);
+        return std::nullopt;
     }
 
     template<typename T>
     std::pair<View<Index<T>, Repository>, bool> get_or_create(Data<T>& builder, buffer::Buffer& buf)
     {
-        auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-        auto& slot = entry.slot;
-        auto& container = slot.container;
-        const auto h = container.hash(builder);
+        const auto [index, success] = m_serialization_repository.get_or_create(builder, buf);
 
-        if (m_parent)
-            if (auto ptr = m_parent->template find_with_hash<T>(builder, h))
-                return { *ptr, false };
-
-        // Manually assign index to continue indexing.
-        builder.index.value = slot.parent_size + container.size();
-
-        const auto [ptr, success] = container.insert_with_hash(h, builder, buf, m_arena);
-
-        return { View<Index<T>, Repository>(ptr->index, *this), success };
+        return { make_view(index, *this), success };
     }
 
-    /// @brief Access the element with the given index.
     template<typename T>
     const Data<T>& operator[](Index<T> index) const noexcept
     {
-        assert(index != Index<T>::max() && "Unassigned index.");
-
-        const auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-        const auto& slot = entry.slot;
-        const auto parent_size = slot.parent_size;
-
-        // In parent range -> delegate
-        if (index.value < parent_size)
-        {
-            assert(m_parent);
-            return (*m_parent)[index];
-        }
-
-        // Local range -> shift down
-        index.value -= parent_size;
-
-        return slot.container[index];
+        return m_serialization_repository[index];
     }
 
     template<typename T>
     const Data<T>& front() const
     {
-        const auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-        const auto& slot = entry.slot;
-
-        if (slot.parent_size > 0)
-        {
-            assert(m_parent);
-            return m_parent->template front<T>();  // recurse to root-most non-empty
-        }
-
-        return slot.container.front();
+        return m_serialization_repository.template front<T>();
     }
 
-    /// @brief Get the number of stored elements.
     template<typename T>
     size_t size() const noexcept
     {
-        const auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-        const auto& slot = entry.slot;
-
-        return slot.parent_size + slot.container.size();
+        return m_serialization_repository.template size<T>();
     }
 
-    /// @brief Clear the repository but keep memory allocated.
     void clear() noexcept
     {
-        m_arena.clear();
-        clear_entries();
+        m_serialization_repository.clear();
         m_relation_repository.clear();
     }
 
-    // Get the canonical repository which is repository whose container stores the data of the element corresponding to the given index.
     template<typename T>
     const Repository& get_canonical_context(Index<T> index) const noexcept
     {
-        const auto& entry = std::get<RepositoryEntry<T>>(m_repository);
-
-        if (index.value < entry.slot.parent_size)
+        if (!m_serialization_repository.template is_local(index))
         {
             assert(m_parent && "Element not found in the repository chain.");
             return m_parent->get_canonical_context(index);
         }
-
         return *this;
     }
 
     /**
-     * Predicate tables
+     * RelationTableRepository forwarding
      */
 
     template<IndexConcept I>
@@ -306,9 +172,14 @@ public:
     }
 
     template<IndexConcept I>
-    const RelationTableRepository& get_canonical_context(std::pair<I, Index<Binding>> index) const noexcept
+    const Repository& get_canonical_context(std::pair<I, Index<Binding>> index) const noexcept
     {
-        return m_relation_repository.get_canonical_context(index);
+        if (!m_relation_repository.template is_local(index))
+        {
+            assert(m_parent && "Element not found in the repository chain.");
+            return m_parent->template get_canonical_context(index);
+        }
+        return *this;
     }
 };
 
