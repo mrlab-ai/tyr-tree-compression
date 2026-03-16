@@ -27,7 +27,8 @@
 namespace tyr::planning
 {
 
-template<typename Task, SearchNodeConcept SearchNode>
+template<typename Task, typename SearchNode>
+    requires SearchNodeConcept<SearchNode, Task>
 NodeList<Task> extract_node_trajectory(const SegmentedVector<SearchNode>& search_nodes,
                                        const SearchNode& final_search_node,
                                        const Node<Task>& final_node,
@@ -39,7 +40,7 @@ NodeList<Task> extract_node_trajectory(const SegmentedVector<SearchNode>& search
     auto cur_search_node = &final_search_node;
     auto& state_repository = *successor_generator.get_state_repository();
 
-    while (cur_search_node->parent_state != StateIndex::max())
+    while (cur_search_node->parent_state != Index<State<Task>>::max())
     {
         const auto parent_state_index = cur_search_node->parent_state;
 
@@ -80,7 +81,8 @@ LabeledNodeList<Task> extract_labeled_node_trajectory(const NodeList<Task>& node
     return labeled_node_trajectory;
 }
 
-template<typename Task, SearchNodeConcept SearchNode>
+template<typename Task, typename SearchNode>
+    requires SearchNodeConcept<SearchNode, Task>
 inline Plan<Task> extract_total_ordered_plan(const SearchNode& final_search_node,
                                              const Node<Task>& final_node,
                                              const SegmentedVector<SearchNode>& search_nodes,

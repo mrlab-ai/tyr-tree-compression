@@ -15,23 +15,24 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_PLANNING_PACKED_STATE_HPP_
-#define TYR_PLANNING_PACKED_STATE_HPP_
+#ifndef TYR_PLANNING_STATE_DATA_HPP_
+#define TYR_PLANNING_STATE_DATA_HPP_
 
 #include "tyr/common/config.hpp"
 #include "tyr/common/declarations.hpp"
+#include "tyr/common/types.hpp"
 #include "tyr/formalism/declarations.hpp"
+#include "tyr/planning/declarations.hpp"
 #include "tyr/planning/state_index.hpp"
 
 #include <concepts>
-#include <valla/valla.hpp>
 
-namespace tyr::planning
+namespace tyr
 {
 template<typename Task>
-class PackedState
+class Data<planning::State<Task>>
 {
-    static_assert(dependent_false<Task>::value, "PackedState is not defined for type T.");
+    static_assert(dependent_false<Task>::value, "Data<State<Task>> is not defined for type T.");
 };
 }
 

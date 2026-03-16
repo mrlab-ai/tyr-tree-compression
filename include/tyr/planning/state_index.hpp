@@ -19,13 +19,16 @@
 #define TYR_PLANNING_STATE_INDEX_HPP_
 
 #include "tyr/common/index_mixins.hpp"
+#include "tyr/common/types.hpp"
+#include "tyr/planning/declarations.hpp"
 
-namespace tyr::planning
+namespace tyr
 {
-struct StateIndex : IndexMixin<StateIndex>
+template<typename Task>
+struct Index<planning::State<Task>> : IndexMixin<Index<planning::State<Task>>>
 {
     // Inherit constructors
-    using Base = IndexMixin<StateIndex>;
+    using Base = IndexMixin<Index<planning::State<Task>>>;
     using Base::Base;
 };
 }

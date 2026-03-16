@@ -36,10 +36,10 @@ class UnpackedState
     static_assert(dependent_false<Task>::value, "UnpackedState is not defined for type T.");
 };
 
-template<typename T>
+template<typename T, typename Task>
 concept UnpackedStateConcept = requires(T& s,
                                         const T& cs,
-                                        StateIndex index,
+                                        Index<State<Task>> index,
                                         Index<formalism::planning::FDRVariable<formalism::FluentTag>> variable,
                                         Data<formalism::planning::FDRFact<formalism::FluentTag>> fact,
                                         Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> fterm,
@@ -50,7 +50,7 @@ concept UnpackedStateConcept = requires(T& s,
     { s.clear_unextended_part() };
     { s.clear_extended_part() };
     { s.assign_unextended_part(cs) };
-    { cs.get_index() } -> std::same_as<StateIndex>;
+    { cs.get_index() } -> std::same_as<Index<State<Task>>>;
     { s.set(index) };
     { cs.get(variable) } -> std::same_as<formalism::planning::FDRValue>;
     { s.set(fact) };

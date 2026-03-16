@@ -20,9 +20,9 @@
 
 #include "tyr/common/shared_object_pool.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/state.hpp"
 #include "tyr/planning/state_index.hpp"
 #include "tyr/planning/state_repository.hpp"
+#include "tyr/planning/state_view.hpp"
 #include "tyr/planning/unpacked_state.hpp"
 
 #include <concepts>
@@ -40,19 +40,19 @@ template<typename T, typename Task>
 concept StateRepositoryConcept =
     requires(T& r,
              std::shared_ptr<Task> task,
-             StateIndex index,
+             Index<State<Task>> index,
              SharedObjectPoolPtr<UnpackedState<Task>> unregistered_state,
              const std::vector<Data<formalism::planning::FDRFact<formalism::FluentTag>>>& fluent_facts,
              const std::vector<std::pair<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, float_t>>& fterm_values,
              const std::vector<formalism::planning::FDRFactView<formalism::FluentTag>>& fluent_fact_views,
              const std::vector<formalism::planning::GroundFunctionTermViewValuePair<formalism::FluentTag>>& fterm_value_views) {
         { T(task) };
-        { r.get_initial_state() } -> std::same_as<State<Task>>;
-        { r.get_registered_state(index) } -> std::same_as<State<Task>>;
-        { r.create_state(fluent_facts, fterm_values) } -> std::same_as<State<Task>>;
-        { r.create_state(fluent_fact_views, fterm_value_views) } -> std::same_as<State<Task>>;
+        { r.get_initial_state() } -> std::same_as<StateView<Task>>;
+        { r.get_registered_state(index) } -> std::same_as<StateView<Task>>;
+        { r.create_state(fluent_facts, fterm_values) } -> std::same_as<StateView<Task>>;
+        { r.create_state(fluent_fact_views, fterm_value_views) } -> std::same_as<StateView<Task>>;
         { r.get_unregistered_state() } -> std::same_as<SharedObjectPoolPtr<UnpackedState<Task>>>;
-        { r.register_state(unregistered_state) } -> std::same_as<State<Task>>;
+        { r.register_state(unregistered_state) } -> std::same_as<StateView<Task>>;
         { r.get_task() } -> std::same_as<const std::shared_ptr<Task>&>;
     };
 }

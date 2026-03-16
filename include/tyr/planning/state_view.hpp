@@ -15,12 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_PLANNING_STATE_HPP_
-#define TYR_PLANNING_STATE_HPP_
+#ifndef TYR_PLANNING_STATE_VIEW_HPP_
+#define TYR_PLANNING_STATE_VIEW_HPP_
 
 #include "tyr/common/shared_object_pool.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
-#include "tyr/formalism/planning/views.hpp"
+#include "tyr/formalism/planning/repository.hpp"
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/state_index.hpp"
 #include "tyr/planning/unpacked_state.hpp"
@@ -28,14 +28,19 @@
 #include <concepts>
 #include <ranges>
 
-namespace tyr::planning
+namespace tyr
 {
 
-template<typename Task>
-class State
+template<typename Task, typename C>
+class View<planning::State<Task>, C>
 {
     static_assert(dependent_false<Task>::value, "State is not defined for type T.");
 };
+
+namespace planning
+{
+template<typename Task>
+using StateView = View<Index<State<Task>>, std::shared_ptr<StateRepository<Task>>>;
 
 /**
  * IterableStateConcept
@@ -100,7 +105,7 @@ concept IndexableStateConcept = requires(const T& cs,
                                          Index<formalism::planning::GroundAtom<formalism::StaticTag>> static_atom,
                                          Index<formalism::planning::GroundAtom<formalism::DerivedTag>> derived_atom) {
     requires std::same_as<typename T::TaskType, Task>;
-    { cs.get_index() } -> std::same_as<StateIndex>;
+    { cs.get_index() } -> std::same_as<Index<State<Task>>>;
     { cs.get(variable) } -> std::same_as<formalism::planning::FDRValue>;
     { cs.get(static_fterm) } -> std::same_as<float_t>;
     { cs.get(fluent_fterm) } -> std::same_as<float_t>;
@@ -121,7 +126,7 @@ concept IndexableViewStateConcept = requires(const T& cs,
                                              formalism::planning::GroundAtomView<formalism::StaticTag> static_atom,
                                              formalism::planning::GroundAtomView<formalism::DerivedTag> derived_atom) {
     requires std::same_as<typename T::TaskType, Task>;
-    { cs.get_index() } -> std::same_as<StateIndex>;
+    { cs.get_index() } -> std::same_as<Index<State<Task>>>;
     { cs.get(variable) } -> std::same_as<formalism::planning::FDRValue>;
     { cs.get(static_fterm) } -> std::same_as<float_t>;
     { cs.get(fluent_fterm) } -> std::same_as<float_t>;
@@ -130,8 +135,7 @@ concept IndexableViewStateConcept = requires(const T& cs,
     { cs.get_state_repository() } -> std::same_as<const std::shared_ptr<StateRepository<Task>>&>;
 };
 
-template<typename Task>
-using StateList = std::vector<State<Task>>;
+}
 
 }
 

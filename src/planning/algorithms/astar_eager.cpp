@@ -29,15 +29,15 @@
 #include "tyr/planning/applicability.hpp"
 #include "tyr/planning/ground_task.hpp"
 #include "tyr/planning/ground_task/node.hpp"
-#include "tyr/planning/ground_task/state.hpp"
 #include "tyr/planning/ground_task/state_repository.hpp"
+#include "tyr/planning/ground_task/state_view.hpp"
 #include "tyr/planning/ground_task/successor_generator.hpp"
 #include "tyr/planning/ground_task/unpacked_state.hpp"
 #include "tyr/planning/heuristic.hpp"
 #include "tyr/planning/lifted_task.hpp"
 #include "tyr/planning/lifted_task/node.hpp"
-#include "tyr/planning/lifted_task/state.hpp"
 #include "tyr/planning/lifted_task/state_repository.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
 #include "tyr/planning/lifted_task/successor_generator.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
 #include "tyr/planning/search_node.hpp"
@@ -53,20 +53,24 @@ namespace tyr::planning::astar_eager
  * GBFS search node
  */
 
+template<typename Task>
 struct SearchNode
 {
     float_t g_value;
-    StateIndex parent_state;
+    Index<State<Task>> parent_state;
     SearchNodeStatus status;
 };
 
-static_assert(sizeof(SearchNode) == 16);
+static_assert(sizeof(SearchNode<LiftedTask>) == 16);
+static_assert(sizeof(SearchNode<GroundTask>) == 16);
 
-using SearchNodeVector = SegmentedVector<SearchNode>;
+template<typename Task>
+using SearchNodeVector = SegmentedVector<SearchNode<Task>>;
 
-static SearchNode& get_or_create_search_node(StateIndex state_index, SearchNodeVector& search_nodes)
+template<typename Task>
+static SearchNode<Task>& get_or_create_search_node(Index<State<Task>> state_index, SearchNodeVector<Task>& search_nodes)
 {
-    static auto default_node = SearchNode { std::numeric_limits<float_t>::infinity(), StateIndex::max(), SearchNodeStatus::NEW };
+    static auto default_node = SearchNode { std::numeric_limits<float_t>::infinity(), Index<State<Task>>::max(), SearchNodeStatus::NEW };
 
     while (uint_t(state_index) >= search_nodes.size())
     {
@@ -79,22 +83,25 @@ static SearchNode& get_or_create_search_node(StateIndex state_index, SearchNodeV
  * GBFS queue
  */
 
+template<typename Task>
 struct QueueEntry
 {
     using KeyType = std::tuple<float_t, SearchNodeStatus>;
-    using ItemType = std::tuple<float_t, StateIndex>;
+    using ItemType = std::tuple<float_t, Index<State<Task>>>;
 
     float_t f_value;
-    StateIndex state;
+    Index<State<Task>> state;
     SearchNodeStatus status;
 
     KeyType get_key() const { return std::make_tuple(f_value, status); }
     ItemType get_item() const { return std::make_tuple(f_value, state); }
 };
 
-static_assert(sizeof(QueueEntry) == 16);
+static_assert(sizeof(QueueEntry<LiftedTask>) == 16);
+static_assert(sizeof(QueueEntry<GroundTask>) == 16);
 
-using Queue = PriorityQueue<QueueEntry>;
+template<typename Task>
+using Queue = PriorityQueue<QueueEntry<Task>>;
 
 template<typename Task>
 SearchResult<Task> find_solution(Task& task, SuccessorGenerator<Task>& successor_generator, Heuristic<Task>& heuristic, const Options<Task>& options)
@@ -119,8 +126,8 @@ SearchResult<Task> find_solution(Task& task, SuccessorGenerator<Task>& successor
     auto& state_repository = *successor_generator.get_state_repository();
 
     auto result = SearchResult<Task>();
-    auto search_nodes = SearchNodeVector();
-    auto openlist = Queue();
+    auto search_nodes = SearchNodeVector<Task>();
+    auto openlist = Queue<Task>();
     const auto start_h_value = heuristic.evaluate(start_state);
     const auto start_f_value = start_node.get_metric() + start_h_value;
     auto& start_search_node = get_or_create_search_node(start_state_index, search_nodes);

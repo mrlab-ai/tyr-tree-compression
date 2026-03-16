@@ -31,15 +31,15 @@
 #include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/algorithms/statistics.hpp"  // for Statistics
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/ground_task.hpp"        // for GroundTask
-#include "tyr/planning/ground_task/node.hpp"   // for Node
-#include "tyr/planning/ground_task/state.hpp"  // for State
+#include "tyr/planning/ground_task.hpp"       // for GroundTask
+#include "tyr/planning/ground_task/node.hpp"  // for Node
 #include "tyr/planning/ground_task/state_repository.hpp"
+#include "tyr/planning/ground_task/state_view.hpp"  // for State
 #include "tyr/planning/ground_task/unpacked_state.hpp"
-#include "tyr/planning/lifted_task.hpp"        // for LiftedTask
-#include "tyr/planning/lifted_task/node.hpp"   // for Node
-#include "tyr/planning/lifted_task/state.hpp"  // for State
+#include "tyr/planning/lifted_task.hpp"       // for LiftedTask
+#include "tyr/planning/lifted_task/node.hpp"  // for Node
 #include "tyr/planning/lifted_task/state_repository.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"  // for State
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
 
 #include <boost/dynamic_bitset.hpp>  // for dynamic_bitset
@@ -68,11 +68,11 @@ std::ostream& print(std::ostream& os, const planning::GroundTask& el)
     return os;
 }
 
-std::ostream& print(std::ostream& os, const planning::PackedState<planning::LiftedTask>& el) { return os; }
+std::ostream& print(std::ostream& os, const Data<planning::State<planning::LiftedTask>>& el) { return os; }
 
 std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::LiftedTask>& el) { return os; }
 
-std::ostream& print(std::ostream& os, const planning::PackedState<planning::GroundTask>& el) { return os; }
+std::ostream& print(std::ostream& os, const Data<planning::State<planning::GroundTask>>& el) { return os; }
 
 std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::GroundTask>& el) { return os; }
 
@@ -93,7 +93,7 @@ std::ostream& print(std::ostream& os, const planning::Statistics& el)
 }
 
 template<typename Task>
-std::ostream& print(std::ostream& os, const planning::State<Task>& el)
+std::ostream& print(std::ostream& os, const planning::StateView<Task>& el)
 {
     auto static_atoms = std::vector<formalism::planning::GroundAtomView<formalism::StaticTag>> {};
     for (auto&& atom : el.get_static_atoms_view())
@@ -138,8 +138,8 @@ std::ostream& print(std::ostream& os, const planning::State<Task>& el)
     return os;
 }
 
-template std::ostream& print(std::ostream& os, const planning::State<planning::LiftedTask>& el);
-template std::ostream& print(std::ostream& os, const planning::State<planning::GroundTask>& el);
+template std::ostream& print(std::ostream& os, const planning::StateView<planning::LiftedTask>& el);
+template std::ostream& print(std::ostream& os, const planning::StateView<planning::GroundTask>& el);
 
 template<typename Task>
 std::ostream& print(std::ostream& os, const planning::Node<Task>& el)
@@ -179,24 +179,24 @@ std::ostream& operator<<(std::ostream& os, const LiftedTask& el) { return tyr::p
 
 std::ostream& operator<<(std::ostream& os, const GroundTask& el) { return tyr::print(os, el); }
 
-std::ostream& operator<<(std::ostream& os, const PackedState<LiftedTask>& el) { return tyr::print(os, el); }
+std::ostream& operator<<(std::ostream& os, const Data<State<LiftedTask>>& el) { return tyr::print(os, el); }
 
 std::ostream& operator<<(std::ostream& os, const UnpackedState<LiftedTask>& el) { return tyr::print(os, el); }
 
-std::ostream& operator<<(std::ostream& os, const PackedState<GroundTask>& el) { return tyr::print(os, el); }
+std::ostream& operator<<(std::ostream& os, const Data<State<GroundTask>>& el) { return tyr::print(os, el); }
 
 std::ostream& operator<<(std::ostream& os, const UnpackedState<GroundTask>& el) { return tyr::print(os, el); }
 
 std::ostream& operator<<(std::ostream& os, const Statistics& el) { return tyr::print(os, el); }
 
 template<typename Task>
-std::ostream& operator<<(std::ostream& os, const State<Task>& el)
+std::ostream& operator<<(std::ostream& os, const StateView<Task>& el)
 {
     return tyr::print(os, el);
 }
 
-template std::ostream& operator<<(std::ostream& os, const State<LiftedTask>& el);
-template std::ostream& operator<<(std::ostream& os, const State<GroundTask>& el);
+template std::ostream& operator<<(std::ostream& os, const StateView<LiftedTask>& el);
+template std::ostream& operator<<(std::ostream& os, const StateView<GroundTask>& el);
 
 template<typename Task>
 std::ostream& operator<<(std::ostream& os, const Node<Task>& el)

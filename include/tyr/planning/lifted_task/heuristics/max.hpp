@@ -50,7 +50,10 @@ public:
 
     static std::shared_ptr<MaxHeuristic<LiftedTask>> create(std::shared_ptr<LiftedTask> task) { return std::make_shared<MaxHeuristic<LiftedTask>>(task); }
 
-    float_t extract_cost_and_set_preferred_actions_impl(const State<LiftedTask>& state) { return m_workspace.tp.get_total_cost(this->m_workspace.or_annot); }
+    float_t extract_cost_and_set_preferred_actions_impl(const StateView<LiftedTask>& state)
+    {
+        return m_workspace.tp.get_total_cost(this->m_workspace.or_annot);
+    }
 };
 
 }

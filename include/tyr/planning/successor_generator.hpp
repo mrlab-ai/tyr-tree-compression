@@ -21,6 +21,7 @@
 #include "tyr/common/declarations.hpp"
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/node.hpp"
+#include "tyr/planning/state_index.hpp"
 
 namespace tyr::planning
 {
@@ -34,7 +35,7 @@ class SuccessorGenerator
 template<typename T, typename Task>
 concept SuccessorGeneratorConcept = requires(T& r,
                                              std::shared_ptr<Task> task,
-                                             StateIndex state_index,
+                                             Index<State<Task>> state_index,
                                              const Node<Task>& node,
                                              std::vector<LabeledNode<Task>>& labeled_successor_nodes,
                                              formalism::planning::GroundActionView action) {

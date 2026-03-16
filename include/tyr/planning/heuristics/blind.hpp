@@ -33,7 +33,7 @@ public:
 
     void set_goal(formalism::planning::GroundConjunctiveConditionView goal) override {}
 
-    float_t evaluate(const State<Task>& state) override { return float_t { 0 }; }
+    float_t evaluate(const StateView<Task>& state) override { return float_t { 0 }; }
 };
 
 }

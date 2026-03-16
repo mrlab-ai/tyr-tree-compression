@@ -47,8 +47,8 @@ public:
      * UnpackedStateConcept
      */
 
-    StateIndex get_index() const;
-    void set(StateIndex index);
+    Index<State<GroundTask>> get_index() const;
+    void set(Index<State<GroundTask>> index);
 
     formalism::planning::FDRValue get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const;
     void set(Data<formalism::planning::FDRFact<formalism::FluentTag>> fact);
@@ -81,21 +81,21 @@ public:
     const std::vector<float_t>& get_numeric_variables() const noexcept;
 
 private:
-    StateIndex m_index;
+    Index<State<GroundTask>> m_index;
     std::vector<formalism::planning::FDRValue> m_fluent_values;
     boost::dynamic_bitset<> m_derived_atoms;
     std::vector<float_t> m_numeric_variables;
 };
 
-static_assert(UnpackedStateConcept<UnpackedState<GroundTask>>);
+static_assert(UnpackedStateConcept<UnpackedState<GroundTask>, GroundTask>);
 
 /**
  * Implementations
  */
 
-inline StateIndex UnpackedState<GroundTask>::get_index() const { return m_index; }
+inline Index<State<GroundTask>> UnpackedState<GroundTask>::get_index() const { return m_index; }
 
-inline void UnpackedState<GroundTask>::set(StateIndex index) { m_index = index; }
+inline void UnpackedState<GroundTask>::set(Index<State<GroundTask>> index) { m_index = index; }
 
 // Fluent facts
 inline formalism::planning::FDRValue UnpackedState<GroundTask>::get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const

@@ -15,39 +15,30 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_PLANNING_GROUND_TASK_PACKED_STATE_HPP_
-#define TYR_PLANNING_GROUND_TASK_PACKED_STATE_HPP_
+#ifndef TYR_PLANNING_GROUND_TASK_STATE_DATA_HPP_
+#define TYR_PLANNING_GROUND_TASK_STATE_DATA_HPP_
 
+#include "tyr/formalism/declarations.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/packed_state.hpp"
+#include "tyr/planning/state_data.hpp"
 
 #include <valla/valla.hpp>
-
-/**
- * Forward declarations
- */
-
-namespace tyr::formalism
-{
-struct FluentTag;
-struct DerivedTag;
-}
 
 /**
  * Definitions
  */
 
-namespace tyr::planning
+namespace tyr
 {
 
 template<>
-class PackedState<GroundTask>
+class Data<planning::State<planning::GroundTask>>
 {
 public:
-    using TaskType = GroundTask;
+    using TaskType = planning::GroundTask;
 
-    PackedState() noexcept = default;
-    PackedState(StateIndex index, uint_t fluent_facts, uint_t derived_facts, valla::Slot<uint_t> numeric_variables) noexcept :
+    Data() noexcept = default;
+    Data(Index<planning::State<planning::GroundTask>> index, uint_t fluent_facts, uint_t derived_facts, valla::Slot<uint_t> numeric_variables) noexcept :
         m_index(index),
         m_fluent_facts(fluent_facts),
         m_derived_facts(derived_facts),
@@ -55,7 +46,7 @@ public:
     {
     }
 
-    StateIndex get_index() const noexcept { return m_index; }
+    Index<planning::State<planning::GroundTask>> get_index() const noexcept { return m_index; }
 
     template<formalism::FactKind T>
     const uint_t get_facts() const noexcept
@@ -73,7 +64,7 @@ public:
     auto identifying_members() const noexcept { return std::tie(m_fluent_facts, m_derived_facts, m_numeric_variables.i1, m_numeric_variables.i2); }
 
 private:
-    StateIndex m_index;
+    Index<planning::State<planning::GroundTask>> m_index;
     uint_t m_fluent_facts;
     uint_t m_derived_facts;
     valla::Slot<uint_t> m_numeric_variables;

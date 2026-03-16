@@ -18,17 +18,15 @@
 #ifndef TYR_PLANNING_GROUND_TASK_STATE_REPOSITORY_HPP_
 #define TYR_PLANNING_GROUND_TASK_STATE_REPOSITORY_HPP_
 
-#include "tyr/planning/ground_task/packed_state.hpp"
-#include "tyr/planning/ground_task/state.hpp"
-#include "tyr/planning/ground_task/unpacked_state.hpp"
-//
-
 #include "tyr/common/bit_packed_layout.hpp"   // for BitPackedArra...
 #include "tyr/common/config.hpp"              // for uint_t, float_t
 #include "tyr/common/indexed_hash_set.hpp"    // for IndexedHashSet
 #include "tyr/common/raw_array_set.hpp"       // for SegmentedArra...
 #include "tyr/common/shared_object_pool.hpp"  // for SharedObjectPool
 #include "tyr/planning/declarations.hpp"      // for GroundTask
+#include "tyr/planning/ground_task/state_data.hpp"
+#include "tyr/planning/ground_task/state_view.hpp"
+#include "tyr/planning/ground_task/unpacked_state.hpp"
 #include "tyr/planning/state_index.hpp"
 
 #include <memory>  // for shared_ptr
@@ -47,19 +45,20 @@ public:
 
     static std::shared_ptr<StateRepository<GroundTask>> create(std::shared_ptr<GroundTask> task);
 
-    State<GroundTask> get_initial_state();
+    StateView<GroundTask> get_initial_state();
 
-    State<GroundTask> get_registered_state(StateIndex state_index);
+    StateView<GroundTask> get_registered_state(Index<State<GroundTask>> state_index);
 
-    State<GroundTask> create_state(const std::vector<Data<formalism::planning::FDRFact<formalism::FluentTag>>>& fluent_facts,
-                                   const std::vector<std::pair<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, float_t>>& fterm_values);
+    StateView<GroundTask>
+    create_state(const std::vector<Data<formalism::planning::FDRFact<formalism::FluentTag>>>& fluent_facts,
+                 const std::vector<std::pair<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, float_t>>& fterm_values);
 
-    State<GroundTask> create_state(const std::vector<formalism::planning::FDRFactView<formalism::FluentTag>>& fluent_facts,
-                                   const std::vector<formalism::planning::GroundFunctionTermViewValuePair<formalism::FluentTag>>& fterm_values);
+    StateView<GroundTask> create_state(const std::vector<formalism::planning::FDRFactView<formalism::FluentTag>>& fluent_facts,
+                                       const std::vector<formalism::planning::GroundFunctionTermViewValuePair<formalism::FluentTag>>& fterm_values);
 
     SharedObjectPoolPtr<UnpackedState<GroundTask>> get_unregistered_state();
 
-    State<GroundTask> register_state(SharedObjectPoolPtr<UnpackedState<GroundTask>> state);
+    StateView<GroundTask> register_state(SharedObjectPoolPtr<UnpackedState<GroundTask>> state);
 
     const auto& get_task() const noexcept { return m_task; }
     const auto& get_axiom_evaluator() const noexcept { return m_axiom_evaluator; }
@@ -72,7 +71,7 @@ private:
     valla::IndexedHashSet<valla::Slot<uint_t>, uint_t> m_uint_nodes;
     valla::IndexedHashSet<float_t, uint_t> m_float_nodes;
     std::vector<uint_t> m_nodes_buffer;
-    IndexedHashSet<PackedState<GroundTask>, StateIndex> m_packed_states;
+    IndexedHashSet<Data<State<GroundTask>>, Index<State<GroundTask>>> m_packed_states;
     RawArraySet<uint_t> m_fluent_repository;
     RawArraySet<uint_t> m_derived_repository;
     std::vector<uint_t> m_fluent_buffer;

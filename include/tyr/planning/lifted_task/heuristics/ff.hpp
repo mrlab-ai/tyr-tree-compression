@@ -67,7 +67,7 @@ public:
 
     static std::shared_ptr<FFHeuristic<LiftedTask>> create(std::shared_ptr<LiftedTask> task) { return std::make_shared<FFHeuristic<LiftedTask>>(task); }
 
-    float_t extract_cost_and_set_preferred_actions_impl(const State<LiftedTask>& state)
+    float_t extract_cost_and_set_preferred_actions_impl(const StateView<LiftedTask>& state)
     {
         m_preferred_action_views_dirty = true;
         m_relaxed_plan.clear();

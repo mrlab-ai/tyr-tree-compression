@@ -22,12 +22,12 @@
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/ground_task.hpp"
 #include "tyr/planning/ground_task/node.hpp"
-#include "tyr/planning/ground_task/packed_state.hpp"
-#include "tyr/planning/ground_task/state.hpp"
+#include "tyr/planning/ground_task/state_data.hpp"
+#include "tyr/planning/ground_task/state_view.hpp"
 #include "tyr/planning/ground_task/unpacked_state.hpp"
 #include "tyr/planning/lifted_task/node.hpp"
-#include "tyr/planning/lifted_task/packed_state.hpp"
-#include "tyr/planning/lifted_task/state.hpp"
+#include "tyr/planning/lifted_task/state_data.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
 #include "tyr/planning/plan.hpp"
 
@@ -40,18 +40,18 @@ extern std::ostream& print(std::ostream& os, const planning::LiftedTask& el);
 
 extern std::ostream& print(std::ostream& os, const planning::GroundTask& el);
 
-extern std::ostream& print(std::ostream& os, const planning::PackedState<planning::LiftedTask>& el);
+extern std::ostream& print(std::ostream& os, const Data<planning::State<planning::LiftedTask>>& el);
 
 extern std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::LiftedTask>& el);
 
-extern std::ostream& print(std::ostream& os, const planning::PackedState<planning::GroundTask>& el);
+extern std::ostream& print(std::ostream& os, const Data<planning::State<planning::GroundTask>>& el);
 
 extern std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::GroundTask>& el);
 
 extern std::ostream& print(std::ostream& os, const planning::Statistics& el);
 
 template<typename Task>
-std::ostream& print(std::ostream& os, const planning::State<Task>& el);
+std::ostream& print(std::ostream& os, const planning::StateView<Task>& el);
 
 template<typename Task>
 std::ostream& print(std::ostream& os, const planning::Node<Task>& el);
@@ -66,18 +66,18 @@ extern std::ostream& operator<<(std::ostream& os, const LiftedTask& el);
 
 extern std::ostream& operator<<(std::ostream& os, const GroundTask& el);
 
-extern std::ostream& operator<<(std::ostream& os, const PackedState<LiftedTask>& el);
+extern std::ostream& operator<<(std::ostream& os, const Data<State<LiftedTask>>& el);
 
 extern std::ostream& operator<<(std::ostream& os, const UnpackedState<LiftedTask>& el);
 
-extern std::ostream& operator<<(std::ostream& os, const PackedState<GroundTask>& el);
+extern std::ostream& operator<<(std::ostream& os, const Data<State<GroundTask>>& el);
 
 extern std::ostream& operator<<(std::ostream& os, const UnpackedState<GroundTask>& el);
 
 extern std::ostream& operator<<(std::ostream& os, const Statistics& el);
 
 template<typename Task>
-std::ostream& operator<<(std::ostream& os, const State<Task>& el);
+std::ostream& operator<<(std::ostream& os, const StateView<Task>& el);
 
 template<typename Task>
 std::ostream& operator<<(std::ostream& os, const Node<Task>& el);

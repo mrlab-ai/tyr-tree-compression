@@ -17,7 +17,7 @@
 
 #include "tyr/planning/lifted_task/node.hpp"
 
-#include "tyr/planning/lifted_task/state.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
 //
 #include "tyr/common/config.hpp"
 #include "tyr/planning/lifted_task.hpp"

@@ -20,7 +20,7 @@
 
 #include "tyr/common/config.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/ground_task/state.hpp"
+#include "tyr/planning/ground_task/state_view.hpp"
 #include "tyr/planning/node.hpp"
 
 /**
@@ -35,15 +35,15 @@ class Node<GroundTask>
 public:
     using TaskType = GroundTask;
 
-    Node(State<GroundTask> state, float_t metric) noexcept : m_state(std::move(state)), m_metric(metric) {}
+    Node(StateView<GroundTask> state, float_t metric) noexcept : m_state(std::move(state)), m_metric(metric) {}
 
-    const State<GroundTask>& get_state() const noexcept { return m_state; }
+    const StateView<GroundTask>& get_state() const noexcept { return m_state; }
     float_t get_metric() const noexcept { return m_metric; }
 
     auto identifying_members() const noexcept { return std::make_tuple(m_state.get_index(), m_metric); }
 
 private:
-    State<GroundTask> m_state;
+    StateView<GroundTask> m_state;
     float_t m_metric;
 };
 

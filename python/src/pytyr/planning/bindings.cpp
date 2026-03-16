@@ -43,12 +43,6 @@ void bind_module_definitions(nb::module_& m)
         .export_values();
 
     /**
-     * StateIndex
-     */
-
-    bind_index<StateIndex>(m, "StateIndex");
-
-    /**
      * Statistics
      */
 
@@ -63,6 +57,7 @@ void bind_ground_module_definitions(nb::module_& m)
         .def("get_task", &GroundTask::get_task)
         .def("get_fdr_context", &GroundTask::get_fdr_context);
 
+    bind_index<Index<State<GroundTask>>>(m, "StateIndex");
     bind_state<GroundTask>(m, "State");
     bind_node<GroundTask>(m, "Node");
     bind_labeled_node<GroundTask>(m, "LabeledNode");
@@ -103,6 +98,7 @@ should not be used further.
         .def("get_fdr_context", nb::overload_cast<>(&LiftedTask::get_fdr_context, nb::const_))
         .def("instantiate_ground_task", &LiftedTask::instantiate_ground_task);
 
+    bind_index<Index<State<LiftedTask>>>(m, "StateIndex");
     bind_state<LiftedTask>(m, "State");
     bind_node<LiftedTask>(m, "Node");
     bind_labeled_node<LiftedTask>(m, "LabeledNode");

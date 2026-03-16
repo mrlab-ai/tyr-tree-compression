@@ -53,7 +53,7 @@ std::shared_ptr<StateRepository<LiftedTask>> StateRepository<LiftedTask>::create
     return std::make_shared<StateRepository<LiftedTask>>(std::move(task));
 }
 
-State<LiftedTask> StateRepository<LiftedTask>::get_initial_state()
+StateView<LiftedTask> StateRepository<LiftedTask>::get_initial_state()
 {
     auto unpacked_state = get_unregistered_state();
 
@@ -66,7 +66,7 @@ State<LiftedTask> StateRepository<LiftedTask>::get_initial_state()
     return register_state(unpacked_state);
 }
 
-State<LiftedTask> StateRepository<LiftedTask>::get_registered_state(StateIndex state_index)
+StateView<LiftedTask> StateRepository<LiftedTask>::get_registered_state(Index<State<LiftedTask>> state_index)
 {
     const auto& packed_state = m_packed_states[state_index];
 
@@ -77,11 +77,12 @@ State<LiftedTask> StateRepository<LiftedTask>::get_registered_state(StateIndex s
     fill_atoms(packed_state.template get_atoms<f::DerivedTag>(), m_uint_nodes, m_nodes_buffer, unpacked_state->template get_atoms<f::DerivedTag>());
     fill_numeric_variables(packed_state.get_numeric_variables(), m_uint_nodes, m_float_nodes, m_nodes_buffer, unpacked_state->get_numeric_variables());
 
-    return State<LiftedTask>(shared_from_this(), std::move(unpacked_state));
+    return StateView<LiftedTask>(shared_from_this(), std::move(unpacked_state));
 }
 
-State<LiftedTask> StateRepository<LiftedTask>::create_state(const std::vector<Data<fp::FDRFact<f::FluentTag>>>& fluent_facts,
-                                                            const std::vector<std::pair<Index<fp::GroundFunctionTerm<f::FluentTag>>, float_t>>& fterm_values)
+StateView<LiftedTask>
+StateRepository<LiftedTask>::create_state(const std::vector<Data<fp::FDRFact<f::FluentTag>>>& fluent_facts,
+                                          const std::vector<std::pair<Index<fp::GroundFunctionTerm<f::FluentTag>>, float_t>>& fterm_values)
 {
     auto unpacked_state = get_unregistered_state();
 
@@ -93,8 +94,8 @@ State<LiftedTask> StateRepository<LiftedTask>::create_state(const std::vector<Da
     return register_state(std::move(unpacked_state));
 }
 
-State<LiftedTask> StateRepository<LiftedTask>::create_state(const std::vector<fp::FDRFactView<f::FluentTag>>& fluent_facts,
-                                                            const std::vector<std::pair<fp::GroundFunctionTermView<f::FluentTag>, float_t>>& fterm_values)
+StateView<LiftedTask> StateRepository<LiftedTask>::create_state(const std::vector<fp::FDRFactView<f::FluentTag>>& fluent_facts,
+                                                                const std::vector<std::pair<fp::GroundFunctionTermView<f::FluentTag>, float_t>>& fterm_values)
 {
     auto unpacked_state = get_unregistered_state();
 
@@ -114,7 +115,7 @@ SharedObjectPoolPtr<UnpackedState<LiftedTask>> StateRepository<LiftedTask>::get_
     return state;
 }
 
-State<LiftedTask> StateRepository<LiftedTask>::register_state(SharedObjectPoolPtr<UnpackedState<LiftedTask>> state)
+StateView<LiftedTask> StateRepository<LiftedTask>::register_state(SharedObjectPoolPtr<UnpackedState<LiftedTask>> state)
 {
     m_axiom_evaluator->compute_extended_state(*state);
 
@@ -122,9 +123,10 @@ State<LiftedTask> StateRepository<LiftedTask>::register_state(SharedObjectPoolPt
     auto derived_atoms = create_atoms_slot(state->template get_atoms<formalism::DerivedTag>(), m_nodes_buffer, m_uint_nodes);
     auto numeric_variables = create_numeric_variables_slot(state->get_numeric_variables(), m_nodes_buffer, m_uint_nodes, m_float_nodes);
 
-    state->set(m_packed_states.insert(PackedState<LiftedTask>(StateIndex(m_packed_states.size()), fluent_atoms, derived_atoms, numeric_variables)));
+    state->set(
+        m_packed_states.insert(Data<State<LiftedTask>>(Index<State<LiftedTask>>(m_packed_states.size()), fluent_atoms, derived_atoms, numeric_variables)));
 
-    return State<LiftedTask>(shared_from_this(), std::move(state));
+    return StateView<LiftedTask>(shared_from_this(), std::move(state));
 }
 
 static_assert(StateRepositoryConcept<StateRepository<LiftedTask>, LiftedTask>);

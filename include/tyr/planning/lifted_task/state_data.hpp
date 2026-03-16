@@ -20,36 +20,30 @@
 
 #include "tyr/common/config.hpp"
 #include "tyr/common/declarations.hpp"
+#include "tyr/formalism/declarations.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/packed_state.hpp"
+#include "tyr/planning/state_data.hpp"
 #include "tyr/planning/state_index.hpp"
 
 #include <valla/valla.hpp>
 
 /**
- * Forward declarations
- */
-
-namespace tyr::formalism
-{
-struct FluentTag;
-struct DerivedTag;
-}
-
-/**
  * Definitions
  */
 
-namespace tyr::planning
+namespace tyr
 {
 template<>
-class PackedState<LiftedTask>
+class Data<planning::State<planning::LiftedTask>>
 {
 public:
-    using TaskType = LiftedTask;
+    using TaskType = planning::LiftedTask;
 
-    PackedState() noexcept = default;
-    PackedState(StateIndex index, valla::Slot<uint_t> fluent_atoms, valla::Slot<uint_t> derived_atoms, valla::Slot<uint_t> numeric_variables) noexcept :
+    Data() noexcept = default;
+    Data(Index<planning::State<TaskType>> index,
+         valla::Slot<uint_t> fluent_atoms,
+         valla::Slot<uint_t> derived_atoms,
+         valla::Slot<uint_t> numeric_variables) noexcept :
         m_index(index),
         m_fluent_atoms(fluent_atoms),
         m_derived_atoms(derived_atoms),
@@ -57,7 +51,7 @@ public:
     {
     }
 
-    StateIndex get_index() const noexcept { return m_index; }
+    Index<planning::State<TaskType>> get_index() const noexcept { return m_index; }
 
     template<formalism::FactKind T>
     valla::Slot<uint_t> get_atoms() const noexcept
@@ -78,7 +72,7 @@ public:
     }
 
 private:
-    StateIndex m_index;
+    Index<planning::State<TaskType>> m_index;
     valla::Slot<uint_t> m_fluent_atoms;
     valla::Slot<uint_t> m_derived_atoms;
     valla::Slot<uint_t> m_numeric_variables;

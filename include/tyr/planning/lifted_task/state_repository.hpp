@@ -18,14 +18,13 @@
 #ifndef TYR_PLANNING_LIFTED_TASK_STATE_REPOSITORY_HPP_
 #define TYR_PLANNING_LIFTED_TASK_STATE_REPOSITORY_HPP_
 
-#include "tyr/planning/lifted_task/packed_state.hpp"
-#include "tyr/planning/lifted_task/state.hpp"
-#include "tyr/planning/lifted_task/unpacked_state.hpp"
-//
 #include "tyr/common/config.hpp"              // for uint_t, float_t
 #include "tyr/common/indexed_hash_set.hpp"    // for IndexedHashSet
 #include "tyr/common/shared_object_pool.hpp"  // for SharedObjectPool
-#include "tyr/planning/state_index.hpp"       // for StateIndex
+#include "tyr/planning/lifted_task/state_data.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
+#include "tyr/planning/lifted_task/unpacked_state.hpp"
+#include "tyr/planning/state_index.hpp"  // for StateIndex
 
 #include <memory>  // for shared_ptr
 #include <valla/valla.hpp>
@@ -43,19 +42,20 @@ public:
 
     static std::shared_ptr<StateRepository<LiftedTask>> create(std::shared_ptr<LiftedTask> task);
 
-    State<LiftedTask> get_initial_state();
+    StateView<LiftedTask> get_initial_state();
 
-    State<LiftedTask> get_registered_state(StateIndex state_index);
+    StateView<LiftedTask> get_registered_state(Index<State<LiftedTask>> state_index);
 
-    State<LiftedTask> create_state(const std::vector<Data<formalism::planning::FDRFact<formalism::FluentTag>>>& fluent_facts,
-                                   const std::vector<std::pair<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, float_t>>& fterm_values);
+    StateView<LiftedTask>
+    create_state(const std::vector<Data<formalism::planning::FDRFact<formalism::FluentTag>>>& fluent_facts,
+                 const std::vector<std::pair<Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>, float_t>>& fterm_values);
 
-    State<LiftedTask> create_state(const std::vector<formalism::planning::FDRFactView<formalism::FluentTag>>& fluent_facts,
-                                   const std::vector<formalism::planning::GroundFunctionTermViewValuePair<formalism::FluentTag>>& fterm_values);
+    StateView<LiftedTask> create_state(const std::vector<formalism::planning::FDRFactView<formalism::FluentTag>>& fluent_facts,
+                                       const std::vector<formalism::planning::GroundFunctionTermViewValuePair<formalism::FluentTag>>& fterm_values);
 
     SharedObjectPoolPtr<UnpackedState<LiftedTask>> get_unregistered_state();
 
-    State<LiftedTask> register_state(SharedObjectPoolPtr<UnpackedState<LiftedTask>> state);
+    StateView<LiftedTask> register_state(SharedObjectPoolPtr<UnpackedState<LiftedTask>> state);
 
     const auto& get_task() const noexcept { return m_task; }
     const auto& get_axiom_evaluator() const noexcept { return m_axiom_evaluator; }
@@ -66,7 +66,7 @@ private:
     valla::IndexedHashSet<valla::Slot<uint_t>, uint_t> m_uint_nodes;
     valla::IndexedHashSet<float_t, uint_t> m_float_nodes;
     std::vector<uint_t> m_nodes_buffer;
-    IndexedHashSet<PackedState<LiftedTask>, StateIndex> m_packed_states;
+    IndexedHashSet<Data<State<LiftedTask>>, Index<State<LiftedTask>>> m_packed_states;
     SharedObjectPool<UnpackedState<LiftedTask>> m_unpacked_state_pool;
 
     std::shared_ptr<AxiomEvaluator<LiftedTask>> m_axiom_evaluator;

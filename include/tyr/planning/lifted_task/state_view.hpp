@@ -15,33 +15,33 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_PLANNING_LIFTED_TASK_STATE_HPP_
-#define TYR_PLANNING_LIFTED_TASK_STATE_HPP_
+#ifndef TYR_PLANNING_LIFTED_TASK_STATE_VIEW_HPP_
+#define TYR_PLANNING_LIFTED_TASK_STATE_VIEW_HPP_
 
-#include "tyr/planning/lifted_task/unpacked_state.hpp"
-//
 #include "tyr/common/shared_object_pool.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/lifted_task/state_iterators.hpp"
-#include "tyr/planning/state.hpp"
+#include "tyr/planning/lifted_task/unpacked_state.hpp"
 #include "tyr/planning/state_iterators.hpp"
+#include "tyr/planning/state_view.hpp"
 
 #include <boost/dynamic_bitset.hpp>
 
-namespace tyr::planning
+namespace tyr
 {
 template<>
-class State<LiftedTask>
+class View<Index<planning::State<planning::LiftedTask>>, std::shared_ptr<planning::StateRepository<planning::LiftedTask>>>
 {
 public:
-    using TaskType = LiftedTask;
+    using TaskType = planning::LiftedTask;
 
-    State(std::shared_ptr<StateRepository<LiftedTask>> owner, SharedObjectPoolPtr<UnpackedState<LiftedTask>> unpacked) noexcept;
+    View(std::shared_ptr<planning::StateRepository<planning::LiftedTask>> owner,
+         SharedObjectPoolPtr<planning::UnpackedState<planning::LiftedTask>> unpacked) noexcept;
 
-    StateIndex get_index() const;
+    Index<planning::State<planning::LiftedTask>> get_index() const;
 
     /**
      * IndexableStateConcept
@@ -67,11 +67,11 @@ public:
      * IterableStateConcept
      */
 
-    AtomRange<formalism::StaticTag> get_static_atoms() const noexcept;
-    FDRFactRange<LiftedTask, formalism::FluentTag> get_fluent_facts() const noexcept;
-    AtomRange<formalism::DerivedTag> get_derived_atoms() const noexcept;
-    FunctionTermValueRange<formalism::StaticTag> get_static_fterm_values() const noexcept;
-    FunctionTermValueRange<formalism::FluentTag> get_fluent_fterm_values() const noexcept;
+    planning::AtomRange<formalism::StaticTag> get_static_atoms() const noexcept;
+    planning::FDRFactRange<planning::LiftedTask, formalism::FluentTag> get_fluent_facts() const noexcept;
+    planning::AtomRange<formalism::DerivedTag> get_derived_atoms() const noexcept;
+    planning::FunctionTermValueRange<formalism::StaticTag> get_static_fterm_values() const noexcept;
+    planning::FunctionTermValueRange<formalism::FluentTag> get_fluent_fterm_values() const noexcept;
 
     /**
      * IterableStateViewConcept
@@ -88,8 +88,8 @@ public:
      */
 
     const std::shared_ptr<formalism::planning::Repository>& get_repository() const noexcept;
-    const std::shared_ptr<StateRepository<LiftedTask>>& get_state_repository() const noexcept;
-    const UnpackedState<LiftedTask>& get_unpacked_state() const noexcept;
+    const std::shared_ptr<planning::StateRepository<planning::LiftedTask>>& get_state_repository() const noexcept;
+    const planning::UnpackedState<planning::LiftedTask>& get_unpacked_state() const noexcept;
 
 private:
     template<formalism::FactKind T>
@@ -98,66 +98,72 @@ private:
     template<formalism::FactKind T>
     const std::vector<float_t>& get_numeric_variables() const noexcept;
 
-    std::shared_ptr<StateRepository<LiftedTask>> m_state_repository;
-    SharedObjectPoolPtr<UnpackedState<LiftedTask>> m_unpacked;
+    std::shared_ptr<planning::StateRepository<planning::LiftedTask>> m_state_repository;
+    SharedObjectPoolPtr<planning::UnpackedState<planning::LiftedTask>> m_unpacked;
 };
+
+using LiftedStateView = View<Index<planning::State<planning::LiftedTask>>, std::shared_ptr<planning::StateRepository<planning::LiftedTask>>>;
 
 /**
  * Implementations
  */
 
-inline State<LiftedTask>::State(std::shared_ptr<StateRepository<LiftedTask>> owner, SharedObjectPoolPtr<UnpackedState<LiftedTask>> unpacked) noexcept :
+inline LiftedStateView::View(std::shared_ptr<planning::StateRepository<planning::LiftedTask>> owner,
+                             SharedObjectPoolPtr<planning::UnpackedState<planning::LiftedTask>> unpacked) noexcept :
     m_state_repository(std::move(owner)),
     m_unpacked(std::move(unpacked))
 {
 }
 
-inline StateIndex State<LiftedTask>::get_index() const { return m_unpacked->get_index(); }
+inline Index<planning::State<planning::LiftedTask>> LiftedStateView::get_index() const { return m_unpacked->get_index(); }
 
-inline formalism::planning::FDRValue State<LiftedTask>::get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const
+inline formalism::planning::FDRValue LiftedStateView::get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const
 {
     return m_unpacked->get(index);
 }
 
-inline float_t State<LiftedTask>::get(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index) const { return m_unpacked->get(index); }
+inline float_t LiftedStateView::get(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index) const { return m_unpacked->get(index); }
 
-inline bool State<LiftedTask>::test(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index) const { return m_unpacked->test(index); }
+inline bool LiftedStateView::test(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index) const { return m_unpacked->test(index); }
 
-inline const std::shared_ptr<StateRepository<LiftedTask>>& State<LiftedTask>::get_state_repository() const noexcept { return m_state_repository; }
+inline const std::shared_ptr<planning::StateRepository<planning::LiftedTask>>& LiftedStateView::get_state_repository() const noexcept
+{
+    return m_state_repository;
+}
 
-inline const UnpackedState<LiftedTask>& State<LiftedTask>::get_unpacked_state() const noexcept { return *m_unpacked; }
+inline const planning::UnpackedState<planning::LiftedTask>& LiftedStateView::get_unpacked_state() const noexcept { return *m_unpacked; }
 
-inline bool State<LiftedTask>::test(formalism::planning::GroundAtomView<formalism::StaticTag> view) const { return test(view.get_index()); }
+inline bool LiftedStateView::test(formalism::planning::GroundAtomView<formalism::StaticTag> view) const { return test(view.get_index()); }
 
-inline float_t State<LiftedTask>::get(formalism::planning::GroundFunctionTermView<formalism::StaticTag> view) const { return get(view.get_index()); }
+inline float_t LiftedStateView::get(formalism::planning::GroundFunctionTermView<formalism::StaticTag> view) const { return get(view.get_index()); }
 
-inline formalism::planning::FDRValue State<LiftedTask>::get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const
+inline formalism::planning::FDRValue LiftedStateView::get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const
 {
     return get(view.get_index());
 }
 
-inline float_t State<LiftedTask>::get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const { return get(view.get_index()); }
+inline float_t LiftedStateView::get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const { return get(view.get_index()); }
 
-inline bool State<LiftedTask>::test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const { return test(view.get_index()); }
+inline bool LiftedStateView::test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const { return test(view.get_index()); }
 
-inline auto State<LiftedTask>::get_static_atoms_view() const noexcept
+inline auto LiftedStateView::get_static_atoms_view() const noexcept
 {
     return get_static_atoms() | std::views::transform([context = this->get_repository()](auto id) { return make_view(id, *context); });
 }
-inline auto State<LiftedTask>::get_fluent_facts_view() const noexcept
+inline auto LiftedStateView::get_fluent_facts_view() const noexcept
 {
     return get_fluent_facts() | std::views::transform([context = this->get_repository()](auto id) { return make_view(id, *context); });
 }
-inline auto State<LiftedTask>::get_derived_atoms_view() const noexcept
+inline auto LiftedStateView::get_derived_atoms_view() const noexcept
 {
     return get_derived_atoms() | std::views::transform([context = this->get_repository()](auto id) { return make_view(id, *context); });
 }
-inline auto State<LiftedTask>::get_static_fterm_values_view() const noexcept
+inline auto LiftedStateView::get_static_fterm_values_view() const noexcept
 {
     return get_static_fterm_values()
            | std::views::transform([context = this->get_repository()](auto&& pair) { return std::make_pair(make_view(pair.first, *context), pair.second); });
 }
-inline auto State<LiftedTask>::get_fluent_fterm_values_view() const noexcept
+inline auto LiftedStateView::get_fluent_fterm_values_view() const noexcept
 {
     return get_fluent_fterm_values()
            | std::views::transform([context = this->get_repository()](auto&& pair) { return std::make_pair(make_view(pair.first, *context), pair.second); });

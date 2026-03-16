@@ -43,8 +43,8 @@ public:
 
     UnpackedState() = default;
 
-    StateIndex get_index() const;
-    void set(StateIndex index);
+    Index<State<LiftedTask>> get_index() const;
+    void set(Index<State<LiftedTask>> index);
 
     void clear();
     void clear_unextended_part();
@@ -91,21 +91,21 @@ public:
     const std::vector<float_t>& get_numeric_variables() const noexcept;
 
 private:
-    StateIndex m_index;
+    Index<State<LiftedTask>> m_index;
     boost::dynamic_bitset<> m_fluent_atoms;
     boost::dynamic_bitset<> m_derived_atoms;
     std::vector<float_t> m_numeric_variables;
 };
 
-static_assert(UnpackedStateConcept<UnpackedState<LiftedTask>>);
+static_assert(UnpackedStateConcept<UnpackedState<LiftedTask>, LiftedTask>);
 
 /**
  * Implementations
  */
 
-inline StateIndex UnpackedState<LiftedTask>::get_index() const { return m_index; }
+inline Index<State<LiftedTask>> UnpackedState<LiftedTask>::get_index() const { return m_index; }
 
-inline void UnpackedState<LiftedTask>::set(StateIndex index) { m_index = index; }
+inline void UnpackedState<LiftedTask>::set(Index<State<LiftedTask>> index) { m_index = index; }
 
 // Fluent facts
 inline formalism::planning::FDRValue UnpackedState<LiftedTask>::get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const

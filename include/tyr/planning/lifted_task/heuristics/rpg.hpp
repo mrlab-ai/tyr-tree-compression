@@ -24,7 +24,7 @@
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/heuristic.hpp"
 #include "tyr/planning/lifted_task.hpp"
-#include "tyr/planning/lifted_task/state.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
 #include "tyr/planning/task_utils.hpp"
 
@@ -59,7 +59,7 @@ public:
         }
     }
 
-    float_t evaluate(const State<LiftedTask>& state) override
+    float_t evaluate(const StateView<LiftedTask>& state) override
     {
         m_workspace.facts.reset();
 

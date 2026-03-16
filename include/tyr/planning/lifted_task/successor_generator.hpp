@@ -48,7 +48,7 @@ public:
 
     Node<LiftedTask> get_successor_node(const Node<LiftedTask>& node, formalism::planning::GroundActionView action);
 
-    Node<LiftedTask> get_node(StateIndex state_index);
+    Node<LiftedTask> get_node(Index<State<LiftedTask>> state_index);
 
     /**
      * Expert API

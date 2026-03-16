@@ -28,7 +28,7 @@ namespace tyr::planning
 template<typename Task>
 void bind_state(nb::module_& m, const std::string& name)
 {
-    using T = State<Task>;
+    using T = StateView<Task>;
 
     nb::class_<T>(m, name.c_str())  //
         .def("__str__", [](const T& self) { return to_string(self); })
@@ -96,7 +96,7 @@ void bind_node(nb::module_& m, const std::string& name)
     using T = Node<Task>;
 
     nb::class_<T>(m, name.c_str())
-        .def(nb::init<State<Task>, float_t>(), "state"_a, "metric_value"_a)
+        .def(nb::init<StateView<Task>, float_t>(), "state"_a, "metric_value"_a)
         .def("__str__", [](const T& self) { return to_string(self); })
         .def("get_state", &T::get_state, nb::rv_policy::reference_internal)
         .def("get_metric", &T::get_metric, nb::rv_policy::copy);
@@ -187,7 +187,7 @@ public:
     /* Trampoline (need one for each virtual function) */
     bool is_static_goal_satisfied() override { NB_OVERRIDE_PURE(is_static_goal_satisfied); }
 
-    bool is_dynamic_goal_satisfied(const State<Task>& state) override { NB_OVERRIDE_PURE(is_dynamic_goal_satisfied, state); }
+    bool is_dynamic_goal_satisfied(const StateView<Task>& state) override { NB_OVERRIDE_PURE(is_dynamic_goal_satisfied, state); }
 };
 
 template<typename Task>
@@ -218,9 +218,9 @@ public:
     NB_TRAMPOLINE(Base, 2);
 
     /* Trampoline (need one for each virtual function) */
-    bool should_prune_state(const State<Task>& state) override { NB_OVERRIDE(should_prune_state, state); }
+    bool should_prune_state(const StateView<Task>& state) override { NB_OVERRIDE(should_prune_state, state); }
 
-    bool should_prune_successor_state(const State<Task>& state, const State<Task>& succ_state, bool is_new_succ_state) override
+    bool should_prune_successor_state(const StateView<Task>& state, const StateView<Task>& succ_state, bool is_new_succ_state) override
     {
         NB_OVERRIDE(should_prune_successor_state, state, succ_state, is_new_succ_state);
     }
@@ -233,9 +233,9 @@ void bind_pruning_strategy(nb::module_& m, const std::string& name)
 
     nb::class_<T, PyPruningStrategy<Task>>(m, name.c_str())  //
         .def(nb::init<>())
-        .def("should_prune_state", nb::overload_cast<const State<Task>&>(&T::should_prune_state), "state"_a)
+        .def("should_prune_state", nb::overload_cast<const StateView<Task>&>(&T::should_prune_state), "state"_a)
         .def("should_prune_successor_state",
-             nb::overload_cast<const State<Task>&, const State<Task>&, bool>(&T::should_prune_successor_state),
+             nb::overload_cast<const StateView<Task>&, const StateView<Task>&, bool>(&T::should_prune_successor_state),
              "state"_a,
              "succ_state"_a,
              "is_new_succ_state"_a);
@@ -252,7 +252,7 @@ public:
     /* Trampoline (need one for each virtual function) */
     void set_goal(formalism::planning::GroundConjunctiveConditionView goal) override { NB_OVERRIDE_PURE(set_goal, goal); }
 
-    float_t evaluate(const State<Task>& state) override { NB_OVERRIDE_PURE(evaluate, state); }
+    float_t evaluate(const StateView<Task>& state) override { NB_OVERRIDE_PURE(evaluate, state); }
 
     const UnorderedSet<formalism::planning::GroundActionView>& get_preferred_action_views() override { NB_OVERRIDE(get_preferred_action_views); }
 };

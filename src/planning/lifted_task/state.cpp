@@ -15,23 +15,22 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "tyr/planning/lifted_task/state.hpp"
-
 #include "tyr/planning/lifted_task.hpp"
 #include "tyr/planning/lifted_task/state_repository.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
 
-namespace tyr::planning
+namespace tyr
 {
 
-bool State<LiftedTask>::test(Index<formalism::planning::GroundAtom<formalism::StaticTag>> index) const { return m_state_repository->get_task()->test(index); }
+bool LiftedStateView::test(Index<formalism::planning::GroundAtom<formalism::StaticTag>> index) const { return m_state_repository->get_task()->test(index); }
 
-float_t State<LiftedTask>::get(Index<formalism::planning::GroundFunctionTerm<formalism::StaticTag>> index) const
+float_t LiftedStateView::get(Index<formalism::planning::GroundFunctionTerm<formalism::StaticTag>> index) const
 {
     return m_state_repository->get_task()->get(index);
 }
 
 template<formalism::FactKind T>
-const boost::dynamic_bitset<>& State<LiftedTask>::get_atoms() const noexcept
+const boost::dynamic_bitset<>& LiftedStateView::get_atoms() const noexcept
 {
     if constexpr (std::is_same_v<T, formalism::StaticTag>)
         return m_state_repository->get_task()->get_static_atoms_bitset();
@@ -41,12 +40,12 @@ const boost::dynamic_bitset<>& State<LiftedTask>::get_atoms() const noexcept
         static_assert(dependent_false<T>::value, "Missing case");
 }
 
-template const boost::dynamic_bitset<>& State<LiftedTask>::get_atoms<formalism::StaticTag>() const noexcept;
-template const boost::dynamic_bitset<>& State<LiftedTask>::get_atoms<formalism::FluentTag>() const noexcept;
-template const boost::dynamic_bitset<>& State<LiftedTask>::get_atoms<formalism::DerivedTag>() const noexcept;
+template const boost::dynamic_bitset<>& LiftedStateView::get_atoms<formalism::StaticTag>() const noexcept;
+template const boost::dynamic_bitset<>& LiftedStateView::get_atoms<formalism::FluentTag>() const noexcept;
+template const boost::dynamic_bitset<>& LiftedStateView::get_atoms<formalism::DerivedTag>() const noexcept;
 
 template<formalism::FactKind T>
-const std::vector<float_t>& State<LiftedTask>::get_numeric_variables() const noexcept
+const std::vector<float_t>& LiftedStateView::get_numeric_variables() const noexcept
 {
     if constexpr (std::is_same_v<T, formalism::StaticTag>)
         return m_state_repository->get_task()->get_static_numeric_variables();
@@ -56,42 +55,42 @@ const std::vector<float_t>& State<LiftedTask>::get_numeric_variables() const noe
         static_assert(dependent_false<T>::value, "Missing case");
 }
 
-template const std::vector<float_t>& State<LiftedTask>::get_numeric_variables<formalism::StaticTag>() const noexcept;
-template const std::vector<float_t>& State<LiftedTask>::get_numeric_variables<formalism::FluentTag>() const noexcept;
+template const std::vector<float_t>& LiftedStateView::get_numeric_variables<formalism::StaticTag>() const noexcept;
+template const std::vector<float_t>& LiftedStateView::get_numeric_variables<formalism::FluentTag>() const noexcept;
 
-AtomRange<formalism::StaticTag> State<LiftedTask>::get_static_atoms() const noexcept
+planning::AtomRange<formalism::StaticTag> LiftedStateView::get_static_atoms() const noexcept
 {
-    return AtomRange<formalism::StaticTag>(m_state_repository->get_task()->get_static_atoms_bitset());
+    return planning::AtomRange<formalism::StaticTag>(m_state_repository->get_task()->get_static_atoms_bitset());
 }
 
-FDRFactRange<LiftedTask, formalism::FluentTag> State<LiftedTask>::get_fluent_facts() const noexcept
+planning::FDRFactRange<planning::LiftedTask, formalism::FluentTag> LiftedStateView::get_fluent_facts() const noexcept
 {
-    return FDRFactRange<LiftedTask, formalism::FluentTag>(get_atoms<formalism::FluentTag>());
+    return planning::FDRFactRange<planning::LiftedTask, formalism::FluentTag>(get_atoms<formalism::FluentTag>());
 }
 
-AtomRange<formalism::DerivedTag> State<LiftedTask>::get_derived_atoms() const noexcept
+planning::AtomRange<formalism::DerivedTag> LiftedStateView::get_derived_atoms() const noexcept
 {
-    return AtomRange<formalism::DerivedTag>(get_atoms<formalism::DerivedTag>());
+    return planning::AtomRange<formalism::DerivedTag>(get_atoms<formalism::DerivedTag>());
 }
 
-FunctionTermValueRange<formalism::StaticTag> State<LiftedTask>::get_static_fterm_values() const noexcept
+planning::FunctionTermValueRange<formalism::StaticTag> LiftedStateView::get_static_fterm_values() const noexcept
 {
-    return FunctionTermValueRange<formalism::StaticTag>(m_state_repository->get_task()->get_static_numeric_variables());
+    return planning::FunctionTermValueRange<formalism::StaticTag>(m_state_repository->get_task()->get_static_numeric_variables());
 }
 
-FunctionTermValueRange<formalism::FluentTag> State<LiftedTask>::get_fluent_fterm_values() const noexcept
+planning::FunctionTermValueRange<formalism::FluentTag> LiftedStateView::get_fluent_fterm_values() const noexcept
 {
-    return FunctionTermValueRange<formalism::FluentTag>(get_numeric_variables<formalism::FluentTag>());
+    return planning::FunctionTermValueRange<formalism::FluentTag>(get_numeric_variables<formalism::FluentTag>());
 }
 
-const std::shared_ptr<formalism::planning::Repository>& State<LiftedTask>::get_repository() const noexcept
+const std::shared_ptr<formalism::planning::Repository>& LiftedStateView::get_repository() const noexcept
 {
     return m_state_repository->get_task()->get_repository();
 }
 
-static_assert(IterableStateConcept<State<LiftedTask>>);
-static_assert(IterableViewStateConcept<State<LiftedTask>>);
-static_assert(IndexableStateConcept<State<LiftedTask>, LiftedTask>);
-static_assert(IndexableViewStateConcept<State<LiftedTask>, LiftedTask>);
+static_assert(planning::IterableStateConcept<LiftedStateView>);
+static_assert(planning::IterableViewStateConcept<LiftedStateView>);
+static_assert(planning::IndexableStateConcept<LiftedStateView, planning::LiftedTask>);
+static_assert(planning::IndexableViewStateConcept<LiftedStateView, planning::LiftedTask>);
 
 }

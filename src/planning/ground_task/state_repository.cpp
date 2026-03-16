@@ -84,7 +84,7 @@ std::shared_ptr<StateRepository<GroundTask>> StateRepository<GroundTask>::create
     return std::make_shared<StateRepository<GroundTask>>(std::move(task));
 }
 
-State<GroundTask> StateRepository<GroundTask>::get_initial_state()
+StateView<GroundTask> StateRepository<GroundTask>::get_initial_state()
 {
     auto unpacked_state = get_unregistered_state();
 
@@ -97,7 +97,7 @@ State<GroundTask> StateRepository<GroundTask>::get_initial_state()
     return register_state(unpacked_state);
 }
 
-State<GroundTask> StateRepository<GroundTask>::get_registered_state(StateIndex state_index)
+StateView<GroundTask> StateRepository<GroundTask>::get_registered_state(Index<State<GroundTask>> state_index)
 {
     const auto& packed_state = m_packed_states[state_index];
 
@@ -116,11 +116,12 @@ State<GroundTask> StateRepository<GroundTask>::get_registered_state(StateIndex s
 
     fill_numeric_variables(packed_state.get_numeric_variables(), m_uint_nodes, m_float_nodes, m_nodes_buffer, unpacked_state->get_numeric_variables());
 
-    return State<GroundTask>(shared_from_this(), std::move(unpacked_state));
+    return StateView<GroundTask>(shared_from_this(), std::move(unpacked_state));
 }
 
-State<GroundTask> StateRepository<GroundTask>::create_state(const std::vector<Data<fp::FDRFact<f::FluentTag>>>& fluent_facts,
-                                                            const std::vector<std::pair<Index<fp::GroundFunctionTerm<f::FluentTag>>, float_t>>& fterm_values)
+StateView<GroundTask>
+StateRepository<GroundTask>::create_state(const std::vector<Data<fp::FDRFact<f::FluentTag>>>& fluent_facts,
+                                          const std::vector<std::pair<Index<fp::GroundFunctionTerm<f::FluentTag>>, float_t>>& fterm_values)
 {
     auto unpacked_state = get_unregistered_state();
 
@@ -132,8 +133,8 @@ State<GroundTask> StateRepository<GroundTask>::create_state(const std::vector<Da
     return register_state(std::move(unpacked_state));
 }
 
-State<GroundTask> StateRepository<GroundTask>::create_state(const std::vector<fp::FDRFactView<f::FluentTag>>& fluent_facts,
-                                                            const std::vector<fp::GroundFunctionTermViewValuePair<f::FluentTag>>& fterm_values)
+StateView<GroundTask> StateRepository<GroundTask>::create_state(const std::vector<fp::FDRFactView<f::FluentTag>>& fluent_facts,
+                                                                const std::vector<fp::GroundFunctionTermViewValuePair<f::FluentTag>>& fterm_values)
 {
     auto unpacked_state = get_unregistered_state();
 
@@ -156,7 +157,7 @@ SharedObjectPoolPtr<UnpackedState<GroundTask>> StateRepository<GroundTask>::get_
     return state;
 }
 
-State<GroundTask> StateRepository<GroundTask>::register_state(SharedObjectPoolPtr<UnpackedState<GroundTask>> state)
+StateView<GroundTask> StateRepository<GroundTask>::register_state(SharedObjectPoolPtr<UnpackedState<GroundTask>> state)
 {
     m_axiom_evaluator->compute_extended_state(*state);
 
@@ -175,10 +176,10 @@ State<GroundTask> StateRepository<GroundTask>::register_state(SharedObjectPoolPt
 
     auto numeric_variables_slot = create_numeric_variables_slot(state->get_numeric_variables(), m_nodes_buffer, m_uint_nodes, m_float_nodes);
 
-    state->set(
-        m_packed_states.insert(PackedState<GroundTask>(StateIndex(m_packed_states.size()), fluent_facts_index, derived_atoms_index, numeric_variables_slot)));
+    state->set(m_packed_states.insert(
+        Data<State<GroundTask>>(Index<State<GroundTask>>(m_packed_states.size()), fluent_facts_index, derived_atoms_index, numeric_variables_slot)));
 
-    return State<GroundTask>(shared_from_this(), std::move(state));
+    return StateView<GroundTask>(shared_from_this(), std::move(state));
 }
 
 static_assert(StateRepositoryConcept<StateRepository<GroundTask>, GroundTask>);

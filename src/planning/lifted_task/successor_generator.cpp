@@ -27,6 +27,7 @@
 #include "tyr/planning/lifted_task.hpp"
 #include "tyr/planning/lifted_task/axiom_evaluator.hpp"
 #include "tyr/planning/lifted_task/state_repository.hpp"
+#include "tyr/planning/lifted_task/state_view.hpp"
 #include "tyr/planning/programs/action.hpp"
 #include "tyr/planning/successor_generator.hpp"
 #include "tyr/planning/task_utils.hpp"
@@ -158,7 +159,7 @@ Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_successor_node(const Node<L
     return m_executor.apply_action(state_context, action, *m_state_repository);
 }
 
-Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_node(StateIndex state_index)
+Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_node(Index<State<LiftedTask>> state_index)
 {
     auto state = m_state_repository->get_registered_state(state_index);
     const auto state_context = StateContext<LiftedTask>(*m_task, state.get_unpacked_state(), 0);

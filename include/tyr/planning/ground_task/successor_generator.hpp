@@ -18,8 +18,8 @@
 #ifndef TYR_PLANNING_GROUND_TASK_SUCCESSOR_GENERATOR_HPP_
 #define TYR_PLANNING_GROUND_TASK_SUCCESSOR_GENERATOR_HPP_
 
-#include "tyr/planning/ground_task/node.hpp"   // for Node
-#include "tyr/planning/ground_task/state.hpp"  // for State
+#include "tyr/planning/ground_task/node.hpp"        // for Node
+#include "tyr/planning/ground_task/state_view.hpp"  // for State
 //
 #include "tyr/formalism/planning/ground_action_index.hpp"  // for Index
 #include "tyr/formalism/planning/ground_action_view.hpp"
@@ -45,7 +45,7 @@ public:
 
     Node<GroundTask> get_successor_node(const Node<GroundTask>& node, formalism::planning::GroundActionView action);
 
-    Node<GroundTask> get_node(StateIndex state_index);
+    Node<GroundTask> get_node(Index<State<GroundTask>> state_index);
 
     /**
      * Expert API

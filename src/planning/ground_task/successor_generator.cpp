@@ -25,6 +25,7 @@
 #include "tyr/planning/ground_task.hpp"
 #include "tyr/planning/ground_task/match_tree/match_tree.hpp"
 #include "tyr/planning/ground_task/state_repository.hpp"
+#include "tyr/planning/ground_task/state_view.hpp"
 #include "tyr/planning/state_index.hpp"
 #include "tyr/planning/task_utils.hpp"
 
@@ -91,7 +92,7 @@ Node<GroundTask> SuccessorGenerator<GroundTask>::get_successor_node(const Node<G
     return m_executor.apply_action(state_context, action, *m_state_repository);
 }
 
-Node<GroundTask> SuccessorGenerator<GroundTask>::get_node(StateIndex state_index)
+Node<GroundTask> SuccessorGenerator<GroundTask>::get_node(Index<State<GroundTask>> state_index)
 {
     auto state = m_state_repository->get_registered_state(state_index);
     const auto state_context = StateContext<GroundTask>(*m_task, state.get_unpacked_state(), 0);

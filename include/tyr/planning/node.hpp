@@ -23,8 +23,8 @@
 #include "tyr/formalism/declarations.hpp"
 #include "tyr/formalism/planning/ground_action_view.hpp"
 #include "tyr/formalism/planning/repository.hpp"
-#include "tyr/planning/state.hpp"
 #include "tyr/planning/state_index.hpp"
+#include "tyr/planning/state_view.hpp"
 
 #include <concepts>
 #include <ranges>
@@ -52,7 +52,7 @@ using LabeledNodeList = std::vector<LabeledNode<Task>>;
 
 template<typename T, typename Task>
 concept NodeConcept = requires(const T& cn) {
-    { cn.get_state() } -> std::same_as<const State<Task>&>;
+    { cn.get_state() } -> std::same_as<const StateView<Task>&>;
     { cn.get_metric() } -> std::same_as<float_t>;
 };
 }

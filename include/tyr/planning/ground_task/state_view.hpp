@@ -15,8 +15,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_PLANNING_GROUND_TASK_STATE_HPP_
-#define TYR_PLANNING_GROUND_TASK_STATE_HPP_
+#ifndef TYR_PLANNING_GROUND_TASK_STATE_VIEW_HPP_
+#define TYR_PLANNING_GROUND_TASK_STATE_VIEW_HPP_
 
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/repository.hpp"
@@ -24,22 +24,23 @@
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/ground_task/state_iterators.hpp"
 #include "tyr/planning/ground_task/unpacked_state.hpp"
-#include "tyr/planning/state.hpp"
 #include "tyr/planning/state_iterators.hpp"
+#include "tyr/planning/state_view.hpp"
 
 #include <boost/dynamic_bitset.hpp>
 
-namespace tyr::planning
+namespace tyr
 {
 template<>
-class State<GroundTask>
+class View<Index<planning::State<planning::GroundTask>>, std::shared_ptr<planning::StateRepository<planning::GroundTask>>>
 {
 public:
-    using TaskType = GroundTask;
+    using TaskType = planning::GroundTask;
 
-    State(std::shared_ptr<StateRepository<GroundTask>> owner, SharedObjectPoolPtr<UnpackedState<GroundTask>> unpacked) noexcept;
+    View(std::shared_ptr<planning::StateRepository<planning::GroundTask>> owner,
+         SharedObjectPoolPtr<planning::UnpackedState<planning::GroundTask>> unpacked) noexcept;
 
-    StateIndex get_index() const;
+    Index<planning::State<planning::GroundTask>> get_index() const;
 
     /**
      * IndexableStateConcept
@@ -65,11 +66,11 @@ public:
      * IterableStateConcept
      */
 
-    AtomRange<formalism::StaticTag> get_static_atoms() const noexcept;
-    FDRFactRange<GroundTask, formalism::FluentTag> get_fluent_facts() const noexcept;
-    AtomRange<formalism::DerivedTag> get_derived_atoms() const noexcept;
-    FunctionTermValueRange<formalism::StaticTag> get_static_fterm_values() const noexcept;
-    FunctionTermValueRange<formalism::FluentTag> get_fluent_fterm_values() const noexcept;
+    planning::AtomRange<formalism::StaticTag> get_static_atoms() const noexcept;
+    planning::FDRFactRange<planning::GroundTask, formalism::FluentTag> get_fluent_facts() const noexcept;
+    planning::AtomRange<formalism::DerivedTag> get_derived_atoms() const noexcept;
+    planning::FunctionTermValueRange<formalism::StaticTag> get_static_fterm_values() const noexcept;
+    planning::FunctionTermValueRange<formalism::FluentTag> get_fluent_fterm_values() const noexcept;
 
     /**
      * IterableStateViewConcept
@@ -86,8 +87,8 @@ public:
      */
 
     const std::shared_ptr<formalism::planning::Repository>& get_repository() const noexcept;
-    const std::shared_ptr<StateRepository<GroundTask>>& get_state_repository() const noexcept;
-    const UnpackedState<GroundTask>& get_unpacked_state() const noexcept;
+    const std::shared_ptr<planning::StateRepository<planning::GroundTask>>& get_state_repository() const noexcept;
+    const planning::UnpackedState<planning::GroundTask>& get_unpacked_state() const noexcept;
 
     template<formalism::FactKind T>
     const boost::dynamic_bitset<>& get_atoms() const noexcept;
@@ -98,68 +99,74 @@ public:
     const std::vector<float_t>& get_numeric_variables() const noexcept;
 
 private:
-    std::shared_ptr<StateRepository<GroundTask>> m_state_repository;
-    SharedObjectPoolPtr<UnpackedState<GroundTask>> m_unpacked;
+    std::shared_ptr<planning::StateRepository<planning::GroundTask>> m_state_repository;
+    SharedObjectPoolPtr<planning::UnpackedState<planning::GroundTask>> m_unpacked;
 };
+
+using GroundStateView = View<Index<planning::State<planning::GroundTask>>, std::shared_ptr<planning::StateRepository<planning::GroundTask>>>;
 
 /**
  * Implemntations
  */
 
-inline State<GroundTask>::State(std::shared_ptr<StateRepository<GroundTask>> owner, SharedObjectPoolPtr<UnpackedState<GroundTask>> unpacked) noexcept :
+inline GroundStateView::View(std::shared_ptr<planning::StateRepository<planning::GroundTask>> owner,
+                             SharedObjectPoolPtr<planning::UnpackedState<planning::GroundTask>> unpacked) noexcept :
     m_state_repository(std::move(owner)),
     m_unpacked(std::move(unpacked))
 {
 }
 
-inline StateIndex State<GroundTask>::get_index() const { return m_unpacked->get_index(); }
+inline Index<planning::State<planning::GroundTask>> GroundStateView::get_index() const { return m_unpacked->get_index(); }
 
-inline formalism::planning::FDRValue State<GroundTask>::get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const
+inline formalism::planning::FDRValue GroundStateView::get(Index<formalism::planning::FDRVariable<formalism::FluentTag>> index) const
 {
     return m_unpacked->get(index);
 }
 
-inline float_t State<GroundTask>::get(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index) const { return m_unpacked->get(index); }
+inline float_t GroundStateView::get(Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> index) const { return m_unpacked->get(index); }
 
-inline bool State<GroundTask>::test(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index) const { return m_unpacked->test(index); }
+inline bool GroundStateView::test(Index<formalism::planning::GroundAtom<formalism::DerivedTag>> index) const { return m_unpacked->test(index); }
 
-inline const std::shared_ptr<StateRepository<GroundTask>>& State<GroundTask>::get_state_repository() const noexcept { return m_state_repository; }
+inline const std::shared_ptr<planning::StateRepository<planning::GroundTask>>& GroundStateView::get_state_repository() const noexcept
+{
+    return m_state_repository;
+}
 
-inline const UnpackedState<GroundTask>& State<GroundTask>::get_unpacked_state() const noexcept { return *m_unpacked; }
+inline const planning::UnpackedState<planning::GroundTask>& GroundStateView::get_unpacked_state() const noexcept { return *m_unpacked; }
 
-inline const std::vector<formalism::planning::FDRValue>& State<GroundTask>::get_fluent_values() const noexcept { return m_unpacked->get_fluent_values(); }
+inline const std::vector<formalism::planning::FDRValue>& GroundStateView::get_fluent_values() const noexcept { return m_unpacked->get_fluent_values(); }
 
-inline bool State<GroundTask>::test(formalism::planning::GroundAtomView<formalism::StaticTag> view) const { return test(view.get_index()); }
+inline bool GroundStateView::test(formalism::planning::GroundAtomView<formalism::StaticTag> view) const { return test(view.get_index()); }
 
-inline float_t State<GroundTask>::get(formalism::planning::GroundFunctionTermView<formalism::StaticTag> view) const { return get(view.get_index()); }
+inline float_t GroundStateView::get(formalism::planning::GroundFunctionTermView<formalism::StaticTag> view) const { return get(view.get_index()); }
 
-inline formalism::planning::FDRValue State<GroundTask>::get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const
+inline formalism::planning::FDRValue GroundStateView::get(formalism::planning::FDRVariableView<formalism::FluentTag> view) const
 {
     return get(view.get_index());
 }
 
-inline float_t State<GroundTask>::get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const { return get(view.get_index()); }
+inline float_t GroundStateView::get(formalism::planning::GroundFunctionTermView<formalism::FluentTag> view) const { return get(view.get_index()); }
 
-inline bool State<GroundTask>::test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const { return test(view.get_index()); }
+inline bool GroundStateView::test(formalism::planning::GroundAtomView<formalism::DerivedTag> view) const { return test(view.get_index()); }
 
-inline auto State<GroundTask>::get_static_atoms_view() const noexcept
+inline auto GroundStateView::get_static_atoms_view() const noexcept
 {
     return get_static_atoms() | std::views::transform([context = this->get_repository()](auto id) { return make_view(id, *context); });
 }
-inline auto State<GroundTask>::get_fluent_facts_view() const noexcept
+inline auto GroundStateView::get_fluent_facts_view() const noexcept
 {
     return get_fluent_facts() | std::views::transform([context = this->get_repository()](auto id) { return make_view(id, *context); });
 }
-inline auto State<GroundTask>::get_derived_atoms_view() const noexcept
+inline auto GroundStateView::get_derived_atoms_view() const noexcept
 {
     return get_derived_atoms() | std::views::transform([context = this->get_repository()](auto id) { return make_view(id, *context); });
 }
-inline auto State<GroundTask>::get_static_fterm_values_view() const noexcept
+inline auto GroundStateView::get_static_fterm_values_view() const noexcept
 {
     return get_static_fterm_values()
            | std::views::transform([context = this->get_repository()](auto&& pair) { return std::make_pair(make_view(pair.first, *context), pair.second); });
 }
-inline auto State<GroundTask>::get_fluent_fterm_values_view() const noexcept
+inline auto GroundStateView::get_fluent_fterm_values_view() const noexcept
 {
     return get_fluent_fterm_values()
            | std::views::transform([context = this->get_repository()](auto&& pair) { return std::make_pair(make_view(pair.first, *context), pair.second); });
