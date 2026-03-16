@@ -32,7 +32,7 @@ namespace tyr
 {
 
 template<typename Task, typename C>
-class View<planning::State<Task>, C>
+class View<Index<planning::State<Task>>, C>
 {
     static_assert(dependent_false<Task>::value, "State is not defined for type T.");
 };
