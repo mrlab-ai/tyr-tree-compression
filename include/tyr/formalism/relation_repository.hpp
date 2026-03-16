@@ -117,6 +117,13 @@ public:
     }
 
     /**
+     * Common methods.
+     */
+
+    /// @brief Clear the repository but keep memory allocated.
+    void clear() noexcept { clear_entries(); }
+
+    /**
      * Global methods.
      */
 
@@ -222,9 +229,6 @@ public:
 
         return parent_size + local_size;
     }
-
-    /// @brief Clear the repository but keep memory allocated.
-    void clear() noexcept { clear_entries(); }
 
     template<typename T>
     const RelationRepository& get_canonical_context(std::pair<Index<T>, Index<Binding>> index) const noexcept

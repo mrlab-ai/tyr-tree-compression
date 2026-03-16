@@ -81,6 +81,24 @@ public:
     SymbolRepository(const SymbolRepository* parent = nullptr) : m_parent(parent), m_repository(), m_arena() { clear_entries(); }
 
     /**
+     * Common methods
+     */
+
+    /// @brief Clear the repository but keep memory allocated.
+    void clear() noexcept
+    {
+        m_arena.clear();
+        clear_entries();
+    }
+
+    template<typename T>
+    size_t hash(const Data<T>& builder) const
+    {
+        const auto& entry = std::get<Entry<T>>(m_repository);
+        return entry.slot.container.hash(builder);
+    }
+
+    /**
      * Global methods
      */
 
@@ -100,20 +118,15 @@ public:
     template<typename T>
     std::optional<View<Index<T>, SymbolRepository>> find(const Data<T>& builder) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto& container = entry.slot.container;
-        const auto h = container.hash(builder);
-
-        return find_with_hash<T>(builder, h);
+        return find_with_hash<T>(builder, hash(builder));
     }
 
     template<typename T>
-    std::pair<View<Index<T>, SymbolRepository>, bool> get_or_create(Data<T>& builder, buffer::Buffer& buf)
+    std::pair<View<Index<T>, SymbolRepository>, bool> get_or_create_with_hash(Data<T>& builder, size_t h, buffer::Buffer& buf)
     {
         auto& entry = std::get<Entry<T>>(m_repository);
         auto& slot = entry.slot;
         auto& container = slot.container;
-        const auto h = container.hash(builder);
 
         if (m_parent)
             if (auto ptr = m_parent->template find_with_hash<T>(builder, h))
@@ -125,6 +138,12 @@ public:
         const auto [ptr, success] = container.insert_with_hash(h, builder, buf, m_arena);
 
         return { View<Index<T>, SymbolRepository>(ptr->index, *this), success };
+    }
+
+    template<typename T>
+    std::pair<View<Index<T>, SymbolRepository>, bool> get_or_create(Data<T>& builder, buffer::Buffer& buf)
+    {
+        return get_or_create_with_hash(builder, hash(builder), buf);
     }
 
     /// @brief Access the element with the given index.
@@ -175,13 +194,6 @@ public:
         return slot.parent_size + slot.container.size();
     }
 
-    /// @brief Clear the repository but keep memory allocated.
-    void clear() noexcept
-    {
-        m_arena.clear();
-        clear_entries();
-    }
-
     template<typename T>
     const SymbolRepository& get_canonical_context(Index<T> index) const noexcept
     {
@@ -223,12 +235,11 @@ public:
     }
 
     template<typename T>
-    std::pair<Index<T>, bool> get_or_create_local(Data<T>& builder, buffer::Buffer& buf)
+    std::pair<Index<T>, bool> get_or_create_local_with_hash(Data<T>& builder, size_t h, buffer::Buffer& buf)
     {
         auto& entry = std::get<Entry<T>>(m_repository);
         auto& slot = entry.slot;
         auto& container = slot.container;
-        const auto h = container.hash(builder);
 
         if (auto ptr = container.find_with_hash(builder, h))
             return { Index<T>(ptr->index), false };
@@ -237,6 +248,12 @@ public:
 
         const auto [ptr, success] = container.insert_with_hash(h, builder, buf, m_arena);
         return { Index<T>(ptr->index), success };
+    }
+
+    template<typename T>
+    std::pair<Index<T>, bool> get_or_create_local(Data<T>& builder, buffer::Buffer& buf)
+    {
+        return get_or_create_local_with_hash(builder, hash(builder), buf);
     }
 
     template<typename T>

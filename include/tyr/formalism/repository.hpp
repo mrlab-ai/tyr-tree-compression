@@ -41,14 +41,14 @@ class Repository
 {
 private:
     const Repository* m_parent;
-    SerializationRepo m_serialization_repository;
+    SerializationRepo m_symbol_repository;
     RelationRepo m_relation_repository;
     size_t m_num_objects;
 
 public:
     Repository(size_t num_objects, const Repository* parent = nullptr) :
         m_parent(parent),
-        m_serialization_repository(m_parent ? &m_parent->m_serialization_repository : nullptr),
+        m_symbol_repository(m_parent ? &m_parent->m_symbol_repository : nullptr),
         m_relation_repository(num_objects, m_parent ? &m_parent->m_relation_repository : nullptr),
         m_num_objects(num_objects)
     {
@@ -64,7 +64,7 @@ public:
     template<typename T>
     std::optional<View<Index<T>, Repository>> find_with_hash(const Data<T>& builder, size_t h) const noexcept
     {
-        if (auto index_or_nullopt = m_serialization_repository.find_local_with_hash(builder, h))
+        if (auto index_or_nullopt = m_symbol_repository.find_local_with_hash(builder, h))
             return View<Index<T>, Repository>(*index_or_nullopt, *this);
 
         return m_parent ? m_parent->template find_with_hash<T>(builder, h) : std::nullopt;
@@ -73,66 +73,69 @@ public:
     template<typename T>
     std::optional<View<Index<T>, Repository>> find(const Data<T>& builder) const noexcept
     {
-        if (auto index_or_nullopt = m_serialization_repository.find_local(builder))
-            return View<Index<T>, Repository>(*index_or_nullopt, *this);
+        return find_with_hash(builder, m_symbol_repository.hash(builder));
+    }
 
-        return m_parent ? m_parent->template find<T>(builder) : std::nullopt;
+    template<typename T>
+    std::pair<View<Index<T>, Repository>, bool> get_or_create_with_hash(Data<T>& builder, size_t h, buffer::Buffer& buf)
+    {
+        if (auto index_or_nullopt = m_symbol_repository.find_local_with_hash(builder, h))
+            return { View<Index<T>, Repository>(*index_or_nullopt, *this), false };
+
+        if (m_parent)
+            if (auto ptr = m_parent->template find_with_hash<T>(builder, h))
+                return { *ptr, false };
+
+        const auto [index, success] = m_symbol_repository.get_or_create_local_with_hash(builder, h, buf);
+        return { View<Index<T>, Repository>(index, *this), success };
     }
 
     template<typename T>
     std::pair<View<Index<T>, Repository>, bool> get_or_create(Data<T>& builder, buffer::Buffer& buf)
     {
-        if (auto index_or_nullopt = m_serialization_repository.find_local(builder))
-            return { View<Index<T>, Repository>(*index_or_nullopt, *this), false };
-
-        if (m_parent)
-            if (auto ptr = m_parent->template find<T>(builder))
-                return { *ptr, false };
-
-        const auto [index, success] = m_serialization_repository.get_or_create_local(builder, buf);
-        return { View<Index<T>, Repository>(index, *this), success };
+        return get_or_create_with_hash(builder, m_symbol_repository.hash(builder), buf);
     }
 
     template<typename T>
     const Data<T>& operator[](Index<T> index) const noexcept
     {
-        if (!m_serialization_repository.is_local(index))
+        if (!m_symbol_repository.is_local(index))
         {
             assert(m_parent);
             return (*m_parent)[index];
         }
 
-        return m_serialization_repository.at_local(index);
+        return m_symbol_repository.at_local(index);
     }
 
     template<typename T>
     const Data<T>& front() const
     {
-        if (m_serialization_repository.template parent_size<T>() > 0)
+        if (m_symbol_repository.template parent_size<T>() > 0)
         {
             assert(m_parent);
             return m_parent->template front<T>();
         }
 
-        return m_serialization_repository.template front_local<T>();
+        return m_symbol_repository.template front_local<T>();
     }
 
     template<typename T>
     size_t size() const noexcept
     {
-        return m_serialization_repository.template parent_size<T>() + m_serialization_repository.template local_size<T>();
+        return m_symbol_repository.template parent_size<T>() + m_symbol_repository.template local_size<T>();
     }
 
     void clear() noexcept
     {
-        m_serialization_repository.clear();
+        m_symbol_repository.clear();
         m_relation_repository.clear();
     }
 
     template<typename T>
     const Repository& get_canonical_context(Index<T> index) const noexcept
     {
-        if (!m_serialization_repository.is_local(index))
+        if (!m_symbol_repository.is_local(index))
         {
             assert(m_parent && "Element not found in the repository chain.");
             return m_parent->get_canonical_context(index);
@@ -158,6 +161,7 @@ public:
     std::optional<View<std::pair<I, Index<Binding>>, Repository>> find(I g, const IndexList<Object>& builder) const noexcept
     {
         const auto row_or_nullopt = m_relation_repository.find_local(g, builder);
+
         if (row_or_nullopt)
             return View<std::pair<I, Index<Binding>>, Repository>(std::make_pair(g, *row_or_nullopt), *this);
 
