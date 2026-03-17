@@ -47,16 +47,26 @@ private:
         static constexpr Block encode(value_type value) noexcept { return static_cast<Block>((static_cast<uint_t>(value))); }
     };
 
+    template<typename T>
     struct Slot
     {
-        std::optional<BlockArraySet<uint_t, Coder<uint_t>>> container;
+        Index<T> g;
+        BlockArraySet<uint_t, Coder<uint_t>> container;
         size_t parent_size = 0;
+
+        Slot(Index<T> g, BlockArraySet<uint_t, Coder<uint_t>> container, size_t parent_size) : g(g), container(std::move(container)), parent_size(parent_size)
+        {
+        }
     };
+
+    static constexpr uint_t kInvalid = std::numeric_limits<uint_t>::max();
 
     template<typename T>
     struct Entry
     {
-        using slot_type = UnorderedMap<Index<T>, Slot>;
+        std::vector<uint_t> forward;
+
+        using slot_type = std::vector<Slot<T>>;
 
         slot_type slots;
     };
@@ -68,43 +78,69 @@ private:
     size_t m_num_objects;
 
     template<typename T>
-    auto& get_or_create_slot(Index<T> g)
+    auto& get_or_create_slot(Index<T> g, size_t arity)
     {
+        const auto parent_size = m_parent ? m_parent->size(g) : size_t { 0 };
         auto& entry = std::get<Entry<T>>(m_repository);
+        const auto gi = uint_t(g);
+
+        if (gi >= entry.forward.size())
+            entry.forward.resize(gi + 1, kInvalid);
+
+        if (entry.forward[gi] == kInvalid)
         {
-            const auto it = entry.slots.find(g);
-            if (it != entry.slots.end())
-                return it->second;  ///< slot already exists
+            entry.forward[gi] = static_cast<uint_t>(entry.slots.size());
+            entry.slots.emplace_back(g, BlockArraySet<uint_t, Coder<uint_t>>(arity), parent_size);
         }
 
-        const auto parent_size = m_parent ? m_parent->size(g) : size_t { 0 };
-        const auto [it, inserted] = entry.slots.emplace(g, Slot { std::nullopt, parent_size });
-        assert(inserted);
-        return it->second;
-    }
-
-    auto& get_or_create_container(size_t arity, Slot& slot)
-    {
-        if (!slot.container)
-            slot.container.emplace(arity);
-        return *slot.container;
+        return entry.slots[entry.forward[gi]];
     }
 
     template<typename T>
     void clear_entry(Entry<T>& entry) noexcept
     {
-        for (auto& [g, slot] : entry.slots)
+        for (auto& slot : entry.slots)
         {
-            if (slot.container)
-                slot.container->clear();
-
-            slot.parent_size = m_parent ? m_parent->template size<T>(g) : size_t { 0 };
+            slot.container.clear();
+            slot.parent_size = m_parent ? m_parent->size(slot.g) : size_t { 0 };
         }
     }
 
     void clear_entries() noexcept
     {
         std::apply([&](auto&... entry) { (clear_entry(entry), ...); }, m_repository);
+    }
+
+    template<typename T>
+    const Slot<T>* find_slot(Index<T> g) const noexcept
+    {
+        const auto& entry = std::get<Entry<T>>(m_repository);
+        const auto gi = uint_t(g);
+
+        if (gi >= entry.forward.size())
+            return nullptr;
+
+        const auto si = entry.forward[gi];
+        if (si == kInvalid)
+            return nullptr;
+
+        return &entry.slots[si];
+    }
+
+    template<typename T>
+    Slot<T>* find_slot(Index<T> g) noexcept
+    {
+        auto& entry = std::get<Entry<T>>(m_repository);
+        const auto gi = uint_t(g);
+
+        if (gi >= entry.forward.size())
+            return nullptr;
+
+        const auto si = entry.forward[gi];
+        if (si == kInvalid)
+            return nullptr;
+
+        return &entry.slots[si];
     }
 
 public:
@@ -135,19 +171,12 @@ public:
     std::optional<View<std::pair<Index<T>, Index<Binding>>, RelationRepository>>
     find_with_hash(Index<T> g, const IndexList<Object>& builder, size_t h) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-
-        const auto& slots = entry.slots;
-        const auto it = slots.find(g);
-        if (it == slots.end())  ///< no slot exists here
+        const auto* slot = find_slot(g);
+        if (!slot)
             return m_parent ? m_parent->template find_with_hash<T>(g, builder, h) : std::nullopt;
 
-        const auto& slot = it->second;
-        if (!slot.container)  ///< no container exists here
-            return m_parent ? m_parent->template find_with_hash<T>(g, builder, h) : std::nullopt;
-
-        if (auto row_or_nullopt = slot.container->find_with_hash(builder, h))  /// container exists here
-            return View<std::pair<Index<T>, Index<Binding>>, RelationRepository>(std::make_pair(g, Index<Binding>(slot.parent_size + *row_or_nullopt)), *this);
+        if (auto row_or_nullopt = slot->container.find_with_hash(builder, h))
+            return View<std::pair<Index<T>, Index<Binding>>, RelationRepository>(std::make_pair(g, Index<Binding>(slot->parent_size + *row_or_nullopt)), *this);
 
         return m_parent ? m_parent->template find_with_hash<T>(g, builder, h) : std::nullopt;
     }
@@ -155,31 +184,27 @@ public:
     template<typename T>
     std::optional<View<std::pair<Index<T>, Index<Binding>>, RelationRepository>> find(Index<T> g, const IndexList<Object>& builder) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto& slots = entry.slots;
-
-        const auto it = slots.find(g);
-        if (it == slots.end())  ///< no slot exists here
+        const auto* slot = find_slot(g);
+        if (!slot)
             return m_parent ? m_parent->template find<T>(g, builder) : std::nullopt;
 
-        const auto& slot = it->second;
-        if (!slot.container)  ///< no container exists here
-            return m_parent ? m_parent->template find<T>(g, builder) : std::nullopt;
+        const auto h = slot->container.hash(builder);
+        if (auto row_or_nullopt = slot->container.find_with_hash(builder, h))
+            return View<std::pair<Index<T>, Index<Binding>>, RelationRepository>(std::make_pair(g, Index<Binding>(slot->parent_size + *row_or_nullopt)), *this);
 
-        const auto h = slot.container->hash(builder);
-        return find_with_hash<T>(g, builder, h);
+        return m_parent ? m_parent->template find<T>(g, builder) : std::nullopt;
     }
 
     template<typename T>
     std::pair<View<std::pair<Index<T>, Index<Binding>>, RelationRepository>, bool> get_or_create(Index<T> g, size_t arity, const IndexList<Object>& builder)
     {
-        auto& slot = get_or_create_slot(g);
+        auto& slot = get_or_create_slot(g, arity);
 
         if (m_parent)
             if (auto ptr = m_parent->template find<T>(g, builder))
                 return { *ptr, false };
 
-        auto& container = get_or_create_container(arity, slot);
+        auto& container = slot.container;
         const auto h = container.hash(builder);
 
         const auto [row, success] = container.insert_with_hash(h, builder);
@@ -194,44 +219,30 @@ public:
         assert(g != Index<T>::max() && "Unassigned index.");
         assert(row != Index<Binding>::max() && "Unassigned index.");
 
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto it = entry.slots.find(g);
-
-        if (it == entry.slots.end())
+        const auto* slot = find_slot(g);
+        if (!slot)
         {
             assert(m_parent);
             return (*m_parent)[index];
         }
 
-        const auto& slot = it->second;
-        const auto parent_size = slot.parent_size;
-
-        if (row.value < parent_size)
+        if (row.value < slot->parent_size)
         {
             assert(m_parent);
             return (*m_parent)[index];
         }
 
-        assert(slot.container && "Missing local container for local row.");
-        assert(row.value >= parent_size);
-
-        return (*slot.container)[row.value - parent_size];
+        return slot->container[row.value - slot->parent_size];
     }
 
     template<typename T>
     size_t size(Index<T> g) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto& slots = entry.slots;
-
-        const auto it = slots.find(g);
-        if (it == slots.end())
+        const auto* slot = find_slot(g);
+        if (!slot)
             return m_parent ? m_parent->size(g) : 0;
 
-        const size_t parent_size = it->second.parent_size;
-        const size_t local_size = it->second.container ? it->second.container->size() : 0;
-
-        return parent_size + local_size;
+        return slot->parent_size + slot->container.size();
     }
 
     template<typename T>
@@ -239,17 +250,14 @@ public:
     {
         const auto& [g, row] = index;
 
-        const auto& entry = std::get<Entry<T>>(m_repository);
-
-        const auto it = entry.slots.find(g);
-        if (it == entry.slots.end())
+        const auto* slot = find_slot(g);
+        if (!slot)
         {
             assert(m_parent && "Element not found in the repository chain.");
             return m_parent ? m_parent->get_canonical_context(index) : *this;
         }
 
-        const auto& slot = it->second;
-        if (row.value < slot.parent_size)
+        if (row.value < slot->parent_size)
         {
             assert(m_parent && "Element not found in the repository chain.");
             return m_parent->get_canonical_context(index);
@@ -265,17 +273,12 @@ public:
     template<typename T>
     std::optional<Index<Binding>> find_local_with_hash(Index<T> g, const IndexList<Object>& builder, size_t h) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto it = entry.slots.find(g);
-        if (it == entry.slots.end())
+        const auto* slot = find_slot(g);
+        if (!slot)
             return std::nullopt;
 
-        const auto& slot = it->second;
-        if (!slot.container)
-            return std::nullopt;
-
-        if (auto row_or_nullopt = slot.container->find_with_hash(builder, h))
-            return Index<Binding>(slot.parent_size + *row_or_nullopt);
+        if (auto row_or_nullopt = slot->container.find_with_hash(builder, h))
+            return Index<Binding>(slot->parent_size + *row_or_nullopt);
 
         return std::nullopt;
     }
@@ -283,23 +286,22 @@ public:
     template<typename T>
     std::optional<Index<Binding>> find_local(Index<T> g, const IndexList<Object>& builder) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto it = entry.slots.find(g);
-        if (it == entry.slots.end())
+        const auto* slot = find_slot(g);
+        if (!slot)
             return std::nullopt;
 
-        const auto& slot = it->second;
-        if (!slot.container)
-            return std::nullopt;
+        const auto h = slot->container.hash(builder);
+        if (auto row_or_nullopt = slot->container.find_with_hash(builder, h))
+            return Index<Binding>(slot->parent_size + *row_or_nullopt);
 
-        return find_local_with_hash<T>(g, builder, slot.container->hash(builder));
+        return std::nullopt;
     }
 
     template<typename T>
     std::pair<Index<Binding>, bool> get_or_create_local(Index<T> g, size_t arity, const IndexList<Object>& builder)
     {
-        auto& slot = get_or_create_slot(g);
-        auto& container = get_or_create_container(arity, slot);
+        auto& slot = get_or_create_slot(g, arity);
+        auto& container = slot.container;
         const auto h = container.hash(builder);
 
         if (auto row_or_nullopt = container.find_with_hash(builder, h))
@@ -314,35 +316,25 @@ public:
     {
         const auto& [g, row] = index;
 
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto it = entry.slots.find(g);
+        const auto* slot = find_slot(g);
+        assert(slot);
+        assert(row.value >= slot->parent_size);
 
-        assert(it != entry.slots.end());
-        const auto& slot = it->second;
-        assert(slot.container);
-        assert(row.value >= slot.parent_size);
-
-        return (*slot.container)[row.value - slot.parent_size];
+        return slot->container[row.value - slot->parent_size];
     }
 
     template<typename T>
     size_t local_size(Index<T> g) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto it = entry.slots.find(g);
-        if (it == entry.slots.end() || !it->second.container)
-            return 0;
-        return it->second.container->size();
+        const auto* slot = find_slot(g);
+        return slot ? slot->container.size() : 0;
     }
 
     template<typename T>
     size_t parent_size(Index<T> g) const noexcept
     {
-        const auto& entry = std::get<Entry<T>>(m_repository);
-        const auto it = entry.slots.find(g);
-        if (it == entry.slots.end())
-            return m_parent ? m_parent->size(g) : 0;
-        return it->second.parent_size;
+        const auto* slot = find_slot(g);
+        return slot ? slot->parent_size : (m_parent ? m_parent->size(g) : 0);
     }
 
     template<typename T>
@@ -352,13 +344,11 @@ public:
         assert(g != Index<T>::max() && "Unassigned index.");
         assert(row != Index<Binding>::max() && "Unassigned index.");
 
-        const auto& entry = std::get<Entry<T>>(m_repository);
-
-        const auto it = entry.slots.find(g);
-        if (it == entry.slots.end())
+        const auto* slot = find_slot(g);
+        if (!slot)
             return false;
 
-        return uint_t(row) >= it->second.parent_size;
+        return uint_t(row) >= slot->parent_size;
     }
 };
 }

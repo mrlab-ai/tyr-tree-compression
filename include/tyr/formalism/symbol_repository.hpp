@@ -94,6 +94,30 @@ private:
         std::apply([&](auto&... entry) { (clear_entry(entry), ...); }, m_repository);
     }
 
+    template<typename T>
+    auto& get_entry() noexcept
+    {
+        return std::get<Entry<T>>(m_repository);
+    }
+
+    template<typename T>
+    const auto& get_entry() const noexcept
+    {
+        return std::get<Entry<T>>(m_repository);
+    }
+
+    template<typename T>
+    auto& slot() noexcept
+    {
+        return get_entry<T>().slot;
+    }
+
+    template<typename T>
+    const auto& slot() const noexcept
+    {
+        return get_entry<T>().slot;
+    }
+
 public:
     SymbolRepository(const SymbolRepository* parent = nullptr) : m_parent(parent), m_arena(), m_buffer(), m_repository(Entry<Ts>(m_buffer, m_arena)...)
     {

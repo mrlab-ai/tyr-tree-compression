@@ -160,38 +160,6 @@ struct ConstProgramWorkspace
     explicit ConstProgramWorkspace(ProgramContext& context);
 };
 
-/**
- * Implementations
- */
-
-template<typename OrAP, typename AndAP, typename TP>
-ProgramWorkspace<OrAP, AndAP, TP>::ProgramWorkspace(ProgramContext& context, const ConstProgramWorkspace& cws, OrAP or_ap, AndAP and_ap, TP tp) :
-    program_repository(context.get_program_repository()),
-    workspace_repository(context.get_workspace_repository()),
-    facts(context.get_program().get_predicates<formalism::FluentTag>(),
-          context.get_program().get_functions<formalism::FluentTag>(),
-          context.get_domains().fluent_predicate_domains,
-          context.get_domains().fluent_function_domains,
-          context.get_program().get_objects().size(),
-          context.get_program().get_atoms<formalism::FluentTag>(),
-          context.get_program().get_fterm_values<formalism::FluentTag>()),
-    or_ap(or_ap),
-    or_annot(context.get_program().get_predicates<formalism::FluentTag>().size()),
-    and_annot(),
-    tp(tp),
-    rules(),
-    d2p(),
-    planning_builder(),
-    datalog_builder(),
-    schedulers(create_schedulers(context.get_strata(), context.get_listeners(), program_repository)),
-    cost_buckets(),
-    statistics()
-{
-    for (uint_t i = 0; i < context.get_program().get_rules().size(); ++i)
-        rules.emplace_back(
-            std::make_unique<RuleWorkspace<AndAP>>(context.get_program().get_objects().size(), program_repository, workspace_repository, cws.rules[i], and_ap));
-}
-
 }
 
 #endif

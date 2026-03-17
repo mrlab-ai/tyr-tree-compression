@@ -20,4 +20,10 @@
 namespace tyr::formalism
 {
 template class Repository<tyr::formalism::planning::SymbolRepository, tyr::formalism::planning::RelationRepository>;
+
+namespace planning
+{
+static_assert(RepositoryConcept<Repository>);
+static_assert(Context<Repository>);
+}
 }

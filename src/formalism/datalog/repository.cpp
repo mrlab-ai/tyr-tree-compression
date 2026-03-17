@@ -20,4 +20,10 @@
 namespace tyr::formalism
 {
 template class Repository<tyr::formalism::datalog::SymbolRepository, tyr::formalism::datalog::RelationRepository>;
+
+namespace datalog
+{
+static_assert(RepositoryConcept<Repository>);
+static_assert(Context<Repository>);
+}
 }

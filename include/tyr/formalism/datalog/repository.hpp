@@ -101,9 +101,6 @@ using RelationRepository = tyr::formalism::RelationRepository<Predicate<StaticTa
 
 using Repository = tyr::formalism::Repository<SymbolRepository, RelationRepository>;
 
-static_assert(RepositoryConcept<Repository>);
-static_assert(Context<Repository>);
-
 using RepositoryPtr = std::shared_ptr<Repository>;
 
 template<typename T>

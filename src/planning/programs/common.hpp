@@ -25,7 +25,6 @@
 #include "tyr/formalism/datalog/views.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/repository.hpp"
-#include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
 
 namespace tyr::planning
