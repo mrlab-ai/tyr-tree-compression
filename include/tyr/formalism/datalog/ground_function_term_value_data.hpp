@@ -57,6 +57,8 @@ struct Data<formalism::datalog::GroundFunctionTermValue<T>>
     auto cista_members() const noexcept { return std::tie(index, fterm, value); }
     auto identifying_members() const noexcept { return std::tie(fterm, value); }
 };
+
+static_assert(uses_trivial_storage_v<formalism::datalog::GroundFunctionTermValue<formalism::StaticTag>>);
 }
 
 #endif

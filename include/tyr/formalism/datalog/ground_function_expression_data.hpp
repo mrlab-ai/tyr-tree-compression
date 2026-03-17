@@ -23,6 +23,8 @@
 #include "tyr/formalism/datalog/arithmetic_operator_data.hpp"
 #include "tyr/formalism/datalog/declarations.hpp"
 #include "tyr/formalism/datalog/ground_function_term_index.hpp"
+#include "tyr/formalism/planning/function_expression_data.hpp"
+#include "tyr/formalism/planning/ground_function_expression_data.hpp"
 
 namespace tyr
 {
@@ -38,12 +40,18 @@ struct Data<formalism::datalog::GroundFunctionExpression>
 
     Data() = default;
     Data(Variant value) : value(value) {}
+    Data(const Data& other) = default;
+    Data& operator=(const Data& other) = default;
+    Data(Data&& other) = default;
+    Data& operator=(Data&& other) = default;
 
     void clear() noexcept { tyr::clear(value); }
 
     auto cista_members() const noexcept { return std::tie(value); }
     auto identifying_members() const noexcept { return std::tie(value); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::datalog::GroundFunctionExpression>);
 
 }
 

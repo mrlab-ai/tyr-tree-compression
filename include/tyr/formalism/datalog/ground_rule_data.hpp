@@ -72,6 +72,8 @@ struct Data<formalism::datalog::GroundRule>
     auto identifying_members() const noexcept { return std::tie(rule, row); }
 };
 
+static_assert(uses_trivial_storage_v<formalism::datalog::GroundRule>);
+
 }
 
 #endif

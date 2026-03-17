@@ -156,6 +156,8 @@ struct Data<formalism::planning::Task>
                         axioms);
     }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::Task>);
 }
 
 #endif

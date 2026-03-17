@@ -64,6 +64,9 @@ struct Data<formalism::planning::ConditionalEffect>
     auto cista_members() const noexcept { return std::tie(index, variables, condition, effect); }
     auto identifying_members() const noexcept { return std::tie(variables, condition, effect); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::ConditionalEffect>);
+
 }
 
 #endif

@@ -50,6 +50,8 @@ struct Data<formalism::planning::MultiOperator<Op, T>>
     auto identifying_members() const noexcept { return std::tie(Op::kind, args); }
 };
 
+static_assert(!uses_trivial_storage_v<formalism::planning::MultiOperator<formalism::OpAdd, Data<formalism::planning::FunctionExpression>>>);
+
 }
 
 #endif

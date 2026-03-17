@@ -71,6 +71,8 @@ struct Data<formalism::planning::Action>
     auto identifying_members() const noexcept { return std::tie(name, variables, original_arity, condition, effects); }
 };
 
+static_assert(!uses_trivial_storage_v<formalism::planning::Action>);
+
 namespace formalism::planning
 {
 using ActionData = Data<Action>;

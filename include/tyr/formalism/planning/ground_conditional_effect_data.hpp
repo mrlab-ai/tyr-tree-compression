@@ -59,6 +59,8 @@ struct Data<formalism::planning::GroundConditionalEffect>
     auto cista_members() const noexcept { return std::tie(index, condition, effect); }
     auto identifying_members() const noexcept { return std::tie(condition, effect); }
 };
+
+static_assert(uses_trivial_storage_v<formalism::planning::GroundConditionalEffect>);
 }
 
 #endif

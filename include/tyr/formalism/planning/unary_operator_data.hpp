@@ -21,6 +21,8 @@
 #include "tyr/common/types.hpp"
 #include "tyr/common/types_utils.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
+#include "tyr/formalism/planning/function_expression_data.hpp"
+#include "tyr/formalism/planning/ground_function_expression_data.hpp"
 #include "tyr/formalism/planning/unary_operator_index.hpp"
 
 namespace tyr
@@ -49,6 +51,8 @@ struct Data<formalism::planning::UnaryOperator<Op, T>>
     auto cista_members() const noexcept { return std::tie(index, arg); }
     auto identifying_members() const noexcept { return std::tie(Op::kind, arg); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::UnaryOperator<formalism::OpAdd, Data<formalism::planning::FunctionExpression>>>);
 
 }
 

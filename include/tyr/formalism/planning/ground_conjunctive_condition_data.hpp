@@ -81,6 +81,8 @@ struct Data<formalism::planning::GroundConjunctiveCondition>
     auto cista_members() const noexcept { return std::tie(index, fluent_facts, static_literals, derived_literals, numeric_constraints); }
     auto identifying_members() const noexcept { return std::tie(fluent_facts, static_literals, derived_literals, numeric_constraints); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::GroundConjunctiveCondition>);
 }
 
 #endif

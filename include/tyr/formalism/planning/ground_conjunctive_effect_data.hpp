@@ -64,6 +64,8 @@ struct Data<formalism::planning::GroundConjunctiveEffect>
     auto cista_members() const noexcept { return std::tie(index, facts, numeric_effects, auxiliary_numeric_effect); }
     auto identifying_members() const noexcept { return std::tie(facts, numeric_effects, auxiliary_numeric_effect); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::GroundConjunctiveEffect>);
 }
 
 #endif

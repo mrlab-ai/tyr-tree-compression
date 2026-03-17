@@ -49,6 +49,8 @@ struct Data<formalism::Predicate<T>>
     auto cista_members() const noexcept { return std::tie(index, name, arity); }
     auto identifying_members() const noexcept { return std::tie(name, arity); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::Predicate<formalism::StaticTag>>);
 }
 
 #endif

@@ -49,6 +49,8 @@ struct Data<formalism::datalog::ArithmeticOperator<T>>
     auto identifying_members() const noexcept { return std::tie(value); }
 };
 
+static_assert(!uses_trivial_storage_v<formalism::datalog::ArithmeticOperator<Data<formalism::datalog::FunctionExpression>>>);
+
 }
 
 #endif

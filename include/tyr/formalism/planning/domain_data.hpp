@@ -144,6 +144,8 @@ struct Data<formalism::planning::Domain>
                         axioms);
     }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::Domain>);
 }
 
 #endif

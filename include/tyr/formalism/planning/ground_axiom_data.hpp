@@ -21,6 +21,7 @@
 #include "tyr/common/types.hpp"
 #include "tyr/common/types_utils.hpp"
 #include "tyr/formalism/binding_index.hpp"
+#include "tyr/formalism/planning/axiom_index.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/ground_atom_index.hpp"
 #include "tyr/formalism/planning/ground_axiom_index.hpp"
@@ -68,6 +69,8 @@ struct Data<formalism::planning::GroundAxiom>
     auto cista_members() const noexcept { return std::tie(index, axiom, row, body, head); }
     auto identifying_members() const noexcept { return std::tie(axiom, row); }
 };
+
+static_assert(uses_trivial_storage_v<formalism::planning::GroundAxiom>);
 }
 
 #endif

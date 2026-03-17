@@ -84,6 +84,8 @@ struct Data<formalism::planning::ConjunctiveCondition>
     auto cista_members() const noexcept { return std::tie(index, variables, static_literals, fluent_literals, derived_literals, numeric_constraints); }
     auto identifying_members() const noexcept { return std::tie(variables, static_literals, fluent_literals, derived_literals, numeric_constraints); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::ConjunctiveCondition>);
 }
 
 #endif

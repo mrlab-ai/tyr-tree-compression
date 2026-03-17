@@ -75,8 +75,7 @@ struct Data<formalism::datalog::GroundConjunctiveCondition>
     auto identifying_members() const noexcept { return std::tie(static_literals, fluent_literals, numeric_constraints); }
 };
 
-static_assert(!std::is_trivially_copyable_v<Data<formalism::datalog::GroundConjunctiveCondition>>);
-static_assert(std::is_default_constructible_v<Data<formalism::datalog::GroundConjunctiveCondition>>);
+static_assert(!uses_trivial_storage_v<formalism::datalog::GroundConjunctiveCondition>);
 }
 
 #endif

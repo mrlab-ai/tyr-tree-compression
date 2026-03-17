@@ -56,6 +56,8 @@ struct Data<formalism::planning::FunctionTerm<T>>
     auto cista_members() const noexcept { return std::tie(index, function, terms); }
     auto identifying_members() const noexcept { return std::tie(function, terms); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::FunctionTerm<formalism::StaticTag>>);
 }
 
 #endif

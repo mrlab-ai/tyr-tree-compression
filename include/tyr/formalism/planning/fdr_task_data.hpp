@@ -226,6 +226,8 @@ struct Data<formalism::planning::FDRTask>
                         ground_axioms);
     }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::FDRTask>);
 }
 
 #endif

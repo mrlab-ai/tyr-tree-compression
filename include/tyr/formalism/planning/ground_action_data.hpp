@@ -22,6 +22,7 @@
 #include "tyr/common/types_utils.hpp"
 #include "tyr/formalism/binding_index.hpp"
 #include "tyr/formalism/function_index.hpp"
+#include "tyr/formalism/planning/action_index.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/ground_action_index.hpp"
 #include "tyr/formalism/planning/ground_conjunctive_condition_index.hpp"
@@ -70,6 +71,8 @@ struct Data<formalism::planning::GroundAction>
     // Have to include effects because row only binds objects to non-effect quantified variables.
     auto identifying_members() const noexcept { return std::tie(action, row, condition, effects); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::GroundAction>);
 }
 
 #endif

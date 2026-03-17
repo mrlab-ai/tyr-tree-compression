@@ -164,6 +164,8 @@ struct Data<formalism::datalog::Program>
     }
 };
 
+static_assert(!uses_trivial_storage_v<formalism::datalog::Program>);
+
 }
 
 #endif

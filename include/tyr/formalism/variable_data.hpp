@@ -47,6 +47,8 @@ struct Data<formalism::Variable>
     auto cista_members() const noexcept { return std::tie(index, name); }
     auto identifying_members() const noexcept { return std::tie(name); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::Variable>);
 }
 
 #endif

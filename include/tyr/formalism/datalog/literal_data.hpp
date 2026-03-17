@@ -51,6 +51,8 @@ struct Data<formalism::datalog::Literal<T>>
     auto identifying_members() const noexcept { return std::tie(atom, polarity); }
 };
 
+static_assert(uses_trivial_storage_v<formalism::datalog::Literal<formalism::StaticTag>>);
+
 }
 
 #endif

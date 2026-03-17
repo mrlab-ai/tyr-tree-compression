@@ -38,12 +38,18 @@ struct Data<formalism::datalog::FunctionExpression>
 
     Data() = default;
     Data(Variant value) : value(value) {}
+    Data(const Data& other) = default;
+    Data& operator=(const Data& other) = default;
+    Data(Data&& other) = default;
+    Data& operator=(Data&& other) = default;
 
     void clear() noexcept { tyr::clear(value); }
 
     auto cista_members() const noexcept { return std::tie(value); }
     auto identifying_members() const noexcept { return std::tie(value); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::datalog::FunctionExpression>);
 
 }
 

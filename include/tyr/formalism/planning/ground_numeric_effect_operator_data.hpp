@@ -79,6 +79,9 @@ struct Data<formalism::planning::GroundNumericEffectOperator<formalism::Auxiliar
     auto cista_members() const noexcept { return std::tie(value); }
     auto identifying_members() const noexcept { return std::tie(value); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::GroundNumericEffectOperator<formalism::FluentTag>>);
+static_assert(!uses_trivial_storage_v<formalism::planning::GroundNumericEffectOperator<formalism::AuxiliaryTag>>);
 }
 
 #endif

@@ -58,6 +58,8 @@ struct Data<formalism::planning::Metric>
     auto cista_members() const noexcept { return std::tie(index, objective, fexpr); }
     auto identifying_members() const noexcept { return std::tie(objective, fexpr); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::Metric>);
 }
 
 #endif

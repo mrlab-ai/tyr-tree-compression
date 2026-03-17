@@ -62,6 +62,9 @@ struct Data<formalism::planning::NumericEffect<Op, T>>
     auto cista_members() const noexcept { return std::tie(index, fterm, fexpr); }
     auto identifying_members() const noexcept { return std::tie(Op::kind, fterm, fexpr); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::NumericEffect<formalism::planning::OpAssign, formalism::FluentTag>>);
+
 }
 
 #endif

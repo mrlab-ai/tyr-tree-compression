@@ -64,6 +64,8 @@ struct Data<formalism::planning::Axiom>
     auto cista_members() const noexcept { return std::tie(index, variables, body, head); }
     auto identifying_members() const noexcept { return std::tie(variables, body, head); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::Axiom>);
 }
 
 #endif

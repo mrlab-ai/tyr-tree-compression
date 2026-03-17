@@ -56,6 +56,8 @@ struct Data<formalism::datalog::GroundLiteral<T>>
     auto cista_members() const noexcept { return std::tie(index, atom, polarity); }
     auto identifying_members() const noexcept { return std::tie(atom, polarity); }
 };
+
+static_assert(uses_trivial_storage_v<formalism::datalog::GroundLiteral<formalism::StaticTag>>);
 }
 
 #endif

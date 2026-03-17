@@ -57,6 +57,8 @@ struct Data<formalism::datalog::Atom<T>>
     auto identifying_members() const noexcept { return std::tie(predicate, terms); }
 };
 
+static_assert(!uses_trivial_storage_v<formalism::datalog::Atom<formalism::StaticTag>>);
+
 }
 
 #endif

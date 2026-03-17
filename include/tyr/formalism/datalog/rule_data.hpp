@@ -66,6 +66,8 @@ struct Data<formalism::datalog::Rule>
     auto cista_members() const noexcept { return std::tie(index, variables, body, head, cost); }
     auto identifying_members() const noexcept { return std::tie(variables, body, head, cost); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::datalog::Rule>);
 }
 
 #endif

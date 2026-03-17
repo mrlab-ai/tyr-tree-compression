@@ -58,9 +58,7 @@ struct Data<formalism::datalog::GroundAtom<T>>
     auto identifying_members() const noexcept { return std::tie(predicate, row); }
 };
 
-static_assert(std::is_trivially_copyable_v<Data<formalism::datalog::GroundAtom<formalism::StaticTag>>>);
-static_assert(std::is_default_constructible_v<Data<formalism::datalog::GroundAtom<formalism::StaticTag>>>);
-
+static_assert(uses_trivial_storage_v<formalism::datalog::GroundAtom<formalism::StaticTag>>);
 }
 
 #endif

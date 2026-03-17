@@ -21,6 +21,8 @@
 #include "tyr/common/types.hpp"
 #include "tyr/common/types_utils.hpp"
 #include "tyr/formalism/datalog/declarations.hpp"
+#include "tyr/formalism/datalog/function_expression_data.hpp"
+#include "tyr/formalism/datalog/ground_function_expression_data.hpp"
 #include "tyr/formalism/datalog/multi_operator_index.hpp"
 
 namespace tyr
@@ -49,6 +51,8 @@ struct Data<formalism::datalog::MultiOperator<Op, T>>
     auto cista_members() const noexcept { return std::tie(index, args); }
     auto identifying_members() const noexcept { return std::tie(Op::kind, args); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::datalog::MultiOperator<formalism::OpAdd, Data<formalism::datalog::FunctionExpression>>>);
 
 }
 

@@ -50,6 +50,8 @@ struct Data<formalism::planning::FDRFact<T>>
     auto identifying_members() const noexcept { return std::tie(variable, value); }
 };
 
+static_assert(uses_trivial_storage_v<formalism::planning::FDRFact<formalism::FluentTag>>);
+
 }
 
 #endif

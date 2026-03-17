@@ -22,6 +22,8 @@
 #include "tyr/common/types_utils.hpp"
 #include "tyr/formalism/datalog/binary_operator_index.hpp"
 #include "tyr/formalism/datalog/declarations.hpp"
+#include "tyr/formalism/datalog/function_expression_data.hpp"
+#include "tyr/formalism/datalog/ground_function_expression_data.hpp"
 
 namespace tyr
 {
@@ -51,6 +53,8 @@ struct Data<formalism::datalog::BinaryOperator<Op, T>>
     auto cista_members() const noexcept { return std::tie(index, lhs, rhs); }
     auto identifying_members() const noexcept { return std::tie(Op::kind, lhs, rhs); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::datalog::BinaryOperator<formalism::OpAdd, Data<formalism::datalog::FunctionExpression>>>);
 
 }
 

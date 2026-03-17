@@ -56,6 +56,8 @@ struct Data<formalism::planning::Atom<T>>
     auto cista_members() const noexcept { return std::tie(index, predicate, terms); }
     auto identifying_members() const noexcept { return std::tie(predicate, terms); }
 };
+
+static_assert(!uses_trivial_storage_v<formalism::planning::Atom<formalism::StaticTag>>);
 }
 
 #endif

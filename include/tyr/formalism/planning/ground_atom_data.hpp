@@ -57,6 +57,8 @@ struct Data<formalism::planning::GroundAtom<T>>
     auto identifying_members() const noexcept { return std::tie(predicate, row); }
 };
 
+static_assert(uses_trivial_storage_v<formalism::planning::GroundAtom<formalism::StaticTag>>);
+
 }
 
 #endif

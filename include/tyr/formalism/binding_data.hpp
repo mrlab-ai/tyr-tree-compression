@@ -49,6 +49,8 @@ struct Data<formalism::Binding>
     auto identifying_members() const noexcept { return std::tie(objects); }
 };
 
+static_assert(!uses_trivial_storage_v<formalism::Binding>);
+
 }
 
 #endif

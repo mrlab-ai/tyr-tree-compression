@@ -57,6 +57,8 @@ struct Data<formalism::planning::GroundFunctionTermValue<T>>
     auto cista_members() const noexcept { return std::tie(index, fterm, value); }
     auto identifying_members() const noexcept { return std::tie(fterm, value); }
 };
+
+static_assert(uses_trivial_storage_v<formalism::planning::GroundFunctionTermValue<formalism::StaticTag>>);
 }
 
 #endif
