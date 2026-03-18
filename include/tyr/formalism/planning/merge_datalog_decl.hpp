@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2025 Dominik Drexler
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#ifndef TYR_FORMALISM_PLANNING_MERGE_DATALOG_DECL_HPP_
+#define TYR_FORMALISM_PLANNING_MERGE_DATALOG_DECL_HPP_
+
+#include "tyr/formalism/datalog/builder.hpp"
+#include "tyr/formalism/datalog/repository.hpp"
+#include "tyr/formalism/planning/declarations.hpp"
+#include "tyr/formalism/planning/repository.hpp"
+
+namespace tyr::formalism::planning
+{
+
+struct MergeDatalogContext
+{
+    formalism::datalog::Builder& builder;
+    formalism::datalog::Repository& destination;
+};
+
+template<typename T>
+struct to_datalog_payload
+{
+    using type = T;  // default: unchanged
+};
+
+template<>
+struct to_datalog_payload<Data<formalism::planning::FunctionExpression>>
+{
+    using type = Data<formalism::datalog::FunctionExpression>;
+};
+
+template<>
+struct to_datalog_payload<Data<formalism::planning::GroundFunctionExpression>>
+{
+    using type = Data<formalism::datalog::GroundFunctionExpression>;
+};
+
+template<typename T>
+using to_datalog_payload_t = typename to_datalog_payload<T>::type;
+
+}
+
+#endif

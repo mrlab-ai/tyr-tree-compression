@@ -128,14 +128,14 @@ merge_d2p(formalism::datalog::MultiOperatorView<OpAdd, Data<formalism::datalog::
 template std::pair<MultiOperatorView<OpMul, Data<GroundFunctionExpression>>, bool>
 merge_d2p(formalism::datalog::MultiOperatorView<OpMul, Data<formalism::datalog::GroundFunctionExpression>> element, MergePlanningContext& context);
 
-template Data<ArithmeticOperator<to_planning_payload_t<Data<FunctionExpression>>>>
+template Data<ArithmeticOperator<Data<FunctionExpression>>>
 merge_d2p(formalism::datalog::ArithmeticOperatorView<Data<formalism::datalog::FunctionExpression>> element, MergePlanningContext& context);
-template Data<ArithmeticOperator<to_planning_payload_t<Data<GroundFunctionExpression>>>>
+template Data<ArithmeticOperator<Data<GroundFunctionExpression>>>
 merge_d2p(formalism::datalog::ArithmeticOperatorView<Data<formalism::datalog::GroundFunctionExpression>> element, MergePlanningContext& context);
 
-template Data<BooleanOperator<to_planning_payload_t<Data<FunctionExpression>>>>
+template Data<BooleanOperator<Data<FunctionExpression>>>
 merge_d2p(formalism::datalog::BooleanOperatorView<Data<formalism::datalog::FunctionExpression>> element, MergePlanningContext& context);
-template Data<BooleanOperator<to_planning_payload_t<Data<GroundFunctionExpression>>>>
+template Data<BooleanOperator<Data<GroundFunctionExpression>>>
 merge_d2p(formalism::datalog::BooleanOperatorView<Data<formalism::datalog::GroundFunctionExpression>> element, MergePlanningContext& context);
 
 }
