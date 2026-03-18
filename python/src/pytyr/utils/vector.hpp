@@ -10,6 +10,7 @@
 #pragma once
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/detail/nb_list.h>
 #include <type_traits>
 #include <tyr/common/block_array_pool.hpp>
 #include <tyr/common/vector.hpp>
@@ -99,6 +100,12 @@ struct type_caster<::tyr::View<::tyr::BasicBlockArrayView<Block, Coder>, C>>
 
         return ret.release();
     }
+};
+
+template<typename Type, template<typename> typename Ptr, bool IndexPointers, typename TemplateSizeType, class Allocator>
+struct type_caster<::cista::basic_vector<Type, Ptr, IndexPointers, TemplateSizeType, Allocator>> :
+    list_caster<::cista::basic_vector<Type, Ptr, IndexPointers, TemplateSizeType, Allocator>, Type>
+{
 };
 
 NAMESPACE_END(detail)

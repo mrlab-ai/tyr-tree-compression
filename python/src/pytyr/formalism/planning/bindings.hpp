@@ -27,12 +27,38 @@ namespace tyr::formalism::planning
  * Data
  */
 
+void bind_object_builder(nb::module_& m, const std::string& name)
+{
+    using V = Data<Object>;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def_rw("name", &V::name);
+}
+
 void bind_binding_builder(nb::module_& m, const std::string& name)
 {
     using V = Data<Binding>;
 
     nb::class_<V>(m, name.c_str())  //
         .def_rw("objects", &V::objects);
+}
+
+void bind_variable_builder(nb::module_& m, const std::string& name)
+{
+    using V = Data<Variable>;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def_rw("name", &V::name);
+}
+
+template<FactKind T>
+void bind_predicate_builder(nb::module_& m, const std::string& name)
+{
+    using V = Data<Predicate<T>>;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def_rw("name", &V::name)
+        .def_rw("arity", &V::arity);
 }
 
 template<FactKind T>
@@ -46,8 +72,163 @@ void bind_ground_atom_builder(nb::module_& m, const std::string& name)
 }
 
 /**
+ * Index
+ */
+
+template<FactKind T>
+void bind_predicate_binding_index(nb::module_& m, const std::string& name)
+{
+    using V = std::pair<Index<Predicate<T>>, Index<Binding>>;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); });
+}
+
+template<FactKind T>
+void bind_function_binding_index(nb::module_& m, const std::string& name)
+{
+    using V = std::pair<Index<Function<T>>, Index<Binding>>;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); });
+}
+
+void bind_action_binding_index(nb::module_& m, const std::string& name)
+{
+    using V = std::pair<Index<Action>, Index<Binding>>;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); });
+}
+
+void bind_axiom_binding_index(nb::module_& m, const std::string& name)
+{
+    using V = std::pair<Index<Axiom>, Index<Binding>>;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); });
+}
+
+/**
  * Views
  */
+
+void bind_object(nb::module_& m, const std::string& name)
+{
+    using V = ObjectView;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_name", &V::get_name);
+}
+
+void bind_binding(nb::module_& m, const std::string& name)
+{
+    using V = BindingView;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_objects", &V::get_objects);
+}
+
+void bind_variable(nb::module_& m, const std::string& name)
+{
+    using V = VariableView;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_name", &V::get_name);
+}
+
+void bind_term(nb::module_& m, const std::string& name)
+{
+    using V = TermView;
+
+    nb::class_<V>(m, name.c_str())  //
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_variant", &V::get_variant);
+}
+
+template<FactKind T>
+void bind_predicate_binding(nb::module_& m, const std::string& name)
+{
+    using V = PredicateBindingView<T>;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_objects", &V::get_objects);
+}
+
+template<FactKind T>
+void bind_function_binding(nb::module_& m, const std::string& name)
+{
+    using V = FunctionBindingView<T>;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_objects", &V::get_objects);
+}
+
+void bind_action_binding(nb::module_& m, const std::string& name)
+{
+    using V = ActionBindingView;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_objects", &V::get_objects);
+}
+
+void bind_axiom_binding(nb::module_& m, const std::string& name)
+{
+    using V = AxiomBindingView;
+
+    nb::class_<V>(m, name.c_str())
+        .def("__str__", [](const V& self) { return to_string(self); })
+        .def("__repr__", [](const V& self) { return to_string(self); })
+        .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
+        .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
+        .def("get_index", &V::get_index)
+        .def("get_objects", &V::get_objects);
+}
 
 template<FactKind T>
 void bind_predicate(nb::module_& m, const std::string& name)

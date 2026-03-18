@@ -190,6 +190,12 @@ inline std::ostream& operator<<(std::ostream& os, const Data<GroundAction>& el);
 template<Context C>
 inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundAction>, C>& el);
 
+template<typename C>
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Action>, Index<Binding>>, C>& el);
+
+template<typename C>
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Axiom>, Index<Binding>>, C>& el);
+
 struct PlanFormatting
 {
 };
@@ -857,6 +863,20 @@ inline std::ostream& print(std::ostream& os, const View<Index<formalism::plannin
     }
     os << print_indent << ")";
 
+    return os;
+}
+
+template<typename C>
+inline std::ostream& print(std::ostream& os, const View<std::pair<Index<formalism::planning::Action>, Index<formalism::Binding>>, C>& el)
+{
+    fmt::print(os, "{}", fmt::join(to_strings(el.get_objects()), " "));
+    return os;
+}
+
+template<typename C>
+inline std::ostream& print(std::ostream& os, const View<std::pair<Index<formalism::planning::Axiom>, Index<formalism::Binding>>, C>& el)
+{
+    fmt::print(os, "{}", fmt::join(to_strings(el.get_objects()), " "));
     return os;
 }
 
@@ -1563,6 +1583,18 @@ inline std::ostream& operator<<(std::ostream& os, const Data<GroundAxiom>& el) {
 
 template<Context C>
 inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundAxiom>, C>& el)
+{
+    return tyr::print(os, el);
+}
+
+template<typename C>
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Action>, Index<Binding>>, C>& el)
+{
+    return tyr::print(os, el);
+}
+
+template<typename C>
+inline std::ostream& operator<<(std::ostream& os, const View<std::pair<Index<Axiom>, Index<Binding>>, C>& el)
 {
     return tyr::print(os, el);
 }

@@ -74,6 +74,18 @@ void bind_module_definitions(nb::module_& m)
     bind_index<Index<Binding>>(m, "BindingIndex");
     bind_index<Index<Variable>>(m, "VariableIndex");
 
+    bind_predicate_binding_index<StaticTag>(m, "StaticPredicateBindingIndex");
+    bind_predicate_binding_index<FluentTag>(m, "FluentPredicateBindingIndex");
+    bind_predicate_binding_index<DerivedTag>(m, "DerivedPredicateBindingIndex");
+
+    bind_function_binding_index<StaticTag>(m, "StaticFunctionBindingIndex");
+    bind_function_binding_index<FluentTag>(m, "FluentFunctionBindingIndex");
+    bind_function_binding_index<AuxiliaryTag>(m, "AuxiliaryFunctionBindingIndex");
+
+    bind_action_binding_index(m, "ActionBindingIndex");
+
+    bind_axiom_binding_index(m, "AxiomBindingIndex");
+
     bind_index<Index<Predicate<StaticTag>>>(m, "StaticPredicateIndex");
     bind_index<Index<Predicate<FluentTag>>>(m, "FluentPredicateIndex");
     bind_index<Index<Predicate<DerivedTag>>>(m, "DerivedPredicateIndex");
@@ -180,7 +192,12 @@ void bind_module_definitions(nb::module_& m)
      * Data
      */
 
+    bind_object_builder(m, "ObjectBuilder");
     bind_binding_builder(m, "BindingBuilder");
+    bind_variable_builder(m, "VariableBuilder");
+    bind_predicate_builder<StaticTag>(m, "StaticPredicateBuilder");
+    bind_predicate_builder<FluentTag>(m, "FluentPredicateBuilder");
+    bind_predicate_builder<DerivedTag>(m, "DerivedPredicateBuilder");
     bind_ground_atom_builder<StaticTag>(m, "StaticGroundAtomBuilder");
     bind_ground_atom_builder<FluentTag>(m, "FluentGroundAtomBuilder");
     bind_ground_atom_builder<DerivedTag>(m, "DerivedGroundAtomBuilder");
@@ -189,54 +206,23 @@ void bind_module_definitions(nb::module_& m)
      * Views
      */
 
-    {
-        using V = ObjectView;
-
-        nb::class_<V>(m, "Object")  //
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_name", &V::get_name);
-    }
-
-    {
-        using V = BindingView;
-
-        nb::class_<V>(m, "Binding")  //
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_objects", &V::get_objects);
-    }
-
-    {
-        using V = VariableView;
-
-        nb::class_<V>(m, "Variable")  //
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_name", &V::get_name);
-    }
-
+    bind_object(m, "Object");
+    bind_binding(m, "Binding");
+    bind_variable(m, "Variable");
     bind_fixed_uint<ParameterIndex>(m, "ParameterIndex");
+    bind_term(m, "Term");
 
-    {
-        using V = TermView;
+    bind_predicate_binding<StaticTag>(m, "StaticPredicateBinding");
+    bind_predicate_binding<FluentTag>(m, "FluentPredicateBinding");
+    bind_predicate_binding<DerivedTag>(m, "DerivedPredicateBinding");
 
-        nb::class_<V>(m, "Term")  //
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_variant", &V::get_variant);
-    }
+    bind_function_binding<StaticTag>(m, "StaticFunctionBinding");
+    bind_function_binding<FluentTag>(m, "FluentFunctionBinding");
+    bind_function_binding<AuxiliaryTag>(m, "AuxiliaryFunctionBinding");
+
+    bind_action_binding(m, "ActionBinding");
+
+    bind_axiom_binding(m, "AxiomBinding");
 
     bind_predicate<StaticTag>(m, "StaticPredicate");
     bind_predicate<FluentTag>(m, "FluentPredicate");
@@ -603,12 +589,25 @@ void bind_module_definitions(nb::module_& m)
     }
 
     nb::class_<Repository>(m, "Repository")  //
-        .def("get_or_create_fluent_ground_atom", &Repository::get_or_create<GroundAtom<FluentTag>>)
-        .def("get_or_create_derived_ground_atom", &Repository::get_or_create<GroundAtom<DerivedTag>>)
+        .def("get_or_create_object", &Repository::get_or_create<Object>, "builder"_a)
+        .def("get_or_create_static_predicate", &Repository::get_or_create<Predicate<StaticTag>>, "builder"_a)
+        .def("get_or_create_fluent_predicate", &Repository::get_or_create<Predicate<FluentTag>>, "builder"_a)
+        .def("get_or_create_derived_predicate", &Repository::get_or_create<Predicate<DerivedTag>>, "builder"_a)
+        .def("get_or_create_static_ground_atom", &Repository::get_or_create<GroundAtom<StaticTag>>, "builder"_a)
+        .def("get_or_create_fluent_ground_atom", &Repository::get_or_create<GroundAtom<FluentTag>>, "builder"_a)
+        .def("get_or_create_derived_ground_atom", &Repository::get_or_create<GroundAtom<DerivedTag>>, "builder"_a)
+        .def("get_or_create_static_predicate_row",
+             nb::overload_cast<PredicateView<StaticTag>, const IndexList<Object>&>(&Repository::get_or_create<Index<Predicate<StaticTag>>>),
+             "predicate"_a,
+             "object_indices"_a)
         .def("get_or_create_fluent_predicate_row",
-             nb::overload_cast<PredicateView<StaticTag>, const IndexList<Object>&>(&Repository::get_or_create<Index<Predicate<StaticTag>>>))
+             nb::overload_cast<PredicateView<FluentTag>, const IndexList<Object>&>(&Repository::get_or_create<Index<Predicate<FluentTag>>>),
+             "predicate"_a,
+             "object_indices"_a)
         .def("get_or_create_derived_predicate_row",
-             nb::overload_cast<PredicateView<FluentTag>, const IndexList<Object>&>(&Repository::get_or_create<Index<Predicate<FluentTag>>>));
+             nb::overload_cast<PredicateView<DerivedTag>, const IndexList<Object>&>(&Repository::get_or_create<Index<Predicate<DerivedTag>>>),
+             "predicate"_a,
+             "object_indices"_a);
 
     nb::class_<BinaryFDRContext>(m, "BinaryFDRContext")  //
         .def("get_fact", nb::overload_cast<GroundAtomView<FluentTag>>(&BinaryFDRContext::get_fact_view), "atom"_a)
