@@ -66,6 +66,14 @@ void bind_module_definitions(nb::module_& m)
             .def("get_domain", &Parser::get_domain);
     }
 
+    nb::class_<Minimize>(m, "Minimize")
+        .def("__str__", [](const Minimize& self) { return to_string(self); })
+        .def("__repr__", [](const Minimize& self) { return to_string(self); });
+
+    nb::class_<Maximize>(m, "Maximize")
+        .def("__str__", [](const Maximize& self) { return to_string(self); })
+        .def("__repr__", [](const Maximize& self) { return to_string(self); });
+
     /**
      * Index
      */
@@ -282,33 +290,8 @@ void bind_module_definitions(nb::module_& m)
     bind_arithmethic_operator<Data<FunctionExpression>>(m, "ArithmeticOperator");
     bind_boolean_operator<Data<FunctionExpression>>(m, "BooleanOperator");
 
-    {
-        using V = FunctionExpressionView;
-
-        nb::class_<V>(m, "FunctionExpression")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_variant", &V::get_variant);
-    }
-
-    {
-        using V = ConjunctiveConditionView;
-
-        nb::class_<V>(m, "ConjunctiveCondition")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_variables", &V::get_variables)
-            .def("get_arity", &V::get_arity)
-            .def("get_static_literals", &V::get_literals<StaticTag>)
-            .def("get_fluent_literals", &V::get_literals<FluentTag>)
-            .def("get_derived_literals", &V::get_literals<DerivedTag>)
-            .def("get_numeric_constraints", &V::get_numeric_constraints);
-    }
+    bind_function_expression(m, "FunctionExpression");
+    bind_conjunctive_condition(m, "ConjunctiveCondition");
 
     bind_numeric_effect<OpAssign, FluentTag>(m, "FluentNumericEffectAssign");
     bind_numeric_effect<OpIncrease, FluentTag>(m, "FluentNumericEffectIncrease");
@@ -320,66 +303,10 @@ void bind_module_definitions(nb::module_& m)
     bind_numeric_effect_operator<FluentTag>(m, "FluentNumericEffectOperator");
     bind_numeric_effect_operator<AuxiliaryTag>(m, "AuxiliaryNumericEffectOperator");
 
-    {
-        using V = ConjunctiveEffectView;
-
-        nb::class_<V>(m, "ConjunctiveEffect")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_literals", &V::get_literals)
-            .def("get_numeric_effects", &V::get_numeric_effects)
-            .def("get_auxiliary_numeric_effect", &V::get_auxiliary_numeric_effect);
-    }
-
-    {
-        using V = ConditionalEffectView;
-
-        nb::class_<V>(m, "ConditionalEffect")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_variables", &V::get_variables)
-            .def("get_arity", &V::get_arity)
-            .def("get_condition", &V::get_condition)
-            .def("get_effect", &V::get_effect);
-    }
-
-    {
-        using V = ActionView;
-
-        nb::class_<V>(m, "Action")  //
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_name", &V::get_name)
-            .def("get_original_arity", &V::get_original_arity)
-            .def("get_arity", &V::get_arity)
-            .def("get_variables", &V::get_variables)
-            .def("get_condition", &V::get_condition)
-            .def("get_effects", &V::get_effects);
-    }
-
-    {
-        using V = AxiomView;
-
-        nb::class_<V>(m, "Axiom")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_arity", &V::get_arity)
-            .def("get_variables", &V::get_variables)
-            .def("get_body", &V::get_body)
-            .def("get_head", &V::get_head);
-    }
+    bind_conjunctive_effect(m, "ConjunctiveEffect");
+    bind_conditional_effect(m, "ConditionalEffect");
+    bind_action(m, "Action");
+    bind_axiom(m, "Axiom");
 
     bind_unary_operator<OpSub, Data<GroundFunctionExpression>>(m, "GroundUnaryOperatorSub");
     bind_binary_operator<OpAdd, Data<GroundFunctionExpression>>(m, "GroundBinaryOperatorAdd");
@@ -399,31 +326,8 @@ void bind_module_definitions(nb::module_& m)
     bind_arithmethic_operator<Data<GroundFunctionExpression>>(m, "GroundArithmeticOperator");
     bind_boolean_operator<Data<GroundFunctionExpression>>(m, "GroundBooleanOperator");
 
-    {
-        using V = GroundFunctionExpressionView;
-
-        nb::class_<V>(m, "GroundFunctionExpression")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_variant", &V::get_variant);
-    }
-
-    {
-        using V = GroundConjunctiveConditionView;
-
-        nb::class_<V>(m, "GroundConjunctiveCondition")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_static_facts", &V::get_facts<StaticTag>)
-            .def("get_fluent_facts", &V::get_facts<FluentTag>)
-            .def("get_derived_facts", &V::get_facts<DerivedTag>)
-            .def("get_numeric_constraints", &V::get_numeric_constraints);
-    }
+    bind_ground_function_expression(m, "GroundFunctionExpression");
+    bind_ground_conjunctive_condition(m, "GroundConjunctiveCondition");
 
     bind_ground_numeric_effect<OpAssign, FluentTag>(m, "FluentGroundNumericEffectAssign");
     bind_ground_numeric_effect<OpIncrease, FluentTag>(m, "FluentGroundNumericEffectIncrease");
@@ -435,158 +339,19 @@ void bind_module_definitions(nb::module_& m)
     bind_ground_numeric_effect_operator<FluentTag>(m, "FluentGroundNumericEffectOperator");
     bind_ground_numeric_effect_operator<AuxiliaryTag>(m, "AuxiliaryGroundNumericEffectOperator");
 
-    {
-        using V = GroundConjunctiveEffectView;
+    bind_ground_conjunctive_effect(m, "GroundConjunctiveEffect");
+    bind_ground_conditional_effect(m, "GroundConditionalEffect");
+    bind_ground_action(m, "GroundAction");
+    bind_ground_axiom(m, "GroundAxiom");
 
-        nb::class_<V>(m, "GroundConjunctiveEffect")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_facts", &V::get_facts)
-            .def("get_numeric_effects", &V::get_numeric_effects)
-            .def("get_auxiliary_numeric_effect", &V::get_auxiliary_numeric_effect);
-    }
+    bind_metric(m, "Metric");
+    bind_domain(m, "Domain");
+    bind_lifted_task(m, "LiftedTask");
+    bind_ground_task(m, "GroundTask");
 
-    {
-        using V = GroundConditionalEffectView;
-
-        nb::class_<V>(m, "GroundConditionalEffect")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_condition", &V::get_condition)
-            .def("get_effect", &V::get_effect);
-    }
-
-    {
-        using V = GroundActionView;
-
-        nb::class_<V>(m, "GroundAction")  //
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_action", &V::get_action)
-            .def("get_objects", [](const V& self) { return self.get_row().get_objects(); })
-            .def("get_condition", &V::get_condition)
-            .def("get_effects", &V::get_effects);
-    }
-
-    {
-        using V = GroundAxiomView;
-
-        nb::class_<V>(m, "GroundAxiom")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_axiom", &V::get_axiom)
-            .def("get_objects", [](const V& self) { return self.get_row().get_objects(); })
-            .def("get_body", &V::get_body)
-            .def("get_head", &V::get_head);
-    }
-
-    nb::class_<Minimize>(m, "Minimize")
-        .def("__str__", [](const Minimize& self) { return to_string(self); })
-        .def("__repr__", [](const Minimize& self) { return to_string(self); });
-
-    nb::class_<Maximize>(m, "Maximize")
-        .def("__str__", [](const Maximize& self) { return to_string(self); })
-        .def("__repr__", [](const Maximize& self) { return to_string(self); });
-
-    {
-        using V = MetricView;
-
-        nb::class_<V>(m, "Metric")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_objective", &V::get_objective)
-            .def("get_fexpr", &V::get_fexpr);
-    }
-
-    {
-        using V = DomainView;
-
-        nb::class_<V>(m, "Domain")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_name", &V::get_name)
-            .def("get_static_predicates", &V::get_predicates<StaticTag>)
-            .def("get_fluent_predicates", &V::get_predicates<FluentTag>)
-            .def("get_derived_predicates", &V::get_predicates<DerivedTag>)
-            .def("get_static_functions", &V::get_functions<StaticTag>)
-            .def("get_fluent_functions", &V::get_functions<FluentTag>)
-            .def("get_auxiliary_function", &V::get_auxiliary_function)
-            .def("get_constants", &V::get_constants)
-            .def("get_actions", &V::get_actions)
-            .def("get_axioms", &V::get_axioms);
-    }
-
-    {
-        using V = TaskView;
-
-        nb::class_<V>(m, "LiftedTask")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_name", &V::get_name)
-            .def("get_domain", &V::get_domain)
-            .def("get_derived_predicates", &V::get_derived_predicates)
-            .def("get_objects", &V::get_objects)
-            .def("get_static_atoms", &V::get_atoms<StaticTag>)
-            .def("get_fluent_atoms", &V::get_atoms<FluentTag>)
-            .def("get_static_fterm_values", &V::get_fterm_values<StaticTag>)
-            .def("get_fluent_fterm_values", &V::get_fterm_values<FluentTag>)
-            .def("get_auxiliary_fterm_value", &V::get_auxiliary_fterm_value)
-            .def("get_goal", &V::get_goal)
-            .def("get_metric", &V::get_metric)
-            .def("get_axioms", &V::get_axioms);
-    }
-
-    {
-        using V = FDRTaskView;
-
-        nb::class_<V>(m, "GroundTask")
-            .def("__str__", [](const V& self) { return to_string(self); })
-            .def("__repr__", [](const V& self) { return to_string(self); })
-            .def("__eq__", [](const V& self, const V& other) { return EqualTo<V> {}(self, other); })
-            .def("__hash__", [](const V& self) { return Hash<V> {}(self); })
-            .def("get_index", &V::get_index)
-            .def("get_name", &V::get_name)
-            .def("get_domain", &V::get_domain)
-            .def("get_derived_predicates", &V::get_derived_predicates)
-            .def("get_objects", &V::get_objects)
-            .def("get_static_atoms", &V::get_atoms<StaticTag>)
-            .def("get_fluent_atoms", &V::get_atoms<FluentTag>)
-            .def("get_derived_atoms", &V::get_atoms<DerivedTag>)
-            .def("get_static_fterm", &V::get_fterms<StaticTag>)
-            .def("get_fluent_fterm", &V::get_fterms<FluentTag>)
-            .def("get_auxiliary_fterm", &V::get_auxiliary_fterm)
-            .def("get_static_fterm_values", &V::get_fterm_values<StaticTag>)
-            .def("get_fluent_fterm_values", &V::get_fterm_values<FluentTag>)
-            .def("get_auxiliary_fterm_value", &V::get_auxiliary_fterm_value)
-            .def("get_goal", &V::get_goal)
-            .def("get_metric", &V::get_metric)
-            .def("get_axioms", &V::get_axioms)
-            .def("get_fluent_variables", &V::get_fluent_variables)
-            .def("get_fluent_facts", &V::get_fluent_facts)
-            .def("get_ground_actions", &V::get_ground_actions)
-            .def("get_ground_axioms", &V::get_ground_axioms);
-    }
+    /**
+     * Repository
+     */
 
     nb::class_<Repository>(m, "Repository")  //
         .def("get_or_create_object", &Repository::get_or_create<Object>, "builder"_a)

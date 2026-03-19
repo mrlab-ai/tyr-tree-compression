@@ -10,7 +10,7 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 HERE = Path(__file__).resolve().parent
 
 
@@ -25,6 +25,9 @@ class CMakeExtension(Extension):
 
 def get_num_jobs():
     return int(os.environ.get("TYR_JOBS", multiprocessing.cpu_count()))
+
+def get_header_instantiation():
+    return os.environ.get("TYR_HEADER_INSTANTIATION", "Off")
 
 
 class CMakeBuild(build_ext):
@@ -82,7 +85,8 @@ class CMakeBuild(build_ext):
             "-DBUILD_TESTS=OFF",
             "-DBUILD_EXECUTABLES=OFF",
             "-DBUILD_PROFILING=OFF",
-            "-DTYR_USE_LLD=OFF"  # lld seems to prune code
+            "-DTYR_USE_LLD=OFF",  # lld seems to prune code
+            f"-DTYR_HEADER_INSTANTIATION={get_header_instantiation()}"
         ]
 
         subprocess.run(

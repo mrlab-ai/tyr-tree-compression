@@ -353,7 +353,7 @@ std::ostream& print(std::ostream& os, const formalism::planning::LiteralView<T>&
 template<formalism::FactKind T>
 std::ostream& print(std::ostream& os, const Data<formalism::planning::GroundAtom<T>>& el)
 {
-    fmt::print(os, "({} {})", to_string(el.predicate), fmt::format("{}", fmt::join(to_strings(el.objects), " ")));
+    fmt::print(os, "({} {})", to_string(el.predicate), fmt::format("{}", fmt::join(to_string(el.row), " ")));
     return os;
 }
 

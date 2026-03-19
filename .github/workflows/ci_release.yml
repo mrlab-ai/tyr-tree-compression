@@ -57,6 +57,7 @@ jobs:
           CIBW_BUILD: "${{ matrix.python-version }}-*"
           CIBW_ARCHS: "${{ matrix.architecture }}"
           CIBW_BUILD_VERBOSITY: "1"
+          CIBW_ENVIRONMENT: "TYR_HEADER_INSTANTIATION=On TYR_JOBS=2"
 
   build_wheels_macos:
     runs-on: macos-latest
@@ -86,3 +87,4 @@ jobs:
           CIBW_BUILD: "${{ matrix.python-version }}-*"
           CIBW_ARCHS: arm64
           CIBW_BUILD_VERBOSITY: "1"
+          CIBW_ENVIRONMENT: "TYR_HEADER_INSTANTIATION=On TYR_JOBS=2"
