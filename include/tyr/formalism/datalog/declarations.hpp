@@ -164,6 +164,9 @@ concept Context = requires(const T& a) {
     { get_repository(a) } -> RepositoryConcept;
 };
 
+struct GrounderContext;
+struct MergeContext;
+
 }
 
 #endif

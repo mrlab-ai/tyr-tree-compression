@@ -30,6 +30,7 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     formalism/datalog/grounder.cpp
     formalism/datalog/merge.cpp
     formalism/datalog/repository.cpp
+    formalism/datalog/views.cpp
     formalism/datalog/variable_dependency_graph.cpp
 
     formalism/planning/builder.cpp
@@ -39,9 +40,12 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     formalism/planning/merge_planning.cpp
     formalism/planning/merge.cpp
     formalism/planning/repository.cpp
+    formalism/planning/views.cpp
     formalism/planning/loki_to_tyr.cpp
     formalism/planning/parser.cpp
 
+    datalog/policies/annotation.cpp
+    datalog/policies/termination.cpp
     datalog/workspaces/d2p.cpp
     datalog/workspaces/facts.cpp
     datalog/workspaces/program.cpp

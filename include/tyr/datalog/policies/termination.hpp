@@ -22,6 +22,7 @@
 #include "tyr/common/dynamic_bitset.hpp"
 #include "tyr/datalog/fact_sets.hpp"
 #include "tyr/datalog/policies/aggregation.hpp"
+#include "tyr/datalog/policies/annotation_types.hpp"
 #include "tyr/formalism/datalog/declarations.hpp"
 #include "tyr/formalism/datalog/ground_atom_index.hpp"
 #include "tyr/formalism/datalog/repository.hpp"
@@ -64,67 +65,19 @@ template<typename AggregationFunction>
 class TerminationPolicy
 {
 public:
-    explicit TerminationPolicy(size_t num_fluent_predicates) : unsat_goals(num_fluent_predicates), num_unsat_goals(0), atoms() {}
+    explicit TerminationPolicy(size_t num_fluent_predicates);
 
-    void set_goals(const PredicateFactSets<formalism::FluentTag>& goals)
-    {
-        clear();
+    void set_goals(const PredicateFactSets<formalism::FluentTag>& goals);
 
-        num_unsat_goals = 0;
-        for (const auto& set : goals.get_sets())
-        {
-            for (const auto& atom : set.get_facts())
-            {
-                tyr::set(uint_t(atom.get_row().get_index().second), true, unsat_goals[uint_t(atom.get_predicate().get_index())]);
-                ++num_unsat_goals;
-                atoms.push_back(atom);
-            }
-        }
-    }
+    void achieve(formalism::datalog::GroundAtomView<formalism::FluentTag> atom) noexcept;
 
-    void achieve(formalism::datalog::GroundAtomView<formalism::FluentTag> atom) noexcept
-    {
-        if (tyr::test(uint_t(atom.get_row().get_index().second), unsat_goals[uint_t(atom.get_predicate().get_index())]))
-        {
-            --num_unsat_goals;
-            tyr::set(uint_t(atom.get_row().get_index().second), false, unsat_goals[uint_t(atom.get_predicate().get_index())]);
-        }
-    }
+    bool check() const noexcept;
 
-    bool check() const noexcept { return num_unsat_goals == 0; }
+    Cost get_total_cost(const OrAnnotationsList& or_annot) const noexcept;
 
-    Cost get_total_cost(const OrAnnotationsList& or_annot) const noexcept
-    {
-        auto cost = AggregationFunction::identity();
+    void reset() noexcept;
 
-        for (const auto atom : atoms)
-        {
-            assert(uint_t(atom.get_predicate().get_index()) < or_annot.size());
-            assert(uint_t(atom.get_row().get_index().second) < or_annot[uint_t(atom.get_predicate().get_index())].size());
-            cost = agg(cost, or_annot[uint_t(atom.get_predicate().get_index())][uint_t(atom.get_row().get_index().second)]);
-        }
-
-        return cost;
-    }
-
-    void reset() noexcept
-    {
-        num_unsat_goals = 0;
-        for (auto& bitset : unsat_goals)
-            bitset.reset();
-
-        for (const auto& atom : atoms)
-            tyr::set(uint_t(atom.get_row().get_index().second), true, unsat_goals[uint_t(atom.get_predicate().get_index())]);
-    }
-
-    void clear() noexcept
-    {
-        num_unsat_goals = 0;
-        for (auto& bitset : unsat_goals)
-            bitset.reset();
-
-        atoms.clear();
-    }
+    void clear() noexcept;
 
     const std::vector<formalism::datalog::GroundAtomView<formalism::FluentTag>>& get_atoms() const noexcept { return atoms; }
 

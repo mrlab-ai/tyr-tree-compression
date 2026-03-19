@@ -22,7 +22,6 @@
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/ground_atom_view.hpp"
 #include "tyr/formalism/planning/ground_literal_index.hpp"
-#include "tyr/formalism/predicate_view.hpp"
 
 namespace tyr
 {
@@ -41,7 +40,6 @@ public:
     const auto& get_handle() const noexcept { return m_handle; }
 
     auto get_index() const noexcept { return m_handle; }
-    auto get_predicate() const noexcept { return make_view(m_handle.predicate_index, *m_context); }
     auto get_atom() const noexcept { return make_view(get_data().atom, *m_context); }
     auto get_polarity() const noexcept { return get_data().polarity; }
 
