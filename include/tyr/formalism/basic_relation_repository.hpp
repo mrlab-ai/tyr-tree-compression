@@ -147,7 +147,7 @@ public:
      * Local methods
      */
 
-    static size_t compute_hash(const IndexList<Object>& builder) noexcept { return BlockArraySet<uint_t, Coder<uint_t>>::compute_hash(builder); }
+    static size_t hash(const IndexList<Object>& builder) noexcept { return BlockArraySet<uint_t, Coder<uint_t>>::hash(builder); }
 
     std::optional<Index<Binding>> find_local_with_hash(Index<T> g, const IndexList<Object>& builder, size_t h) const noexcept
     {
@@ -163,7 +163,7 @@ public:
 
     std::optional<Index<Binding>> find_local(Index<T> g, const IndexList<Object>& builder) const noexcept
     {
-        return find_local_with_hash(g, builder, BasicRelationRepository::compute_hash(builder));
+        return find_local_with_hash(g, builder, BasicRelationRepository::hash(builder));
     }
 
     std::pair<Index<Binding>, bool> get_or_create_local_with_hash(Index<T> g, size_t arity, const IndexList<Object>& builder, size_t h)
@@ -180,7 +180,7 @@ public:
 
     std::pair<Index<Binding>, bool> get_or_create_local(Index<T> g, size_t arity, const IndexList<Object>& builder)
     {
-        return get_or_create_local_with_hash(g, arity, builder, BasicRelationRepository::compute_hash(builder));
+        return get_or_create_local_with_hash(g, arity, builder, BasicRelationRepository::hash(builder));
     }
 
     ConstViewType at_local(std::pair<Index<T>, Index<Binding>> index) const noexcept

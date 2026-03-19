@@ -19,6 +19,8 @@
 
 namespace tyr::formalism
 {
+#ifndef TYR_HEADER_INSTANTIATION
+
 // BasicRelationRepository
 template class BasicRelationRepository<Predicate<StaticTag>>;
 template class BasicRelationRepository<Predicate<FluentTag>>;
@@ -82,6 +84,8 @@ template class BasicSymbolRepository<datalog::Program>;
 
 // Outer repository
 template class Repository<tyr::formalism::datalog::SymbolRepository, tyr::formalism::datalog::RelationRepository>;
+
+#endif
 
 namespace datalog
 {

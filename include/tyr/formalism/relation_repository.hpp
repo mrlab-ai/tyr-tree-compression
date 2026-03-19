@@ -74,9 +74,9 @@ public:
     }
 
     template<typename T>
-    static size_t compute_hash(Index<T>, const IndexList<Object>& builder) noexcept
+    static size_t hash(Index<T>, const IndexList<Object>& builder) noexcept
     {
-        return BasicRelationRepository<T>::compute_hash(builder);
+        return BasicRelationRepository<T>::hash(builder);
     }
 
     template<typename T>

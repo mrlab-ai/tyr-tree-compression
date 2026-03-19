@@ -69,9 +69,9 @@ public:
     }
 
     template<typename T>
-    size_t hash(const Data<T>& builder) const
+    static size_t hash(const Data<T>& builder) noexcept
     {
-        return get<T>().hash(builder);
+        return BasicSymbolRepository<T>::hash(builder);
     }
 
     template<typename T>

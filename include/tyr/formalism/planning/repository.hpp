@@ -386,6 +386,9 @@ using VariableListView = View<IndexList<Variable>, Repository>;
 
 namespace tyr::formalism
 {
+
+#ifndef TYR_HEADER_INSTANTIATION
+
 /**
  * Explicit instantiations
  */
@@ -488,6 +491,8 @@ extern template class BasicSymbolRepository<planning::FDRTask>;
 
 // Outer repository
 extern template class Repository<tyr::formalism::planning::SymbolRepository, tyr::formalism::planning::RelationRepository>;
+
+#endif
 }
 
 #endif

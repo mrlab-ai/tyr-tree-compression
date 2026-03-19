@@ -50,6 +50,8 @@ private:
         ::tyr::IndexedHashSet<U> container;
         size_t parent_size = 0;
 
+        static size_t hash(const Data<U>& builder) noexcept { return ::tyr::IndexedHashSet<U>::hash(builder); }
+
         Slot(buffer::Buffer&, buffer::SegmentedBuffer&) : container(), parent_size(0) {}
     };
 
@@ -58,6 +60,8 @@ private:
     {
         buffer::IndexedHashSet<U> container;
         size_t parent_size = 0;
+
+        static size_t hash(const Data<U>& builder) noexcept { return buffer::IndexedHashSet<U>::hash(builder); }
 
         Slot(buffer::Buffer& buffer, buffer::SegmentedBuffer& arena) : container(buffer, arena), parent_size(0) {}
     };
@@ -94,7 +98,7 @@ public:
         clear_slot();
     }
 
-    size_t hash(const Data<T>& builder) const { return m_slot.container.hash(builder); }
+    static size_t hash(const Data<T>& builder) noexcept { return Slot<T>::hash(builder); }
 
     /**
      * Local methods
@@ -111,7 +115,7 @@ public:
         return std::nullopt;
     }
 
-    std::optional<Index<T>> find_local(const Data<T>& builder) const noexcept { return find_local_with_hash(builder, hash(builder)); }
+    std::optional<Index<T>> find_local(const Data<T>& builder) const noexcept { return find_local_with_hash(builder, BasicSymbolRepository::hash(builder)); }
 
     std::pair<Index<T>, bool> get_or_create_local_with_hash(Data<T>& builder, size_t h)
     {
@@ -126,7 +130,7 @@ public:
         return { Index<T>(m_slot.parent_size + uint_t(index)), success };
     }
 
-    std::pair<Index<T>, bool> get_or_create_local(Data<T>& builder) { return get_or_create_local_with_hash(builder, hash(builder)); }
+    std::pair<Index<T>, bool> get_or_create_local(Data<T>& builder) { return get_or_create_local_with_hash(builder, BasicSymbolRepository::hash(builder)); }
 
     const Data<T>& at_local(Index<T> index) const noexcept
     {

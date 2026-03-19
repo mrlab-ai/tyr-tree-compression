@@ -36,12 +36,12 @@
 namespace tyr::formalism
 {
 
-template<typename SerializationRepo, typename RelationRepo>
+template<typename SymbolRepo, typename RelationRepo>
 class Repository
 {
 private:
     const Repository* m_parent;
-    SerializationRepo m_symbol_repository;
+    SymbolRepo m_symbol_repository;
     RelationRepo m_relation_repository;
     size_t m_num_objects;
 
@@ -77,7 +77,7 @@ public:
     template<typename T>
     std::optional<View<Index<T>, Repository>> find(const Data<T>& builder) const noexcept
     {
-        return find_with_hash(builder, m_symbol_repository.hash(builder));
+        return find_with_hash(builder, SymbolRepo::hash(builder));
     }
 
     template<typename T>
@@ -97,7 +97,7 @@ public:
     template<typename T>
     std::pair<View<Index<T>, Repository>, bool> get_or_create(Data<T>& builder)
     {
-        return get_or_create_with_hash(builder, m_symbol_repository.hash(builder));
+        return get_or_create_with_hash(builder, SymbolRepo::hash(builder));
     }
 
     template<typename T>
@@ -164,7 +164,7 @@ public:
     template<IndexConcept I>
     std::optional<View<std::pair<I, Index<Binding>>, Repository>> find(I g, const IndexList<Object>& builder) const noexcept
     {
-        const auto h = RelationRepo::compute_hash(g.get_index(), builder);
+        const auto h = RelationRepo::hash(g.get_index(), builder);
 
         return find_with_hash(g, builder, h);
     }
@@ -187,7 +187,7 @@ public:
     template<IndexConcept I>
     std::pair<View<std::pair<I, Index<Binding>>, Repository>, bool> get_or_create(View<I, Repository> g, const IndexList<Object>& builder)
     {
-        const auto h = RelationRepo::compute_hash(g.get_index(), builder);
+        const auto h = RelationRepo::hash(g.get_index(), builder);
 
         return get_or_create_with_hash(g, builder, h);
     }

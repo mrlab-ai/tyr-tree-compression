@@ -19,6 +19,8 @@
 
 namespace tyr::formalism
 {
+#ifndef TYR_HEADER_INSTANTIATION
+
 // BasicRelationRepository
 template class BasicRelationRepository<Predicate<StaticTag>>;
 template class BasicRelationRepository<Predicate<FluentTag>>;
@@ -117,6 +119,8 @@ template class BasicSymbolRepository<planning::FDRTask>;
 
 // Outer repository
 template class Repository<tyr::formalism::planning::SymbolRepository, tyr::formalism::planning::RelationRepository>;
+
+#endif
 
 namespace planning
 {

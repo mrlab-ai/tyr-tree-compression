@@ -52,13 +52,7 @@ private:
     class IndexableEqualTo;
 
 public:
-    explicit BlockArraySet(size_t length) :
-        m_pool(std::make_unique<pool_type>(length)),
-        m_set(0, IndexableHash(*m_pool), IndexableEqualTo(*m_pool)),
-        m_hash(),
-        m_equal_to()
-    {
-    }
+    explicit BlockArraySet(size_t length) : m_pool(std::make_unique<pool_type>(length)), m_set(0, IndexableHash(*m_pool), IndexableEqualTo(*m_pool)) {}
 
     void clear() noexcept
     {
@@ -66,13 +60,11 @@ public:
         m_pool->clear();
     }
 
-    static size_t compute_hash(std::span<const value_type> element) noexcept { return gtl::phmap_mix<sizeof(size_t)>()(Hash {}(element)); }
-
-    size_t hash(std::span<const value_type> element) const noexcept { return gtl::phmap_mix<sizeof(size_t)>()(m_hash(element)); }
+    static size_t hash(std::span<const value_type> element) noexcept { return gtl::phmap_mix<sizeof(size_t)>()(Hash {}(element)); }
 
     std::optional<index_type> find_with_hash(std::span<const value_type> element, size_t h) const
     {
-        assert(h == hash(element) && "The given hash does not match container internal's hash.");
+        assert(h == BlockArraySet::hash(element) && "The given hash does not match container internal's hash.");
         assert(h == m_set.hash(element));
 
         const auto it = m_set.find(element, h);
@@ -84,14 +76,14 @@ public:
 
     std::optional<index_type> find(std::span<const value_type> element) const
     {
-        assert(hash(element) == m_set.hash(element));
+        assert(BlockArraySet::hash(element) == m_set.hash(element));
 
-        return find_with_hash(element, hash(element));
+        return find_with_hash(element, BlockArraySet::hash(element));
     }
 
     std::pair<index_type, bool> insert_with_hash(size_t h, std::span<const value_type> element)
     {
-        assert(h == hash(element) && "The given hash does not match container internal's hash.");
+        assert(h == BlockArraySet::hash(element) && "The given hash does not match container internal's hash.");
         assert(h == m_set.hash(element));
 
         if (const auto it = m_set.find(element, h); it != m_set.end())
@@ -108,9 +100,9 @@ public:
 
     std::pair<index_type, bool> insert(std::span<const value_type> element)
     {
-        assert(hash(element) == m_set.hash(element));
+        assert(BlockArraySet::hash(element) == m_set.hash(element));
 
-        return insert_with_hash(hash(element), element);
+        return insert_with_hash(BlockArraySet::hash(element), element);
     }
 
     bool contains(std::span<const value_type> element) const { return m_set.contains(element); }
@@ -182,9 +174,6 @@ private:
 
     std::unique_ptr<pool_type> m_pool;
     gtl::flat_hash_set<index_type, IndexableHash, IndexableEqualTo> m_set;
-
-    Hash m_hash;
-    EqualTo m_equal_to;
 };
 
 }  // namespace tyr
