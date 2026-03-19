@@ -37,114 +37,107 @@ namespace tyr
  */
 namespace formalism::datalog
 {
-inline std::ostream& operator<<(std::ostream& os, const VariableDependencyGraph& el);
+std::ostream& operator<<(std::ostream& os, const VariableDependencyGraph& el);
 
 template<OpKind Op, typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<UnaryOperator<Op, T>>& el);
-
-template<OpKind Op, typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<UnaryOperator<Op, T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<UnaryOperator<Op, T>>& el);
 
 template<OpKind Op, typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<BinaryOperator<Op, T>>& el);
-
-template<OpKind Op, typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<BinaryOperator<Op, T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const UnaryOperatorView<Op, T>& el);
 
 template<OpKind Op, typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<MultiOperator<Op, T>>& el);
+std::ostream& operator<<(std::ostream& os, const Data<BinaryOperator<Op, T>>& el);
 
-template<OpKind Op, typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<MultiOperator<Op, T>>, C>& el);
+template<OpKind Op, typename T>
+std::ostream& operator<<(std::ostream& os, const BinaryOperatorView<Op, T>& el);
+
+template<OpKind Op, typename T>
+std::ostream& operator<<(std::ostream& os, const Data<MultiOperator<Op, T>>& el);
+
+template<OpKind Op, typename T>
+std::ostream& operator<<(std::ostream& os, const MultiOperatorView<Op, T>& el);
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<ArithmeticOperator<T>>& el);
-
-template<typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<ArithmeticOperator<T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<ArithmeticOperator<T>>& el);
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<BooleanOperator<T>>& el);
+std::ostream& operator<<(std::ostream& os, const ArithmeticOperatorView<T>& el);
 
-template<typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<BooleanOperator<T>>, C>& el);
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Data<BooleanOperator<T>>& el);
 
-template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<Atom<T>>& el);
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Atom<T>>, C>& el);
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const BooleanOperatorView<T>& el);
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<Literal<T>>& el);
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Literal<T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<Atom<T>>& el);
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundAtom<T>>& el);
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundAtom<T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const AtomView<T>& el);
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundLiteral<T>>& el);
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundLiteral<T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<Literal<T>>& el);
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<FunctionTerm<T>>& el);
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<FunctionTerm<T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const LiteralView<T>& el);
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTerm<T>>& el);
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundFunctionTerm<T>>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<GroundAtom<T>>& el);
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTermValue<T>>& el);
+std::ostream& operator<<(std::ostream& os, const GroundAtomView<T>& el);
 
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundFunctionTermValue<T>>, C>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<GroundLiteral<T>>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<FunctionExpression>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const GroundLiteralView<T>& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<FunctionExpression>, C>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<FunctionTerm<T>>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionExpression>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const FunctionTermView<T>& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<GroundFunctionExpression>, C>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTerm<T>>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<ConjunctiveCondition>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const GroundFunctionTermView<T>& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<ConjunctiveCondition>, C>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTermValue<T>>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<Rule>& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const GroundFunctionTermValueView<T>& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Rule>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<FunctionExpression>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundConjunctiveCondition>& el);
+std::ostream& operator<<(std::ostream& os, const FunctionExpressionView& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundConjunctiveCondition>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionExpression>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundRule>& el);
+std::ostream& operator<<(std::ostream& os, const GroundFunctionExpressionView& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundRule>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<ConjunctiveCondition>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<Program>& el);
+std::ostream& operator<<(std::ostream& os, const ConjunctiveConditionView& el);
 
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Program>, C>& el);
+std::ostream& operator<<(std::ostream& os, const Data<Rule>& el);
+
+std::ostream& operator<<(std::ostream& os, const RuleView& el);
+
+std::ostream& operator<<(std::ostream& os, const Data<GroundConjunctiveCondition>& el);
+
+std::ostream& operator<<(std::ostream& os, const GroundConjunctiveConditionView& el);
+
+std::ostream& operator<<(std::ostream& os, const Data<GroundRule>& el);
+
+std::ostream& operator<<(std::ostream& os, const GroundRuleView& el);
+
+std::ostream& operator<<(std::ostream& os, const Data<Program>& el);
+
+std::ostream& operator<<(std::ostream& os, const ProgramView& el);
 
 }  // end namespace formalism
 
@@ -152,123 +145,92 @@ inline std::ostream& operator<<(std::ostream& os, const View<Index<Program>, C>&
  * Definitions
  */
 
-inline std::ostream& print(std::ostream& os, const formalism::datalog::VariableDependencyGraph& el)
-{
-    os << "graph {\n";
-
-    const auto k = el.k();
-
-    for (uint_t i = 0; i < k; ++i)
-    {
-        fmt::print(os, "n{} [label=\"V{}\"];\n", i, i);
-    }
-
-    for (uint_t i = 0; i < k; ++i)
-    {
-        for (uint_t j = i + 1; j < k; ++j)
-        {
-            if (el.has_dependency<formalism::StaticTag>(i, j))
-            {
-                fmt::print(os, "n{} -- n{} [color=blue, key=1];\n", i, j);
-            }
-            if (el.has_dependency<formalism::FluentTag>(i, j))
-            {
-                fmt::print(os, "n{} -- n{} [color=red, key=2];\n", i, j);
-            }
-        }
-    }
-
-    os << "}\n";
-
-    return os;
-}
-
 template<formalism::OpKind Op, typename T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::UnaryOperator<Op, T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::UnaryOperator<Op, T>>& el)
 {
     fmt::print(os, "({} {})", to_string(Op {}), to_string(el.arg));
     return os;
 }
 
-template<formalism::OpKind Op, typename T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::UnaryOperator<Op, T>>, C>& el)
+template<formalism::OpKind Op, typename T>
+std::ostream& print(std::ostream& os, const formalism::datalog::UnaryOperatorView<Op, T>& el)
 {
     fmt::print(os, "({} {})", to_string(Op {}), to_string(el.get_arg()));
     return os;
 }
 
 template<formalism::OpKind Op, typename T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::BinaryOperator<Op, T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::BinaryOperator<Op, T>>& el)
 {
     fmt::print(os, "({} {} {})", to_string(Op {}), to_string(el.lhs), to_string(el.rhs));
     return os;
 }
 
-template<formalism::OpKind Op, typename T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::BinaryOperator<Op, T>>, C>& el)
+template<formalism::OpKind Op, typename T>
+std::ostream& print(std::ostream& os, const formalism::datalog::BinaryOperatorView<Op, T>& el)
 {
     fmt::print(os, "({} {} {})", to_string(Op {}), to_string(el.get_lhs()), to_string(el.get_rhs()));
     return os;
 }
 
 template<formalism::OpKind Op, typename T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::MultiOperator<Op, T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::MultiOperator<Op, T>>& el)
 {
     fmt::print(os, "({} {})", to_string(Op {}), fmt::format("{}", fmt::join(to_strings(el.args), " ")));
     return os;
 }
 
-template<formalism::OpKind Op, typename T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::MultiOperator<Op, T>>, C>& el)
+template<formalism::OpKind Op, typename T>
+std::ostream& print(std::ostream& os, const formalism::datalog::MultiOperatorView<Op, T>& el)
 {
     fmt::print(os, "({} {})", to_string(Op {}), fmt::format("{}", fmt::join(to_strings(el.get_args()), " ")));
     return os;
 }
 
 template<typename T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::ArithmeticOperator<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::ArithmeticOperator<T>>& el)
 {
     fmt::print(os, "{}", to_string(el.value));
     return os;
 }
 
-template<typename T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Data<formalism::datalog::ArithmeticOperator<T>>, C>& el)
+template<typename T>
+std::ostream& print(std::ostream& os, const formalism::datalog::ArithmeticOperatorView<T>& el)
 {
     fmt::print(os, "{}", to_string(el.get_variant()));
     return os;
 }
 
 template<typename T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::BooleanOperator<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::BooleanOperator<T>>& el)
 {
     fmt::print(os, "{}", to_string(el.value));
     return os;
 }
 
-template<typename T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Data<formalism::datalog::BooleanOperator<T>>, C>& el)
+template<typename T>
+std::ostream& print(std::ostream& os, const formalism::datalog::BooleanOperatorView<T>& el)
 {
     fmt::print(os, "{}", to_string(el.get_variant()));
     return os;
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::Atom<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::Atom<T>>& el)
 {
     fmt::print(os, "({} {})", to_string(el.predicate), fmt::format("{}", fmt::join(to_strings(el.terms), " ")));
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::Atom<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::AtomView<T>& el)
 {
     fmt::print(os, "({} {})", to_string(el.get_predicate().get_name()), fmt::format("{}", fmt::join(to_strings(el.get_terms()), " ")));
     return os;
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::Literal<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::Literal<T>>& el)
 {
     if (el.polarity)
         print(os, to_string(el.atom));
@@ -277,8 +239,8 @@ inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::Lite
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::Literal<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::LiteralView<T>& el)
 {
     if (el.get_polarity())
         print(os, to_string(el.get_atom()));
@@ -288,21 +250,21 @@ inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundAtom<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundAtom<T>>& el)
 {
     fmt::print(os, "({} {})", to_string(el.index.group), fmt::format("{}", fmt::join(to_strings(el.objects), " ")));
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::GroundAtom<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::GroundAtomView<T>& el)
 {
     fmt::print(os, "({} {})", to_string(el.get_predicate().get_name()), fmt::format("{}", fmt::join(to_strings(el.get_row().get_objects()), " ")));
     return os;
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundLiteral<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundLiteral<T>>& el)
 {
     if (el.polarity)
         print(os, to_string(el.atom));
@@ -311,8 +273,8 @@ inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::Grou
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::GroundLiteral<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::GroundLiteralView<T>& el)
 {
     if (el.get_polarity())
         print(os, to_string(el.get_atom()));
@@ -322,485 +284,190 @@ inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::FunctionTerm<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::FunctionTerm<T>>& el)
 {
     fmt::print(os, "({} {})", to_string(el.function), fmt::format("{}", fmt::join(to_strings(el.terms), " ")));
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::FunctionTerm<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::FunctionTermView<T>& el)
 {
     fmt::print(os, "({} {})", to_string(el.get_function().get_name()), fmt::format("{}", fmt::join(to_strings(el.get_terms()), " ")));
     return os;
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundFunctionTerm<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundFunctionTerm<T>>& el)
 {
     fmt::print(os, "({} {})", to_string(el.index.group), fmt::format("{}", fmt::join(to_strings(el.objects), " ")));
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::GroundFunctionTerm<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::GroundFunctionTermView<T>& el)
 {
     fmt::print(os, "({} {})", to_string(el.get_function().get_name()), fmt::format("{}", fmt::join(to_strings(el.get_row().get_objects()), " ")));
     return os;
 }
 
 template<formalism::FactKind T>
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundFunctionTermValue<T>>& el)
+std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundFunctionTermValue<T>>& el)
 {
     fmt::print(os, "(= {} {})", to_string(el.fterm), to_string(el.value));
     return os;
 }
 
-template<formalism::FactKind T, formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::GroundFunctionTermValue<T>>, C>& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::datalog::GroundFunctionTermValueView<T>& el)
 {
     fmt::print(os, "(= {} {})", to_string(el.get_fterm()), to_string(el.get_value()));
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::FunctionExpression>& el)
-{
-    fmt::print(os, "{}", to_string(el.value));
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Data<formalism::datalog::FunctionExpression>, C>& el)
-{
-    fmt::print(os, "{}", to_string(el.get_variant()));
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundFunctionExpression>& el)
-{
-    fmt::print(os, "{}", to_string(el.value));
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Data<formalism::datalog::GroundFunctionExpression>, C>& el)
-{
-    fmt::print(os, "{}", to_string(el.get_variant()));
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::ConjunctiveCondition>& el)
-{
-    os << "ConjunctiveCondition(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "variables = " << el.variables << "\n";
-
-        os << print_indent << "static literals = " << el.static_literals << "\n";
-
-        os << print_indent << "fluent literals = " << el.fluent_literals << "\n";
-
-        os << print_indent << "numeric constraints = " << el.numeric_constraints << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::ConjunctiveCondition>, C>& el)
-{
-    os << "ConjunctiveCondition(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "variables = " << el.get_variables() << "\n";
-
-        os << print_indent << "static literals = " << el.template get_literals<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent literals = " << el.template get_literals<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "numeric constraints = " << el.get_numeric_constraints() << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::Rule>& el)
-{
-    os << "Rule(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "index = " << el.index << "\n";
-
-        os << print_indent << "variables = " << el.variables << "\n";
-
-        os << print_indent << "head = " << el.head << "\n";
-
-        os << print_indent << "body = " << el.body << "\n";
-
-        os << print_indent << "cost = " << el.cost << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::Rule>, C>& el)
-{
-    os << "Rule(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "index = " << el.get_index() << "\n";
-
-        os << print_indent << "variables = " << el.get_variables() << "\n";
-
-        os << print_indent << "head = " << el.get_head() << "\n";
-
-        os << print_indent << "body = " << el.get_body() << "\n";
-
-        os << print_indent << "cost = " << el.get_cost() << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundConjunctiveCondition>& el)
-{
-    os << "GroundConjunctiveCondition(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "static literals = " << el.static_literals << "\n";
-
-        os << print_indent << "fluent literals = " << el.fluent_literals << "\n";
-
-        os << print_indent << "numeric constraints = " << el.numeric_constraints << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::GroundConjunctiveCondition>, C>& el)
-{
-    os << "GroundConjunctiveCondition(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "static literals = " << el.template get_literals<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent literals = " << el.template get_literals<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "numeric constraints = " << el.get_numeric_constraints() << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::GroundRule>& el)
-{
-    os << "GroundRule(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "head = " << el.head << "\n";
-
-        os << print_indent << "body = " << el.body << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::GroundRule>, C>& el)
-{
-    os << "GroundRule(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "head = " << el.get_head() << "\n";
-
-        os << print_indent << "body = " << el.get_body() << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-inline std::ostream& print(std::ostream& os, const Data<formalism::datalog::Program>& el)
-{
-    os << "Program(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "static predicates =" << el.static_predicates << "\n";
-
-        os << print_indent << "fluent predicates = " << el.fluent_predicates << "\n";
-
-        os << print_indent << "static functions = " << el.static_functions << "\n";
-
-        os << print_indent << "fluent functions = " << el.fluent_functions << "\n";
-
-        os << print_indent << "objects = " << el.objects << "\n";
-
-        os << print_indent << "static atoms = " << el.static_atoms << "\n";
-
-        os << print_indent << "fluent atoms = " << el.fluent_atoms << "\n";
-
-        os << print_indent << "static fterms = " << el.static_fterm_values << "\n";
-
-        os << print_indent << "fluent fterms = " << el.fluent_fterm_values << "\n";
-
-        os << print_indent << "rules = " << el.rules << "\n";
-    }
-    os << print_indent << ")";
-
-    return os;
-}
-
-template<formalism::datalog::Context C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::datalog::Program>, C>& el)
-{
-    os << "Program(\n";
-    {
-        IndentScope scope(os);
-
-        os << print_indent << "static predicates =" << el.template get_predicates<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent predicates = " << el.template get_predicates<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "static functions = " << el.template get_functions<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent functions = " << el.template get_functions<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "objects = " << el.get_objects() << "\n";
-
-        os << print_indent << "static atoms = " << el.template get_atoms<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent atoms = " << el.template get_atoms<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "static fterms = " << el.template get_fterm_values<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent fterms = " << el.template get_fterm_values<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "rules = " << el.get_rules() << "\n";
-    }
-    os << print_indent << ")";
-
     return os;
 }
 
 namespace formalism::datalog
 {
 
-inline std::ostream& operator<<(std::ostream& os, const VariableDependencyGraph& el) { return tyr::print(os, el); }
-
 template<OpKind Op, typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<UnaryOperator<Op, T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<OpKind Op, typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<UnaryOperator<Op, T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const Data<UnaryOperator<Op, T>>& el)
 {
     return tyr::print(os, el);
 }
 
 template<OpKind Op, typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<BinaryOperator<Op, T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<OpKind Op, typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<BinaryOperator<Op, T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const UnaryOperatorView<Op, T>& el)
 {
     return tyr::print(os, el);
 }
 
 template<OpKind Op, typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<MultiOperator<Op, T>>& el)
+std::ostream& operator<<(std::ostream& os, const Data<BinaryOperator<Op, T>>& el)
 {
     return tyr::print(os, el);
 }
 
-template<OpKind Op, typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<MultiOperator<Op, T>>, C>& el)
+template<OpKind Op, typename T>
+std::ostream& operator<<(std::ostream& os, const BinaryOperatorView<Op, T>& el)
+{
+    return tyr::print(os, el);
+}
+
+template<OpKind Op, typename T>
+std::ostream& operator<<(std::ostream& os, const Data<MultiOperator<Op, T>>& el)
+{
+    return tyr::print(os, el);
+}
+
+template<OpKind Op, typename T>
+std::ostream& operator<<(std::ostream& os, const MultiOperatorView<Op, T>& el)
 {
     return tyr::print(os, el);
 }
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<ArithmeticOperator<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<ArithmeticOperator<T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const Data<ArithmeticOperator<T>>& el)
 {
     return tyr::print(os, el);
 }
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& os, const Data<BooleanOperator<T>>& el)
+std::ostream& operator<<(std::ostream& os, const ArithmeticOperatorView<T>& el)
 {
     return tyr::print(os, el);
 }
 
-template<typename T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<BooleanOperator<T>>, C>& el)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Data<BooleanOperator<T>>& el)
 {
     return tyr::print(os, el);
 }
 
-template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<Atom<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Atom<T>>, C>& el)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const BooleanOperatorView<T>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<Literal<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Literal<T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const Data<Atom<T>>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundAtom<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundAtom<T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const AtomView<T>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundLiteral<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundLiteral<T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const Data<Literal<T>>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<FunctionTerm<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<FunctionTerm<T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const LiteralView<T>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTerm<T>>& el)
-{
-    return tyr::print(os, el);
-}
-
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundFunctionTerm<T>>, C>& el)
+std::ostream& operator<<(std::ostream& os, const Data<GroundAtom<T>>& el)
 {
     return tyr::print(os, el);
 }
 
 template<FactKind T>
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTermValue<T>>& el)
+std::ostream& operator<<(std::ostream& os, const GroundAtomView<T>& el)
 {
     return tyr::print(os, el);
 }
 
-template<FactKind T, Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundFunctionTermValue<T>>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<GroundLiteral<T>>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<FunctionExpression>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<FunctionExpression>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const GroundLiteralView<T>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionExpression>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Data<GroundFunctionExpression>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<FunctionTerm<T>>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<ConjunctiveCondition>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<ConjunctiveCondition>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const FunctionTermView<T>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<Rule>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Rule>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTerm<T>>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundConjunctiveCondition>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundConjunctiveCondition>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const GroundFunctionTermView<T>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<GroundRule>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<GroundRule>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const Data<GroundFunctionTermValue<T>>& el)
 {
     return tyr::print(os, el);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Data<Program>& el) { return tyr::print(os, el); }
-
-template<Context C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Program>, C>& el)
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const GroundFunctionTermValueView<T>& el)
 {
     return tyr::print(os, el);
 }

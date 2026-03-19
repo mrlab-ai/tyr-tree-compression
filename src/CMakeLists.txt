@@ -26,12 +26,14 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     analysis/task_domains.cpp
 
     formalism/datalog/builder.cpp
+    formalism/datalog/formatter.cpp
     formalism/datalog/grounder.cpp
     formalism/datalog/merge.cpp
     formalism/datalog/repository.cpp
     formalism/datalog/variable_dependency_graph.cpp
 
     formalism/planning/builder.cpp
+    formalism/planning/formatter.cpp
     formalism/planning/grounder.cpp
     formalism/planning/merge_datalog.cpp
     formalism/planning/merge_planning.cpp
@@ -80,6 +82,7 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     planning/algorithms/gbfs_lazy.cpp
     planning/algorithms/gbfs_lazy/event_handler.cpp
 
+    planning/applicability.cpp
     planning/action_executor.cpp
     planning/formatter.cpp
     planning/ground_task.cpp
