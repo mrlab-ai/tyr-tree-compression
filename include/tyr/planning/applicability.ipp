@@ -57,8 +57,14 @@ float_t evaluate(formalism::planning::GroundUnaryOperatorView<O> element, const 
     return formalism::apply(O {}, evaluate(element.get_arg(), context));
 }
 
-template<typename Task, formalism::OpKind O>
+template<typename Task, formalism::ArithmeticOpKind O>
 float_t evaluate(formalism::planning::GroundBinaryOperatorView<O> element, const StateContext<Task>& context)
+{
+    return formalism::apply(O {}, evaluate(element.get_lhs(), context), evaluate(element.get_rhs(), context));
+}
+
+template<typename Task, formalism::BooleanOpKind O>
+bool evaluate(formalism::planning::GroundBinaryOperatorView<O> element, const StateContext<Task>& context)
 {
     return formalism::apply(O {}, evaluate(element.get_lhs(), context), evaluate(element.get_rhs(), context));
 }

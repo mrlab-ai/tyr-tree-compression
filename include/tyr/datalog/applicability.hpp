@@ -45,153 +45,69 @@ namespace tyr::datalog
  * evaluate
  */
 
-// Forward declarations
-
-inline float_t evaluate(float_t element, const FactSets& fact_sets);
+float_t evaluate(float_t element, const FactSets& fact_sets);
 
 template<formalism::ArithmeticOpKind O>
-inline auto evaluate(formalism::datalog::GroundUnaryOperatorView<O> element, const FactSets& fact_sets);
-
-template<formalism::OpKind O>
-inline auto evaluate(formalism::datalog::GroundBinaryOperatorView<O> element, const FactSets& fact_sets);
+float_t evaluate(formalism::datalog::GroundUnaryOperatorView<O> element, const FactSets& fact_sets);
 
 template<formalism::ArithmeticOpKind O>
-inline auto evaluate(formalism::datalog::GroundMultiOperatorView<O> element, const FactSets& fact_sets);
+float_t evaluate(formalism::datalog::GroundBinaryOperatorView<O> element, const FactSets& fact_sets);
+
+template<formalism::BooleanOpKind O>
+bool evaluate(formalism::datalog::GroundBinaryOperatorView<O> element, const FactSets& fact_sets);
+
+template<formalism::ArithmeticOpKind O>
+float_t evaluate(formalism::datalog::GroundMultiOperatorView<O> element, const FactSets& fact_sets);
 
 template<formalism::FactKind T>
-    requires(!std::is_same_v<T, formalism::AuxiliaryTag>)
-inline float_t evaluate(formalism::datalog::GroundFunctionTermView<T> element, const FactSets& fact_sets);
+float_t evaluate(formalism::datalog::GroundFunctionTermView<T> element, const FactSets& fact_sets);
 
-inline float_t evaluate(formalism::datalog::GroundFunctionTermView<formalism::AuxiliaryTag> element, const FactSets& fact_sets);
+float_t evaluate(formalism::datalog::GroundFunctionExpressionView element, const FactSets& fact_sets);
 
-inline float_t evaluate(formalism::datalog::GroundFunctionExpressionView element, const FactSets& fact_sets);
+float_t evaluate(formalism::datalog::GroundArithmeticOperatorView element, const FactSets& fact_sets);
 
-inline float_t evaluate(formalism::datalog::GroundArithmeticOperatorView element, const FactSets& fact_sets);
-
-inline bool evaluate(formalism::datalog::GroundBooleanOperatorView element, const FactSets& fact_sets);
-
-// Implementations
-
-inline float_t evaluate(float_t element, const FactSets& fact_sets) { return element; }
-
-template<formalism::ArithmeticOpKind O>
-inline auto evaluate(formalism::datalog::GroundUnaryOperatorView<O> element, const FactSets& fact_sets)
-{
-    return formalism::apply(O {}, evaluate(element.get_arg(), fact_sets));
-}
-
-template<formalism::OpKind O>
-inline auto evaluate(formalism::datalog::GroundBinaryOperatorView<O> element, const FactSets& fact_sets)
-{
-    return formalism::apply(O {}, evaluate(element.get_lhs(), fact_sets), evaluate(element.get_rhs(), fact_sets));
-}
-
-template<formalism::ArithmeticOpKind O>
-inline auto evaluate(formalism::datalog::GroundMultiOperatorView<O> element, const FactSets& fact_sets)
-{
-    const auto child_fexprs = element.get_args();
-
-    return std::accumulate(std::next(child_fexprs.begin()),  // Start from the second expression
-                           child_fexprs.end(),
-                           evaluate(child_fexprs.front(), fact_sets),
-                           [&](const auto& value, const auto& child_expr) { return formalism::apply(O {}, value, evaluate(child_expr, fact_sets)); });
-}
-
-template<formalism::FactKind T>
-    requires(!std::is_same_v<T, formalism::AuxiliaryTag>)
-inline float_t evaluate(formalism::datalog::GroundFunctionTermView<T> element, const FactSets& fact_sets)
-{
-    return fact_sets.template get<T>().function[element];
-}
-
-inline float_t evaluate(formalism::datalog::GroundFunctionTermView<formalism::AuxiliaryTag> element, const FactSets& fact_sets)
-{
-    throw std::logic_error("Program does not contain auxiliary function terms.");
-}
-
-inline float_t evaluate(formalism::datalog::GroundFunctionExpressionView element, const FactSets& fact_sets)
-{
-    return visit([&](auto&& arg) { return evaluate(arg, fact_sets); }, element.get_variant());
-}
-
-inline float_t evaluate(formalism::datalog::GroundArithmeticOperatorView element, const FactSets& fact_sets)
-{
-    return visit([&](auto&& arg) { return evaluate(arg, fact_sets); }, element.get_variant());
-}
-
-inline bool evaluate(formalism::datalog::GroundBooleanOperatorView element, const FactSets& fact_sets)
-{
-    return visit([&](auto&& arg) { return evaluate(arg, fact_sets); }, element.get_variant());
-}
+bool evaluate(formalism::datalog::GroundBooleanOperatorView element, const FactSets& fact_sets);
 
 /**
  * is_applicable
  */
 
 template<formalism::FactKind T>
-inline bool is_applicable(formalism::datalog::GroundLiteralView<T> element, const FactSets& fact_sets)
-{
-    return fact_sets.template get<T>().predicate.contains(element.get_atom()) == element.get_polarity();
-}
+bool is_applicable(formalism::datalog::GroundLiteralView<T> element, const FactSets& fact_sets);
 
 template<formalism::FactKind T>
-inline bool is_applicable(formalism::datalog::GroundLiteralListView<T> elements, const FactSets& fact_sets)
-{
-    return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable(arg, fact_sets); });
-}
+bool is_applicable(formalism::datalog::GroundLiteralListView<T> elements, const FactSets& fact_sets);
 
-inline bool is_applicable(formalism::datalog::GroundBooleanOperatorListView elements, const FactSets& fact_sets)
-{
-    return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return evaluate(arg, fact_sets); });
-}
+bool is_applicable(formalism::datalog::GroundBooleanOperatorListView elements, const FactSets& fact_sets);
 
 // GroundConjunctiveCondition
 
-inline bool is_applicable(formalism::datalog::GroundConjunctiveConditionView element, const FactSets& fact_sets)
-{
-    return is_applicable(element.template get_literals<formalism::StaticTag>(), fact_sets)     //
-           && is_applicable(element.template get_literals<formalism::FluentTag>(), fact_sets)  //
-           && is_applicable(element.get_numeric_constraints(), fact_sets);
-}
+bool is_applicable(formalism::datalog::GroundConjunctiveConditionView element, const FactSets& fact_sets);
 
 // GroundRule
 
-inline bool is_applicable(formalism::datalog::GroundRuleView element, const FactSets& fact_sets) { return is_applicable(element.get_body(), fact_sets); }
+bool is_applicable(formalism::datalog::GroundRuleView element, const FactSets& fact_sets);
 
 /**
  * is_valid_binding
  */
 
-inline bool is_valid_binding(formalism::datalog::LiftedBooleanOperatorView element, const FactSets& fact_sets, formalism::datalog::GrounderContext& context)
-{
-    return evaluate(make_view(formalism::datalog::ground(element, context), context.destination), fact_sets);
-}
+bool is_valid_binding(formalism::datalog::LiftedBooleanOperatorView element, const FactSets& fact_sets, formalism::datalog::GrounderContext& context);
 
 template<formalism::FactKind T>
-inline bool is_valid_binding(formalism::datalog::LiteralView<T> element, const FactSets& fact_sets, formalism::datalog::GrounderContext& context)
-{
-    return fact_sets.template get<T>().predicate.contains(formalism::datalog::ground(element.get_atom(), context).first) == element.get_polarity();
-}
+bool is_valid_binding(formalism::datalog::LiteralView<T> element, const FactSets& fact_sets, formalism::datalog::GrounderContext& context);
 
 template<formalism::FactKind T>
-inline bool is_valid_binding(formalism::datalog::LiteralListView<T> elements, const FactSets& fact_sets, formalism::datalog::GrounderContext& context)
-{
-    return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_valid_binding(arg, fact_sets, context); });
-}
+bool is_valid_binding(formalism::datalog::LiteralListView<T> elements, const FactSets& fact_sets, formalism::datalog::GrounderContext& context);
 
-inline bool
-is_valid_binding(formalism::datalog::LiftedBooleanOperatorListView elements, const FactSets& fact_sets, formalism::datalog::GrounderContext& context)
-{
-    return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_valid_binding(arg, fact_sets, context); });
-}
+bool is_valid_binding(formalism::datalog::LiftedBooleanOperatorListView elements, const FactSets& fact_sets, formalism::datalog::GrounderContext& context);
 
-inline bool is_valid_binding(formalism::datalog::ConjunctiveConditionView element, const FactSets& fact_sets, formalism::datalog::GrounderContext& context)
-{
-    return is_valid_binding(element.template get_literals<formalism::StaticTag>(), fact_sets, context)     //
-           && is_valid_binding(element.template get_literals<formalism::FluentTag>(), fact_sets, context)  //
-           && is_valid_binding(element.get_numeric_constraints(), fact_sets, context);
-}
+bool is_valid_binding(formalism::datalog::ConjunctiveConditionView element, const FactSets& fact_sets, formalism::datalog::GrounderContext& context);
 
 }
+
+#ifdef TYR_HEADER_INSTANTIATION
+#include "tyr/datalog/applicability.ipp"
+#endif
 
 #endif

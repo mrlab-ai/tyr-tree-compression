@@ -34,26 +34,27 @@ template float_t evaluate(float_t element, const StateContext<GroundTask>& conte
 template float_t evaluate(formalism::planning::GroundUnaryOperatorView<formalism::OpSub> element, const StateContext<LiftedTask>& context);
 template float_t evaluate(formalism::planning::GroundUnaryOperatorView<formalism::OpSub> element, const StateContext<GroundTask>& context);
 
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpEq> element, const StateContext<LiftedTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpNe> element, const StateContext<LiftedTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGe> element, const StateContext<LiftedTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGt> element, const StateContext<LiftedTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLe> element, const StateContext<LiftedTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLt> element, const StateContext<LiftedTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpAdd> element, const StateContext<LiftedTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpSub> element, const StateContext<LiftedTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpMul> element, const StateContext<LiftedTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpDiv> element, const StateContext<LiftedTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpEq> element, const StateContext<GroundTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpNe> element, const StateContext<GroundTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGe> element, const StateContext<GroundTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGt> element, const StateContext<GroundTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLe> element, const StateContext<GroundTask>& context);
-template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLt> element, const StateContext<GroundTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpAdd> element, const StateContext<GroundTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpSub> element, const StateContext<GroundTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpMul> element, const StateContext<GroundTask>& context);
 template float_t evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpDiv> element, const StateContext<GroundTask>& context);
+
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpEq> element, const StateContext<LiftedTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpNe> element, const StateContext<LiftedTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGe> element, const StateContext<LiftedTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGt> element, const StateContext<LiftedTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLe> element, const StateContext<LiftedTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLt> element, const StateContext<LiftedTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpEq> element, const StateContext<GroundTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpNe> element, const StateContext<GroundTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGe> element, const StateContext<GroundTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpGt> element, const StateContext<GroundTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLe> element, const StateContext<GroundTask>& context);
+template bool evaluate(formalism::planning::GroundBinaryOperatorView<formalism::OpLt> element, const StateContext<GroundTask>& context);
 
 template float_t evaluate(formalism::planning::GroundMultiOperatorView<formalism::OpAdd> element, const StateContext<LiftedTask>& context);
 template float_t evaluate(formalism::planning::GroundMultiOperatorView<formalism::OpMul> element, const StateContext<LiftedTask>& context);

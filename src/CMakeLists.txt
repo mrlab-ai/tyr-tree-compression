@@ -46,6 +46,7 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     datalog/workspaces/facts.cpp
     datalog/workspaces/program.cpp
     datalog/workspaces/rule.cpp
+    datalog/applicability.cpp
     datalog/bottom_up.cpp
     datalog/consistency_graph.cpp
     datalog/delta_kpkc_graph.cpp
