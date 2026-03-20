@@ -35,9 +35,14 @@ class RepositoryFactory
 public:
     RepositoryFactory() : m_next_index(0) {}
 
-    std::shared_ptr<Repository<SymbolRepo, RelationRepo>> create(size_t num_objects, const Repository<SymbolRepo, RelationRepo>* parent = nullptr)
+    Repository<SymbolRepo, RelationRepo> create(const Repository<SymbolRepo, RelationRepo>* parent = nullptr)
     {
-        return std::make_shared<Repository<SymbolRepo, RelationRepo>>(m_next_index++, num_objects, parent);
+        return Repository<SymbolRepo, RelationRepo>(m_next_index++, parent);
+    }
+
+    std::shared_ptr<Repository<SymbolRepo, RelationRepo>> create_shared(const Repository<SymbolRepo, RelationRepo>* parent = nullptr)
+    {
+        return std::make_shared<Repository<SymbolRepo, RelationRepo>>(m_next_index++, parent);
     }
 
 private:

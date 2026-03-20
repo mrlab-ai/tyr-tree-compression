@@ -363,13 +363,14 @@ static auto create_program_context(fp::TaskView task,
                                    GroundTaskProgram::AppPredicateToActionsMapping& predicate_to_actions,
                                    GroundTaskProgram::AppPredicateToAxiomsMapping& predicate_to_axioms)
 {
-    auto repository = std::make_shared<fd::Repository>(task.get_domain().get_constants().size() + task.get_objects().size());
+    auto factory = std::make_shared<fd::RepositoryFactory>();
+    auto repository = factory->create_shared();
     auto program = create_program(task, predicate_to_actions, predicate_to_axioms, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
 
-    return datalog::ProgramContext(program, std::move(repository), std::move(domains), std::move(strata), std::move(listeners));
+    return datalog::ProgramContext(program, std::move(repository), std::move(factory), std::move(domains), std::move(strata), std::move(listeners));
 }
 
 }

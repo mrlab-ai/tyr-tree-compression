@@ -28,7 +28,10 @@ namespace tyr::formalism::planning
 class PlanningDomain
 {
 public:
-    PlanningDomain(DomainView domain, std::shared_ptr<Repository> repository) : m_repository(std::move(repository)), m_domain(domain)
+    PlanningDomain(DomainView domain, RepositoryPtr repository, RepositoryFactoryPtr repository_factory) :
+        m_repository(std::move(repository)),
+        m_repository_factory(std::move(repository_factory)),
+        m_domain(domain)
     {
         if (&m_domain.get_context() != m_repository.get())
             throw std::invalid_argument("Domain context does not match the given Repository.");
@@ -36,9 +39,11 @@ public:
 
     auto get_domain() const noexcept { return m_domain; }
     const auto& get_repository() const noexcept { return m_repository; }
+    const auto& get_repository_factory() const noexcept { return m_repository_factory; }
 
 private:
-    std::shared_ptr<Repository> m_repository;
+    RepositoryPtr m_repository;
+    RepositoryFactoryPtr m_repository_factory;
     DomainView m_domain;
 };
 

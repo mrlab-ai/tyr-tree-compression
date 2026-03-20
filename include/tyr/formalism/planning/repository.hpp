@@ -31,6 +31,7 @@
 #include "tyr/formalism/predicate_view.hpp"
 #include "tyr/formalism/relation_repository.hpp"
 #include "tyr/formalism/repository.hpp"
+#include "tyr/formalism/repository_factory.hpp"
 #include "tyr/formalism/symbol_repository.hpp"
 
 #include <cassert>
@@ -139,6 +140,10 @@ using RelationRepository = tyr::formalism::RelationRepository<Predicate<StaticTa
 using Repository = tyr::formalism::Repository<SymbolRepository, RelationRepository>;
 
 using RepositoryPtr = std::shared_ptr<Repository>;
+
+using RepositoryFactory = tyr::formalism::RepositoryFactory<SymbolRepository, RelationRepository>;
+
+using RepositoryFactoryPtr = std::shared_ptr<RepositoryFactory>;
 
 using ActionView = View<Index<Action>, Repository>;
 

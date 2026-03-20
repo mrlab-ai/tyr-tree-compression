@@ -43,14 +43,14 @@ private:
     const Repository* m_parent;
     SymbolRepo m_symbol_repository;
     RelationRepo m_relation_repository;
-    size_t m_num_objects;
+    size_t m_index;
 
 public:
-    Repository(size_t num_objects, const Repository* parent = nullptr) :
+    Repository(size_t index, const Repository* parent = nullptr) :
         m_parent(parent),
         m_symbol_repository(m_parent ? &m_parent->m_symbol_repository : nullptr),
-        m_relation_repository(num_objects, m_parent ? &m_parent->m_relation_repository : nullptr),
-        m_num_objects(num_objects)
+        m_relation_repository(m_parent ? &m_parent->m_relation_repository : nullptr),
+        m_index(index)
     {
         clear();
     }
@@ -59,7 +59,7 @@ public:
     Repository(Repository&& other) = delete;
     Repository& operator=(Repository&& other) = delete;
 
-    auto get_num_objects() const noexcept { return m_num_objects; }
+    const auto& get_index() const noexcept { return m_index; }
 
     /**
      * SymbolRepository forwarding.

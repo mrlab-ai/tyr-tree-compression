@@ -75,22 +75,26 @@ private:
     buffer::SegmentedBuffer m_arena;
     buffer::Buffer m_buffer;
     RepositoryStorage m_repository;
+    uint_t m_index;
 
 public:
-    explicit Repository(const formalism::planning::Repository& formalism_repository) :
+    explicit Repository(uint_t index, const formalism::planning::Repository& formalism_repository) :
         m_formalism_repository(formalism_repository),
         m_arena(),
         m_buffer(),
         m_repository(Entry<AtomSelectorNode<Tag>>(m_buffer, m_arena),
                      Entry<VariableSelectorNode<Tag>>(m_buffer, m_arena),
                      Entry<NumericConstraintSelectorNode<Tag>>(m_buffer, m_arena),
-                     Entry<ElementGeneratorNode<Tag>>(m_buffer, m_arena))
+                     Entry<ElementGeneratorNode<Tag>>(m_buffer, m_arena)),
+        m_index(index)
     {
     }
     Repository(const Repository& other) = delete;
     Repository& operator=(const Repository& other) = delete;
     Repository(Repository&& other) = delete;
     Repository& operator=(Repository&& other) = delete;
+
+    const auto& get_index() const noexcept { return m_index; }
 
     const formalism::planning::Repository& get_formalism_repository() const noexcept { return m_formalism_repository; }
 

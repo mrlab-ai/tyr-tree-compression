@@ -63,7 +63,6 @@ private:
 
     std::vector<uint_t> m_forward;
     std::vector<Slot> m_slots;
-    size_t m_num_objects;
 
     Slot& get_or_create_slot(Index<T> g, size_t arity)
     {
@@ -123,14 +122,7 @@ public:
     using container_type = BlockArraySet<uint_t, Coder<uint_t>>;
     using ConstViewType = typename container_type::ConstArrayView;
 
-    BasicRelationRepository(size_t num_objects, const BasicRelationRepository* parent = nullptr) :
-        m_parent(parent),
-        m_forward(),
-        m_slots(),
-        m_num_objects(num_objects)
-    {
-        clear_slots();
-    }
+    BasicRelationRepository(const BasicRelationRepository* parent = nullptr) : m_parent(parent), m_forward(), m_slots() { clear_slots(); }
     BasicRelationRepository(const BasicRelationRepository& other) = delete;
     BasicRelationRepository& operator=(const BasicRelationRepository& other) = delete;
     BasicRelationRepository(BasicRelationRepository&& other) = default;

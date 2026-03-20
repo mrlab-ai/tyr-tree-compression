@@ -27,6 +27,8 @@ template<typename T>
 void bind_index(nb::module_& m, const std::string& name)
 {
     nb::class_<T>(m, name.c_str())  //
+        .def(nb::init<>())          // default -> MAX sentinel
+        .def(nb::init<uint_t>(), "index"_a)
         .def("__int__", [](const T& i) { return (uint_t) i; })
         .def("__index__", [](const T& i) { return (uint_t) i; })
         .def("__hash__", [](const T& i) { return (uint_t) i; })
@@ -47,7 +49,7 @@ void bind_fixed_uint(nb::module_& m, const std::string& name)
 
     nb::class_<T>(m, name.c_str())
         // construction
-        .def(nb::init<>())  // default -> MAX sentinel in your mixin
+        .def(nb::init<>())  // default -> MAX sentinel
         .def(nb::init<value_type>(), nb::arg("value"))
 
         // conversions / numeric protocol

@@ -536,7 +536,7 @@ private:
 public:
     MatchTree(IndexList<Tag> elements_, const formalism::planning::Repository& context_) :
         m_elements(std::move(elements_)),
-        m_context(std::make_unique<Repository<Tag>>(context_)),
+        m_context(std::make_unique<Repository<Tag>>(uint_t(0), context_)),  // we use constant index 0 since we dont compare node views anyway.
         m_root(),
         m_evaluate_stack()
     {

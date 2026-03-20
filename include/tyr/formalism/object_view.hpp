@@ -41,7 +41,7 @@ public:
     auto get_index() const noexcept { return m_handle; }
     const auto& get_name() const noexcept { return get_data().name; }
 
-    auto identifying_members() const noexcept { return std::tie(m_handle, m_context); }
+    auto identifying_members() const noexcept { return std::tie(m_handle, m_context->get_index()); }
 };
 }
 

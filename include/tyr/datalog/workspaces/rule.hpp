@@ -187,7 +187,7 @@ struct RuleWorkspace
     /// - annotate witnesses
     struct Iteration
     {
-        explicit Iteration(size_t num_objects, const Common& common);
+        explicit Iteration(formalism::datalog::RepositoryFactory& factory, const Common& common);
 
         void clear() noexcept;
 
@@ -206,7 +206,7 @@ struct RuleWorkspace
 
     struct Solve
     {
-        explicit Solve(size_t num_objects,
+        explicit Solve(formalism::datalog::RepositoryFactory& factory,
                        const formalism::datalog::Repository& program_repository,
                        const formalism::datalog::Repository& workspace_repository,
                        const AndAP& and_ap);
@@ -231,7 +231,7 @@ struct RuleWorkspace
 
     struct Worker
     {
-        explicit Worker(size_t num_objects,
+        explicit Worker(formalism::datalog::RepositoryFactory& factory,
                         const formalism::datalog::Repository& program_repository,
                         const formalism::datalog::Repository& workspace_repository,
                         const Common& common,
@@ -246,7 +246,7 @@ struct RuleWorkspace
         Solve solve;
     };
 
-    RuleWorkspace(size_t num_objects,
+    RuleWorkspace(formalism::datalog::RepositoryFactory& factory,
                   const formalism::datalog::Repository& program_repository,
                   const formalism::datalog::Repository& workspace_repository,
                   const ConstRuleWorkspace& cws,
@@ -324,8 +324,8 @@ void RuleWorkspace<AndAP>::Common::initialize_iteration(const StaticConsistencyG
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Iteration::Iteration(size_t num_objects, const Common& common) :
-    workspace_overlay_repository(num_objects, &common.workspace_repository),
+RuleWorkspace<AndAP>::Iteration::Iteration(formalism::datalog::RepositoryFactory& factory, const Common& common) :
+    workspace_overlay_repository(factory.create(&common.workspace_repository)),
     heads(),
     and_annot(),
     kpkc_workspace(common.kpkc.get_graph_layout())
@@ -341,12 +341,12 @@ void RuleWorkspace<AndAP>::Iteration::clear() noexcept
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Solve::Solve(size_t num_objects,
+RuleWorkspace<AndAP>::Solve::Solve(formalism::datalog::RepositoryFactory& factory,
                                    const formalism::datalog::Repository& program_repository,
                                    const formalism::datalog::Repository& workspace_repository,
                                    const AndAP& and_ap) :
     and_ap(and_ap),
-    program_overlay_repository(num_objects, &program_repository),
+    program_overlay_repository(factory.create(&program_repository)),
     seen_bindings_dbg(),
     applicability_check_pool(),
     pending_rules(),
@@ -363,15 +363,15 @@ void RuleWorkspace<AndAP>::Solve::clear() noexcept
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::Worker::Worker(size_t num_objects,
+RuleWorkspace<AndAP>::Worker::Worker(formalism::datalog::RepositoryFactory& factory,
                                      const formalism::datalog::Repository& program_repository,
                                      const formalism::datalog::Repository& workspace_repository,
                                      const Common& common,
                                      const AndAP& and_ap) :
     builder(),
     binding(),
-    iteration(num_objects, common),
-    solve(num_objects, program_repository, workspace_repository, and_ap)
+    iteration(factory, common),
+    solve(factory, program_repository, workspace_repository, and_ap)
 {
 }
 
@@ -383,14 +383,14 @@ void RuleWorkspace<AndAP>::Worker::clear() noexcept
 }
 
 template<typename AndAP>
-RuleWorkspace<AndAP>::RuleWorkspace(size_t num_objects,
+RuleWorkspace<AndAP>::RuleWorkspace(formalism::datalog::RepositoryFactory& factory,
                                     const formalism::datalog::Repository& program_repository,
                                     const formalism::datalog::Repository& workspace_repository,
                                     const ConstRuleWorkspace& cws,
                                     const AndAP& and_ap) :
     common(program_repository, workspace_repository, cws.get_static_consistency_graph()),
-    worker([this, program_repo = &program_repository, workspace_repo = &workspace_repository, and_ap, num_objects]
-           { return Worker(num_objects, *program_repo, *workspace_repo, this->common, and_ap); })
+    worker([this, program_repo = &program_repository, workspace_repo = &workspace_repository, repo_factory = &factory, and_ap]
+           { return Worker(*repo_factory, *program_repo, *workspace_repo, this->common, and_ap); })
 {
 }
 

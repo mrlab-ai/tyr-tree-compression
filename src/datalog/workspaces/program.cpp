@@ -48,7 +48,7 @@ ProgramWorkspace<OrAP, AndAP, TP>::ProgramWorkspace(ProgramContext& context, con
 {
     for (uint_t i = 0; i < context.get_program().get_rules().size(); ++i)
         rules.emplace_back(
-            std::make_unique<RuleWorkspace<AndAP>>(context.get_program().get_objects().size(), program_repository, workspace_repository, cws.rules[i], and_ap));
+            std::make_unique<RuleWorkspace<AndAP>>(context.get_repository_factory(), program_repository, workspace_repository, cws.rules[i], and_ap));
 }
 
 template struct ProgramWorkspace<NoOrAnnotationPolicy, NoAndAnnotationPolicy, NoTerminationPolicy>;

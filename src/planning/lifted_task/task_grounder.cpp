@@ -173,8 +173,8 @@ static auto create_fdr_task(const fp::PlanningTask& planning_task,
                             fp::GroundAxiomListView axioms)
 {
     auto task = planning_task.get_task();
-    auto repository = std::make_shared<fp::Repository>(task.get_domain().get_constants().size() + task.get_objects().size(),
-                                                       planning_task.get_domain().get_repository().get());
+    const auto& factory = planning_task.get_domain().get_repository_factory();
+    auto repository = factory->create_shared(planning_task.get_domain().get_repository().get());
     auto builder = fp::Builder();
     auto fdr_task_ptr = builder.get_builder<fp::FDRTask>();
     auto& fdr_task = *fdr_task_ptr;

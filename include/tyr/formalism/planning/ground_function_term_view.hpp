@@ -50,7 +50,7 @@ public:
         return make_view(std::make_pair(data.function, data.row), *m_context);
     }
 
-    auto identifying_members() const noexcept { return std::tie(m_handle, m_context); }
+    auto identifying_members() const noexcept { return std::tie(m_handle, m_context->get_index()); }
 };
 
 }

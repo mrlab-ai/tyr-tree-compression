@@ -28,8 +28,8 @@ namespace tyr::tests
 
 TEST(TyrTests, TyrFormalismRepository)
 {
-    const auto num_objects = 3;
-    auto repository = fp::Repository(num_objects);
+    auto factory = fp::RepositoryFactory();
+    auto repository = factory.create();
     auto predicate_builder = Data<f::Predicate<f::FluentTag>>();
     auto object_builder = Data<f::Object>();
     auto atom_builder = Data<fp::Atom<f::FluentTag>>();
@@ -108,8 +108,8 @@ TEST(TyrTests, TyrFormalismRepository)
 
 TEST(TyrTests, TyrFormalismView)
 {
-    const auto num_objects = 3;
-    auto repository = fp::Repository(num_objects);
+    auto factory = fp::RepositoryFactory();
+    auto repository = factory.create();
     auto predicate_builder = Data<f::Predicate<f::FluentTag>>();
     auto object_builder = Data<f::Object>();
     auto atom_builder = Data<fp::Atom<f::FluentTag>>();

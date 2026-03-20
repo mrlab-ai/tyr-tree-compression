@@ -38,16 +38,14 @@ class RelationRepository
 private:
     const RelationRepository* m_parent;
     std::tuple<BasicRelationRepository<Ts>...> m_repositories;
-    size_t m_num_objects;
 
 public:
     using container_type = typename BasicRelationRepository<std::tuple_element_t<0, std::tuple<Ts...>>>::container_type;
     using ConstViewType = typename container_type::ConstArrayView;
 
-    RelationRepository(size_t num_objects, const RelationRepository* parent = nullptr) :
+    RelationRepository(const RelationRepository* parent = nullptr) :
         m_parent(parent),
-        m_repositories(BasicRelationRepository<Ts>(num_objects, parent ? &std::get<BasicRelationRepository<Ts>>(parent->m_repositories) : nullptr)...),
-        m_num_objects(num_objects)
+        m_repositories(BasicRelationRepository<Ts>(parent ? &std::get<BasicRelationRepository<Ts>>(parent->m_repositories) : nullptr)...)
     {
     }
 
