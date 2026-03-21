@@ -74,11 +74,6 @@ inline std::ostream& operator<<(std::ostream& os, const View<Index<formalism::Va
 template<typename C>
 inline std::ostream& operator<<(std::ostream& os, const View<Index<Object>, C>& el);
 
-inline std::ostream& operator<<(std::ostream& os, const Data<Binding>& el);
-
-template<typename C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Binding>, C>& el);
-
 template<typename T, typename C>
 inline std::ostream& operator<<(std::ostream& os, const View<RelationBindingIndex<T>, C>& el);
 
@@ -200,19 +195,6 @@ inline std::ostream& print(std::ostream& os, const View<Index<formalism::Object>
     return os;
 }
 
-inline std::ostream& print(std::ostream& os, const Data<formalism::Binding>& el)
-{
-    fmt::print(os, "{}", fmt::join(to_strings(el.objects), " "));
-    return os;
-}
-
-template<typename C>
-inline std::ostream& print(std::ostream& os, const View<Index<formalism::Binding>, C>& el)
-{
-    fmt::print(os, "{}", fmt::join(to_strings(el.get_objects()), " "));
-    return os;
-}
-
 template<typename T>
 inline std::ostream& print(std::ostream& os, const formalism::RelationBindingIndex<T>& el)
 {
@@ -304,14 +286,6 @@ inline std::ostream& operator<<(std::ostream& os, const Data<Object>& el) { retu
 
 template<typename C>
 inline std::ostream& operator<<(std::ostream& os, const View<Index<Object>, C>& el)
-{
-    return tyr::print(os, el);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const Data<Binding>& el) { return tyr::print(os, el); }
-
-template<typename C>
-inline std::ostream& operator<<(std::ostream& os, const View<Index<Binding>, C>& el)
 {
     return tyr::print(os, el);
 }

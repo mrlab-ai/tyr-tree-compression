@@ -154,13 +154,11 @@ struct TaggedFactSets
     void reset() noexcept;
 };
 
-class FactSets
+struct FactSets
 {
-private:
     const TaggedFactSets<formalism::StaticTag>& static_sets;
     const TaggedFactSets<formalism::FluentTag>& fluent_sets;
 
-public:
     FactSets(const TaggedFactSets<formalism::StaticTag>& static_sets, const TaggedFactSets<formalism::FluentTag>& fluent_sets) noexcept;
 
     template<formalism::FactKind T>

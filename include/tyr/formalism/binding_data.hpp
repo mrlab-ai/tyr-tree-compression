@@ -26,6 +26,7 @@
 
 namespace tyr
 {
+// Only used to fetch temporaries from a Builder class to construct RelationBindings.
 template<>
 struct Data<formalism::Binding>
 {
