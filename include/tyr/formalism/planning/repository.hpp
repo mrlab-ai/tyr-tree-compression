@@ -45,7 +45,6 @@ namespace tyr::formalism::planning
 
 using SymbolRepository = tyr::formalism::SymbolRepository<Variable,
                                                           Object,
-                                                          Binding,
                                                           Predicate<StaticTag>,
                                                           Predicate<FluentTag>,
                                                           Predicate<DerivedTag>,
@@ -183,8 +182,6 @@ using LiftedBinaryOperatorListView = View<IndexList<BinaryOperator<Op, Data<Func
 template<OpKind Op>
 using GroundBinaryOperatorListView = View<IndexList<BinaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 
-using BindingView = View<Index<Binding>, Repository>;
-using BindingListView = View<IndexList<Binding>, Repository>;
 template<FactKind T>
 using PredicateBindingView = View<RelationBindingIndex<Predicate<T>>, Repository>;
 template<FactKind T>

@@ -54,18 +54,6 @@ TYR_INLINE_IMPL std::pair<ObjectView, bool> merge_p2p(ObjectView element, MergeC
     return context.destination.get_or_create(object);
 }
 
-TYR_INLINE_IMPL std::pair<BindingView, bool> merge_p2p(BindingView element, MergeContext& context)
-{
-    auto binding_ptr = context.builder.template get_builder<Binding>();
-    auto& binding = *binding_ptr;
-    binding.clear();
-
-    binding.objects = element.get_data().objects;
-
-    canonicalize(binding);
-    return context.destination.get_or_create(binding);
-}
-
 template<FactKind T>
 std::pair<PredicateBindingView<T>, bool> merge_p2p(PredicateView<T> predicate, PredicateBindingView<T> element, MergeContext& context)
 {

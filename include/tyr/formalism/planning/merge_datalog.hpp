@@ -38,8 +38,6 @@ std::pair<formalism::datalog::VariableView, bool> merge_p2d(VariableView element
 
 std::pair<formalism::datalog::ObjectView, bool> merge_p2d(ObjectView element, MergeDatalogContext& context);
 
-std::pair<formalism::datalog::BindingView, bool> merge_p2d(BindingView element, MergeDatalogContext& context);
-
 Data<Term> merge_p2d(TermView element, MergeDatalogContext& context);
 
 // Propositional

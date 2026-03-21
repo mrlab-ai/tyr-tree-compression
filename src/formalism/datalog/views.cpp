@@ -27,7 +27,6 @@ namespace tyr
 
 template class View<Index<formalism::Variable>, formalism::datalog::Repository>;
 template class View<Index<formalism::Object>, formalism::datalog::Repository>;
-template class View<Index<formalism::Binding>, formalism::datalog::Repository>;
 
 template class View<Index<formalism::Predicate<formalism::StaticTag>>, formalism::datalog::Repository>;
 template class View<Index<formalism::Predicate<formalism::FluentTag>>, formalism::datalog::Repository>;

@@ -1073,16 +1073,6 @@ private:
             element->get_object_or_variable());
     }
 
-    Index<Binding> to_binding(const IndexList<Object>& element, Builder& builder, Repository& context)
-    {
-        auto binding_ptr = builder.get_builder<Binding>();
-        auto& binding = *binding_ptr;
-        binding.clear();
-        binding.objects = element;
-        canonicalize(binding);
-        return context.get_or_create(binding).first.get_index();
-    }
-
     template<typename T>
     auto to_binding(View<T, Repository> element, const IndexList<Object>& objects, Repository& context)
     {

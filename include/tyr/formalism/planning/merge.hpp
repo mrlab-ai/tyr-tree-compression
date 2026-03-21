@@ -36,8 +36,6 @@ std::pair<VariableView, bool> merge_p2p(VariableView element, MergeContext& cont
 
 std::pair<ObjectView, bool> merge_p2p(ObjectView element, MergeContext& context);
 
-std::pair<BindingView, bool> merge_p2p(BindingView element, MergeContext& context);
-
 template<FactKind T>
 std::pair<PredicateBindingView<T>, bool> merge_p2p(PredicateView<T> predicate, PredicateBindingView<T> element, MergeContext& context);
 

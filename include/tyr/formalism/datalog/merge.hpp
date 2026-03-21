@@ -40,8 +40,6 @@ std::pair<VariableView, bool> merge_d2d(VariableView element, MergeContext& cont
 
 std::pair<ObjectView, bool> merge_d2d(ObjectView element, MergeContext& context);
 
-std::pair<BindingView, bool> merge_d2d(BindingView element, MergeContext& context);
-
 Data<Term> merge_d2d(TermView element, MergeContext& context);
 
 // Propositional

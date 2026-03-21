@@ -46,7 +46,6 @@ namespace tyr::formalism::datalog
 {
 using SymbolRepository = tyr::formalism::SymbolRepository<Variable,
                                                           Object,
-                                                          Binding,
                                                           Predicate<StaticTag>,
                                                           Predicate<FluentTag>,
                                                           Atom<StaticTag>,
@@ -137,7 +136,6 @@ using LiftedBinaryOperatorListView = View<IndexList<BinaryOperator<Op, Data<Func
 template<formalism::OpKind Op>
 using GroundBinaryOperatorListView = View<IndexList<BinaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 
-using BindingView = View<Index<Binding>, Repository>;
 template<FactKind T>
 using PredicateBindingView = View<RelationBindingIndex<Predicate<T>>, Repository>;
 template<FactKind T>

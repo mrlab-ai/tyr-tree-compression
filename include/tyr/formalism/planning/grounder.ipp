@@ -32,51 +32,6 @@
 namespace tyr::formalism::planning
 {
 
-TYR_INLINE_IMPL std::pair<BindingView, bool> ground(TermListView element, GrounderContext& context)
-{
-    // Fetch and clear
-    auto binding_ptr = context.builder.template get_builder<Binding>();
-    auto& binding = *binding_ptr;
-    binding.clear();
-
-    // Fill data
-    for (const auto term : element)
-    {
-        visit(
-            [&](auto&& arg)
-            {
-                using Alternative = std::decay_t<decltype(arg)>;
-
-                if constexpr (std::is_same_v<Alternative, ParameterIndex>)
-                    binding.objects.push_back(context.binding[uint_t(arg)]);
-                else if constexpr (std::is_same_v<Alternative, ObjectView>)
-                    binding.objects.push_back(arg.get_index());
-                else
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-            },
-            term.get_variant());
-    }
-
-    // Canonicalize and Serialize
-    canonicalize(binding);
-    return context.destination.get_or_create(binding);
-}
-
-TYR_INLINE_IMPL std::pair<BindingView, bool> ground(const IndexList<Object>& element, GrounderContext& context)
-{
-    // Fetch and clear
-    auto binding_ptr = context.builder.template get_builder<Binding>();
-    auto& binding = *binding_ptr;
-    binding.clear();
-
-    // Fill data
-    binding.objects = element;
-
-    // Canonicalize and Serialize
-    canonicalize(binding);
-    return context.destination.get_or_create(binding);
-}
-
 template<FactKind T>
 std::pair<FunctionBindingView<T>, bool> ground(TermListView terms, FunctionView<T> function, GrounderContext& context)
 {

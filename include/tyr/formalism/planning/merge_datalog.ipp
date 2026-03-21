@@ -56,18 +56,6 @@ TYR_INLINE_IMPL std::pair<formalism::datalog::ObjectView, bool> merge_p2d(Object
     return context.destination.get_or_create(object);
 }
 
-TYR_INLINE_IMPL std::pair<formalism::datalog::BindingView, bool> merge_p2d(BindingView element, MergeDatalogContext& context)
-{
-    auto binding_ptr = context.builder.template get_builder<Binding>();
-    auto& binding = *binding_ptr;
-    binding.clear();
-
-    binding.objects = element.get_data().objects;
-
-    canonicalize(binding);
-    return context.destination.get_or_create(binding);
-}
-
 TYR_INLINE_IMPL Data<Term> merge_p2d(TermView element, MergeDatalogContext& context)
 {
     return visit(

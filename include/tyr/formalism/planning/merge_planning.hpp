@@ -40,8 +40,6 @@ std::pair<VariableView, bool> merge_d2p(formalism::datalog::VariableView element
 
 std::pair<ObjectView, bool> merge_d2p(formalism::datalog::ObjectView element, MergePlanningContext& context);
 
-std::pair<BindingView, bool> merge_d2p(formalism::datalog::BindingView element, MergePlanningContext& context);
-
 Data<formalism::Term> merge_d2p(formalism::datalog::TermView element, MergePlanningContext& context);
 
 // Propositional

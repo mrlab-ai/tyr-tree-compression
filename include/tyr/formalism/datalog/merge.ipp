@@ -58,18 +58,6 @@ TYR_INLINE_IMPL std::pair<ObjectView, bool> merge_d2d(ObjectView element, MergeC
     return context.destination.get_or_create(object);
 }
 
-TYR_INLINE_IMPL std::pair<BindingView, bool> merge_d2d(BindingView element, MergeContext& context)
-{
-    auto binding_ptr = context.builder.template get_builder<Binding>();
-    auto& binding = *binding_ptr;
-    binding.clear();
-
-    binding.objects = element.get_data().objects;
-
-    canonicalize(binding);
-    return context.destination.get_or_create(binding);
-}
-
 TYR_INLINE_IMPL Data<Term> merge_d2d(TermView element, MergeContext& context)
 {
     return visit(

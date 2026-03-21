@@ -28,7 +28,6 @@ namespace tyr
 // Views over indices
 template class View<Index<formalism::planning::Action>, formalism::planning::Repository>;
 template class View<Index<formalism::planning::Axiom>, formalism::planning::Repository>;
-template class View<Index<formalism::Binding>, formalism::planning::Repository>;
 template class View<Index<formalism::planning::ConditionalEffect>, formalism::planning::Repository>;
 template class View<Index<formalism::planning::ConjunctiveCondition>, formalism::planning::Repository>;
 template class View<Index<formalism::planning::ConjunctiveEffect>, formalism::planning::Repository>;

@@ -38,10 +38,6 @@ namespace tyr::formalism::datalog
  * Declarations
  */
 
-std::pair<BindingView, bool> ground(TermListView element, GrounderContext& context);
-
-std::pair<BindingView, bool> ground(const IndexList<Object>& element, GrounderContext& context);
-
 template<FactKind T>
 std::pair<FunctionBindingView<T>, bool> ground(TermListView terms, FunctionView<T> function, GrounderContext& context);
 

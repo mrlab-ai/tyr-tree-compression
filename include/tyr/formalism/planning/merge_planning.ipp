@@ -59,18 +59,6 @@ TYR_INLINE_IMPL std::pair<ObjectView, bool> merge_d2p(formalism::datalog::Object
     return context.destination.get_or_create(object);
 }
 
-TYR_INLINE_IMPL std::pair<BindingView, bool> merge_d2p(formalism::datalog::BindingView element, MergePlanningContext& context)
-{
-    auto binding_ptr = context.builder.template get_builder<formalism::Binding>();
-    auto& binding = *binding_ptr;
-    binding.clear();
-
-    binding.objects = element.get_data().objects;
-
-    canonicalize(binding);
-    return context.destination.get_or_create(binding);
-}
-
 TYR_INLINE_IMPL Data<formalism::Term> merge_d2p(formalism::datalog::TermView element, MergePlanningContext& context)
 {
     return visit(
