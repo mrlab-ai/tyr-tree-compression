@@ -102,7 +102,7 @@ void generate_nullary_case(RuleExecutionContext<OrAP, AndAP, TP>& rctx)
                                       worker_head,
                                       in.cost_buckets().current_cost(),
                                       in.cws_rule().get_rule(),
-                                      in.cws_rule().get_witness_condition(),
+                                      in.cws_rule().get_witness_rule().get_body(),
                                       in.or_annot(),
                                       out.and_annot(),
                                       out.ground_context_solve(),
@@ -155,7 +155,7 @@ void process_clique(RuleWorkerExecutionContext<OrAP, AndAP, TP>& wrctx, std::spa
         return;  ///< optimal cost proven
 
     auto applicability_check = out.applicability_check_pool().get_or_allocate(in.cws_rule().get_nullary_condition(),
-                                                                              in.cws_rule().get_conflicting_overapproximation_condition(),
+                                                                              in.cws_rule().get_conflicting_overapproximation_rule().get_body(),
                                                                               in.fact_sets(),
                                                                               out.ground_context_iteration());
 
@@ -182,7 +182,7 @@ void process_clique(RuleWorkerExecutionContext<OrAP, AndAP, TP>& wrctx, std::spa
                                       worker_head,
                                       in.cost_buckets().current_cost(),
                                       in.cws_rule().get_rule(),
-                                      in.cws_rule().get_witness_condition(),
+                                      in.cws_rule().get_witness_rule().get_body(),
                                       in.or_annot(),
                                       out.and_annot(),
                                       out.ground_context_solve(),
@@ -192,8 +192,9 @@ void process_clique(RuleWorkerExecutionContext<OrAP, AndAP, TP>& wrctx, std::spa
     {
         ++out.statistics().num_pending_rules;
 
-        out.pending_rules().emplace(fd::ground(out.ground_context_solve().binding, out.ground_context_solve()).first.get_index(),
-                                    std::move(applicability_check));
+        const auto overapproximation_worker_head = fd::ground_binding(in.cws_rule().get_conflicting_overapproximation_rule(), out.ground_context_solve()).first;
+
+        out.pending_rules().emplace(overapproximation_worker_head, std::move(applicability_check));
     }
 }
 
@@ -284,7 +285,9 @@ void process_pending(RuleExecutionContext<OrAP, AndAP, TP>& rctx)
 
         for (auto it = out.pending_rules().begin(); it != out.pending_rules().end();)
         {
-            out.ground_context_solve().binding = make_view(it->first, out.ground_context_solve().destination).get_objects().get_data();
+            out.ground_context_solve().binding.clear();
+            for (const auto object : it->first.get_objects())
+                out.ground_context_solve().binding.push_back(object.get_index());
 
             assert(out.ground_context_solve().binding == out.ground_context_iteration().binding);
             const auto program_head = fd::ground_binding(in.cws_rule().get_rule().get_head(), out.ground_context_iteration()).first;
@@ -305,7 +308,7 @@ void process_pending(RuleExecutionContext<OrAP, AndAP, TP>& rctx)
                                               worker_head,
                                               in.cost_buckets().current_cost(),
                                               in.cws_rule().get_rule(),
-                                              in.cws_rule().get_witness_condition(),
+                                              in.cws_rule().get_witness_rule().get_body(),
                                               in.or_annot(),
                                               out.and_annot(),
                                               out.ground_context_solve(),

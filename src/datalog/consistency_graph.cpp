@@ -31,6 +31,7 @@
 #include "tyr/formalism/datalog/expression_properties.hpp"
 #include "tyr/formalism/datalog/formatter.hpp"
 #include "tyr/formalism/datalog/grounder.hpp"
+#include "tyr/formalism/datalog/merge.hpp"
 #include "tyr/formalism/datalog/repository.hpp"
 #include "tyr/formalism/datalog/views.hpp"
 
@@ -1415,32 +1416,8 @@ const details::LiteralToRuleInfos& StaticConsistencyGraph::get_predicate_to_anch
 
 const kpkc::DeduplicatedAdjacencyMatrix& StaticConsistencyGraph::get_adjacency_matrix() const noexcept { return m_matrix; }
 
-std::pair<fd::GroundConjunctiveConditionView, bool> create_ground_nullary_condition(fd::ConjunctiveConditionView condition, fd::Repository& context)
+namespace
 {
-    auto builder = fd::Builder {};
-    auto conj_cond_ptr = builder.get_builder<fd::GroundConjunctiveCondition>();
-    auto& conj_cond = *conj_cond_ptr;
-    conj_cond.clear();
-
-    auto binding_empty = IndexList<f::Object> {};
-    auto grounder_context = fd::GrounderContext { builder, context, binding_empty };
-
-    for (const auto literal : condition.get_literals<f::StaticTag>())
-        if (parameter_arity(literal) == 0)
-            conj_cond.static_literals.push_back(ground(literal, grounder_context).first.get_index());
-
-    for (const auto literal : condition.get_literals<f::FluentTag>())
-        if (parameter_arity(literal) == 0)
-            conj_cond.fluent_literals.push_back(ground(literal, grounder_context).first.get_index());
-
-    for (const auto numeric_constraint : condition.get_numeric_constraints())
-        if (parameter_arity(numeric_constraint) == 0)
-            conj_cond.numeric_constraints.push_back(ground(numeric_constraint, grounder_context));
-
-    canonicalize(conj_cond);
-    return context.get_or_create(conj_cond);
-}
-
 std::pair<fd::ConjunctiveConditionView, bool>
 create_overapproximation_conjunctive_condition(size_t k, fd::ConjunctiveConditionView condition, fd::Repository& context)
 {
@@ -1513,4 +1490,80 @@ create_overapproximation_conflicting_conjunctive_condition(size_t k, fd::Conjunc
     canonicalize(conj_cond);
     return context.get_or_create(conj_cond);
 }
+}
+
+std::pair<fd::GroundConjunctiveConditionView, bool> create_ground_nullary_conjunctive_condition(fd::ConjunctiveConditionView condition, fd::Repository& context)
+{
+    auto builder = fd::Builder {};
+    auto conj_cond_ptr = builder.get_builder<fd::GroundConjunctiveCondition>();
+    auto& conj_cond = *conj_cond_ptr;
+    conj_cond.clear();
+
+    auto binding_empty = IndexList<f::Object> {};
+    auto grounder_context = fd::GrounderContext { builder, context, binding_empty };
+
+    for (const auto literal : condition.get_literals<f::StaticTag>())
+        if (parameter_arity(literal) == 0)
+            conj_cond.static_literals.push_back(ground(literal, grounder_context).first.get_index());
+
+    for (const auto literal : condition.get_literals<f::FluentTag>())
+        if (parameter_arity(literal) == 0)
+            conj_cond.fluent_literals.push_back(ground(literal, grounder_context).first.get_index());
+
+    for (const auto numeric_constraint : condition.get_numeric_constraints())
+        if (parameter_arity(numeric_constraint) == 0)
+            conj_cond.numeric_constraints.push_back(ground(numeric_constraint, grounder_context));
+
+    canonicalize(conj_cond);
+    return context.get_or_create(conj_cond);
+}
+
+std::pair<fd::RuleView, bool> create_overapproximation_rule(size_t k, fd::RuleView element, fd::Repository& context)
+{
+    auto builder = fd::Builder {};
+    auto merge_context = fd::MergeContext { builder, context };
+    auto rule_ptr = builder.get_builder<fd::Rule>();
+    auto& rule = *rule_ptr;
+    rule.clear();
+
+    rule.variables = element.get_variables().get_data();
+    rule.body = create_overapproximation_conjunctive_condition(k, element.get_body(), context).first.get_index();
+    rule.head = merge_d2d(element.get_head(), merge_context).first.get_index();
+
+    canonicalize(rule);
+    return context.get_or_create(rule);
+}
+
+std::pair<fd::RuleView, bool> create_static_overapproximation_rule(size_t k, fd::RuleView element, fd::Repository& context)
+{
+    auto builder = fd::Builder {};
+    auto merge_context = fd::MergeContext { builder, context };
+    auto rule_ptr = builder.get_builder<fd::Rule>();
+    auto& rule = *rule_ptr;
+    rule.clear();
+
+    rule.variables = element.get_variables().get_data();
+    rule.body = create_static_overapproximation_conjunctive_condition(k, element.get_body(), context).first.get_index();
+    rule.head = merge_d2d(element.get_head(), merge_context).first.get_index();
+
+    canonicalize(rule);
+    return context.get_or_create(rule);
+}
+
+std::pair<fd::RuleView, bool> create_overapproximation_conflicting_rule(size_t k, fd::RuleView element, fd::Repository& context)
+{
+    auto builder = fd::Builder {};
+    auto merge_context = fd::MergeContext { builder, context };
+    auto rule_ptr = builder.get_builder<fd::Rule>();
+    auto& rule = *rule_ptr;
+    rule.clear();
+
+    rule.variables = element.get_variables().get_data();
+    rule.body = create_overapproximation_conflicting_conjunctive_condition(k, element.get_body(), context).first.get_index();
+    rule.head = merge_d2d(element.get_head(), merge_context).first.get_index();
+
+    canonicalize(rule);
+    return context.get_or_create(rule);
+}
+
 }

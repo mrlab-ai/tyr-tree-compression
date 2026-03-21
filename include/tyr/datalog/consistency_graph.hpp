@@ -309,20 +309,16 @@ private:
 };
 
 extern std::pair<formalism::datalog::GroundConjunctiveConditionView, bool>
-create_ground_nullary_condition(formalism::datalog::ConjunctiveConditionView condition, formalism::datalog::Repository& context);
+create_ground_nullary_conjunctive_condition(formalism::datalog::ConjunctiveConditionView condition, formalism::datalog::Repository& context);
 
-extern std::pair<formalism::datalog::ConjunctiveConditionView, bool>
-create_overapproximation_conjunctive_condition(size_t k, formalism::datalog::ConjunctiveConditionView condition, formalism::datalog::Repository& context);
+extern std::pair<formalism::datalog::RuleView, bool>
+create_overapproximation_rule(size_t k, formalism::datalog::RuleView element, formalism::datalog::Repository& context);
 
-extern std::pair<formalism::datalog::ConjunctiveConditionView, bool>
-create_static_overapproximation_conjunctive_condition(size_t k,
-                                                      formalism::datalog::ConjunctiveConditionView condition,
-                                                      formalism::datalog::Repository& context);
+extern std::pair<formalism::datalog::RuleView, bool>
+create_static_overapproximation_rule(size_t k, formalism::datalog::RuleView element, formalism::datalog::Repository& context);
 
-extern std::pair<formalism::datalog::ConjunctiveConditionView, bool>
-create_overapproximation_conflicting_conjunctive_condition(size_t k,
-                                                           formalism::datalog::ConjunctiveConditionView condition,
-                                                           formalism::datalog::Repository& context);
+extern std::pair<formalism::datalog::RuleView, bool>
+create_overapproximation_conflicting_rule(size_t k, formalism::datalog::RuleView element, formalism::datalog::Repository& context);
 
 }
 

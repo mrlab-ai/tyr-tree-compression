@@ -224,7 +224,7 @@ struct RuleWorkspace
 
         /// Pool applicability checks since we dont know how many are needed.
         UniqueObjectPool<ApplicabilityCheck> applicability_check_pool;
-        UnorderedMap<Index<formalism::Binding>, UniqueObjectPoolPtr<ApplicabilityCheck>> pending_rules;
+        UnorderedMap<formalism::datalog::RuleBindingView, UniqueObjectPoolPtr<ApplicabilityCheck>> pending_rules;
 
         /// Statistics
         RuleWorkerStatistics statistics;
@@ -269,12 +269,12 @@ struct ConstRuleWorkspace
 {
 public:
     auto get_rule() const noexcept { return rule; }
-    auto get_witness_condition() const noexcept { return witness_condition; }
+    auto get_witness_rule() const noexcept { return witness_rule; }
     auto get_nullary_condition() const noexcept { return nullary_condition; }
-    auto get_unary_overapproximation_condition() const noexcept { return unary_overapproximation_condition; }
-    auto get_binary_overapproximation_condition() const noexcept { return binary_overapproximation_condition; }
-    auto get_static_binary_overapproximation_condition() const noexcept { return static_binary_overapproximation_condition; }
-    auto get_conflicting_overapproximation_condition() const noexcept { return conflicting_overapproximation_condition; }
+    auto get_unary_overapproximation_rule() const noexcept { return unary_overapproximation_rule; }
+    auto get_binary_overapproximation_rule() const noexcept { return binary_overapproximation_rule; }
+    auto get_static_binary_overapproximation_rule() const noexcept { return static_binary_overapproximation_rule; }
+    auto get_conflicting_overapproximation_rule() const noexcept { return conflicting_overapproximation_rule; }
     const auto& get_static_consistency_graph() const noexcept { return static_consistency_graph; }
 
     ConstRuleWorkspace(formalism::datalog::RuleView rule,
@@ -286,12 +286,12 @@ public:
 
 private:
     formalism::datalog::RuleView rule;
-    formalism::datalog::ConjunctiveConditionView witness_condition;
+    formalism::datalog::RuleView witness_rule;
     formalism::datalog::GroundConjunctiveConditionView nullary_condition;
-    formalism::datalog::ConjunctiveConditionView unary_overapproximation_condition;
-    formalism::datalog::ConjunctiveConditionView binary_overapproximation_condition;
-    formalism::datalog::ConjunctiveConditionView static_binary_overapproximation_condition;
-    formalism::datalog::ConjunctiveConditionView conflicting_overapproximation_condition;
+    formalism::datalog::RuleView unary_overapproximation_rule;
+    formalism::datalog::RuleView binary_overapproximation_rule;
+    formalism::datalog::RuleView static_binary_overapproximation_rule;
+    formalism::datalog::RuleView conflicting_overapproximation_rule;
 
     StaticConsistencyGraph static_consistency_graph;
 };

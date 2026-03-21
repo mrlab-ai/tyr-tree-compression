@@ -22,6 +22,7 @@
 #include "tyr/formalism/datalog/canonicalization.hpp"
 #include "tyr/formalism/datalog/expression_arity.hpp"
 #include "tyr/formalism/datalog/grounder.hpp"
+#include "tyr/formalism/datalog/merge.hpp"
 #include "tyr/formalism/datalog/repository.hpp"
 #include "tyr/formalism/datalog/rule_view.hpp"
 
@@ -38,7 +39,9 @@ namespace tyr::datalog
  * ConstRuleWorkspace
  */
 
-static auto create_witness_condition(fd::ConjunctiveConditionView element, fd::Repository& context)
+namespace
+{
+auto create_witness_conjunctive_condition(fd::ConjunctiveConditionView element, fd::Repository& context)
 {
     auto builder = fd::Builder {};
     auto conj_cond_ptr = builder.get_builder<fd::ConjunctiveCondition>();
@@ -54,6 +57,23 @@ static auto create_witness_condition(fd::ConjunctiveConditionView element, fd::R
     return context.get_or_create(conj_cond);
 }
 
+auto create_witness_rule(fd::RuleView element, fd::Repository& context)
+{
+    auto builder = fd::Builder {};
+    auto merge_context = fd::MergeContext { builder, context };
+    auto rule_ptr = builder.get_builder<fd::Rule>();
+    auto& rule = *rule_ptr;
+    rule.clear();
+
+    rule.variables = element.get_variables().get_data();
+    rule.body = create_witness_conjunctive_condition(element.get_body(), context).first.get_index();
+    rule.head = merge_d2d(element.get_head(), merge_context).first.get_index();
+
+    canonicalize(rule);
+    return context.get_or_create(rule);
+}
+}
+
 ConstRuleWorkspace::ConstRuleWorkspace(fd::RuleView rule,
                                        fd::Repository& repository,
                                        const analysis::DomainListList& parameter_domains,
@@ -61,18 +81,17 @@ ConstRuleWorkspace::ConstRuleWorkspace(fd::RuleView rule,
                                        size_t num_fluent_predicates,
                                        const TaggedAssignmentSets<formalism::StaticTag>& static_assignment_sets) :
     rule(rule),
-    witness_condition(create_witness_condition(get_rule().get_body(), repository).first),
-    nullary_condition(create_ground_nullary_condition(get_rule().get_body(), repository).first),
-    unary_overapproximation_condition(create_overapproximation_conjunctive_condition(1, get_rule().get_body(), repository).first),
-    binary_overapproximation_condition(create_overapproximation_conjunctive_condition(2, get_rule().get_body(), repository).first),
-    static_binary_overapproximation_condition(create_static_overapproximation_conjunctive_condition(2, get_rule().get_body(), repository).first),
-    conflicting_overapproximation_condition(
-        create_overapproximation_conflicting_conjunctive_condition(get_rule().get_arity() == 1 ? 1 : 2, get_rule().get_body(), repository).first),
+    witness_rule(create_witness_rule(get_rule(), repository).first),
+    nullary_condition(create_ground_nullary_conjunctive_condition(get_rule().get_body(), repository).first),
+    unary_overapproximation_rule(create_overapproximation_rule(1, get_rule(), repository).first),
+    binary_overapproximation_rule(create_overapproximation_rule(2, get_rule(), repository).first),
+    static_binary_overapproximation_rule(create_static_overapproximation_rule(2, get_rule(), repository).first),
+    conflicting_overapproximation_rule(create_overapproximation_conflicting_rule(get_rule().get_arity() == 1 ? 1 : 2, get_rule(), repository).first),
     static_consistency_graph(get_rule(),
                              get_rule().get_body(),
-                             get_unary_overapproximation_condition(),
-                             get_binary_overapproximation_condition(),
-                             get_static_binary_overapproximation_condition(),
+                             get_unary_overapproximation_rule().get_body(),
+                             get_binary_overapproximation_rule().get_body(),
+                             get_static_binary_overapproximation_rule().get_body(),
                              parameter_domains,
                              num_objects,
                              num_fluent_predicates,
