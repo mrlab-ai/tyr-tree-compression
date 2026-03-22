@@ -126,6 +126,12 @@ struct Binding
 {
 };
 
+// TODO: rename to Binding and get rid of the old one.
+template<typename T>
+struct RelationBinding
+{
+};
+
 struct Term
 {
 };

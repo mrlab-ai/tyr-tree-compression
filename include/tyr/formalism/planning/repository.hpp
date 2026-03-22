@@ -201,8 +201,8 @@ using LiftedBooleanOperatorListView = View<DataList<BooleanOperator<Data<Functio
 using GroundBooleanOperatorListView = View<DataList<BooleanOperator<Data<GroundFunctionExpression>>>, Repository>;
 
 using ConditionalEffectView = View<Index<ConditionalEffect>, Repository>;
-
 using ConditionalEffectListView = View<IndexList<ConditionalEffect>, Repository>;
+using ConditionalEffectViewList = std::vector<View<Index<ConditionalEffect>, Repository>>;
 
 using ConjunctiveConditionView = View<Index<ConjunctiveCondition>, Repository>;
 
@@ -365,7 +365,6 @@ using TaskView = View<Index<Task>, Repository>;
 using TaskListView = View<IndexList<Task>, Repository>;
 
 using TermView = View<Data<Term>, Repository>;
-
 using TermListView = View<DataList<Term>, Repository>;
 using TermViewList = std::vector<View<Data<Term>, Repository>>;
 
@@ -384,8 +383,8 @@ template<OpKind Op>
 using GroundUnaryOperatorListView = View<IndexList<UnaryOperator<Op, Data<GroundFunctionExpression>>>, Repository>;
 
 using VariableView = View<Index<Variable>, Repository>;
-
 using VariableListView = View<IndexList<Variable>, Repository>;
+using VariableViewList = std::vector<View<Index<Variable>, Repository>>;
 
 }
 

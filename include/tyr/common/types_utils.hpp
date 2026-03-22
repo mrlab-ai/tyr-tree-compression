@@ -77,6 +77,60 @@ void clear(T& element)
         static_assert(dependent_false<T>::value, "Cannot clear T.");
 }
 
+template<typename T, typename C>
+void append(View<Index<T>, C> view, IndexList<T>& ref_list)
+{
+    ref_list.push_back(view.get_index());
+}
+
+template<typename T, typename C>
+void append(View<Data<T>, C> view, DataList<T>& ref_list)
+{
+    ref_list.push_back(view.get_data());
+}
+
+template<typename T, typename C>
+void extend(const std::vector<View<Index<T>, C>>& views, IndexList<T>& ref_list)
+{
+    for (const auto& view : views)
+        append(view, ref_list);
+}
+
+template<typename T, typename C>
+void extend(const std::vector<View<Data<T>, C>>& views, DataList<T>& ref_list)
+{
+    for (const auto& view : views)
+        append(view, ref_list);
+}
+
+template<typename T, typename C>
+void set(View<Index<T>, C> view, Index<T>& index)
+{
+    index = view.get_index();
+}
+
+template<typename T, typename C>
+void set(View<Data<T>, C> view, Data<T>& data)
+{
+    data = view.get_data();
+}
+
+template<typename T, typename C>
+void set(const std::vector<View<Index<T>, C>>& views, IndexList<T>& out_list)
+{
+    out_list.clear();
+    out_list.reserve(views.size());
+    extend(views, out_list);
+}
+
+template<typename T, typename C>
+void set(const std::vector<View<Data<T>, C>>& views, DataList<T>& out_list)
+{
+    out_list.clear();
+    out_list.reserve(views.size());
+    extend(views, out_list);
+}
+
 }
 
 #endif

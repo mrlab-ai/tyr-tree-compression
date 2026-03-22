@@ -21,59 +21,6 @@ namespace tyr::formalism::planning
 {
 namespace
 {
-template<typename T, typename C>
-void append(View<Index<T>, C> view, IndexList<T>& ref_list)
-{
-    ref_list.push_back(view.get_index());
-}
-
-template<typename T, typename C>
-void append(View<Data<T>, C> view, DataList<T>& ref_list)
-{
-    ref_list.push_back(view.get_data());
-}
-
-template<typename T, typename C>
-void extend(const std::vector<View<Index<T>, C>>& views, IndexList<T>& ref_list)
-{
-    for (const auto& view : views)
-        append(view, ref_list);
-}
-
-template<typename T, typename C>
-void extend(const std::vector<View<Data<T>, C>>& views, DataList<T>& ref_list)
-{
-    for (const auto& view : views)
-        append(view, ref_list);
-}
-
-template<typename T, typename C>
-void set(View<Index<T>, C> view, Index<T>& index)
-{
-    index = view.get_index();
-}
-
-template<typename T, typename C>
-void set(View<Data<T>, C> view, Data<T>& data)
-{
-    data = view.get_data();
-}
-
-template<typename T, typename C>
-void set(const std::vector<View<Index<T>, C>>& views, IndexList<T>& out_list)
-{
-    out_list.clear();
-    out_list.reserve(views.size());
-    extend(views, out_list);
-}
-
-template<typename T, typename C>
-void set(const std::vector<View<Data<T>, C>>& views, DataList<T>& out_list)
-{
-    out_list.clear();
-    out_list.reserve(views.size());
-    extend(views, out_list);
-}
 
 /**
  * Data
@@ -84,8 +31,7 @@ void bind_object_builder(nb::module_& m, const std::string& name)
     using V = Data<Object>;
 
     nb::class_<V>(m, name.c_str())  //
-        .def(nb::init<>())
-        .def("set_name", [](V& self, const std::string& name) { self.name = name; });
+        .def(nb::init<const std::string&>(), "name"_a);
 }
 
 void bind_variable_builder(nb::module_& m, const std::string& name)
@@ -93,8 +39,7 @@ void bind_variable_builder(nb::module_& m, const std::string& name)
     using V = Data<Variable>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def("set_name", [](V& self, const std::string& name) { self.name = name; });
+                   .def(nb::init<const std::string&>(), "name"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -104,8 +49,7 @@ void bind_term_builder(nb::module_& m, const std::string& name)
     using V = Data<Term>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -115,8 +59,7 @@ void bind_binding_builder(nb::module_& m, const std::string& name)
     using V = Data<Binding>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def("set_objects", [](V& self, const ObjectViewList& e) { set(e, self.objects); });
+                   .def(nb::init<const ObjectViewList&>(), "objects"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -127,9 +70,7 @@ void bind_predicate_builder(nb::module_& m, const std::string& name)
     using V = Data<Predicate<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def("set_name", [](V& self, const std::string& name) { self.name = name; })
-                   .def("set_arity", [](V& self, size_t arity) { self.arity = arity; });
+                   .def(nb::init<const std::string&, uint_t>(), "name"_a, "arity"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -140,9 +81,7 @@ void bind_atom_builder(nb::module_& m, const std::string& name)
     using V = Data<Atom<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def("set_predicate", [](V& self, const PredicateView<T>& e) { set(e, self.predicate); })
-                   .def("set_terms", [](V& self, const TermViewList& e) { set(e, self.terms); });
+                   .def(nb::init<PredicateView<T>, const TermViewList&>(), "predicate"_a, "terms"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -218,9 +157,7 @@ void bind_function_builder(nb::module_& m, const std::string& name)
     using V = Data<Function<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("name", &V::name)
-                   .def_rw("arity", &V::arity);
+                   .def(nb::init<const std::string&, uint_t>(), "name"_a, "arity"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -296,8 +233,7 @@ void bind_numeric_effect_operator_builder(nb::module_& m, const std::string& nam
     using V = Data<NumericEffectOperator<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -308,8 +244,7 @@ void bind_ground_numeric_effect_operator_builder(nb::module_& m, const std::stri
     using V = Data<GroundNumericEffectOperator<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -319,8 +254,7 @@ void bind_function_expression_builder(nb::module_& m, const std::string& name)
     using V = Data<FunctionExpression>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -371,12 +305,12 @@ void bind_action_builder(nb::module_& m, const std::string& name)
     using V = Data<Action>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("name", &V::name)
-                   .def_rw("original_arity", &V::original_arity)
-                   .def_rw("variables", &V::variables)
-                   .def_rw("condition", &V::condition)
-                   .def_rw("effects", &V::effects);
+                   .def(nb::init<const std::string&, uint_t, const VariableViewList&, ConjunctiveConditionView, const ConditionalEffectViewList&>(),
+                        "name"_a,
+                        "original_arity"_a,
+                        "variables"_a,
+                        "condition"_a,
+                        "effects"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -399,8 +333,7 @@ void bind_ground_function_expression_builder(nb::module_& m, const std::string& 
     using V = Data<GroundFunctionExpression>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -599,8 +532,7 @@ void bind_arithmethic_operator_builder(nb::module_& m, const std::string& name)
     using V = Data<ArithmeticOperator<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }
@@ -611,8 +543,7 @@ void bind_boolean_operator_builder(nb::module_& m, const std::string& name)
     using V = Data<BooleanOperator<T>>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("value", &V::value);
+                   .def(nb::init<typename V::ViewVariant<Repository>>(), "value"_a);
     add_print(cls);
     add_hash(cls);
 }

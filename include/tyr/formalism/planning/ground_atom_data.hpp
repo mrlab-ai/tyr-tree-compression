@@ -20,6 +20,7 @@
 
 #include "tyr/common/types.hpp"
 #include "tyr/common/types_utils.hpp"
+#include "tyr/formalism/binding_index.hpp"
 #include "tyr/formalism/object_index.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 #include "tyr/formalism/planning/ground_atom_index.hpp"
@@ -35,11 +36,16 @@ struct Data<formalism::planning::GroundAtom<T>>
     Index<formalism::Binding> row;
 
     Data() = default;
-    Data(Index<formalism::planning::GroundAtom<T>> index, Index<formalism::Predicate<T>> predicate, Index<formalism::Binding> row) :
-        index(index),
-        predicate(predicate),
-        row(row)
+    Data(Index<formalism::Predicate<T>> predicate_, Index<formalism::Binding> row_) : index(), predicate(predicate_), row(row_) {}
+    // Python constructor
+    template<typename C>
+    Data(View<Index<formalism::Predicate<T>>, C> predicate_, View<formalism::RelationBindingIndex<formalism::Predicate<T>>, C> row_) :
+        index(),
+        predicate(),
+        row()
     {
+        // set(predicate_, predicate);
+        // set(terms_, terms);
     }
     Data(const Data& other) = default;
     Data& operator=(const Data& other) = default;

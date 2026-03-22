@@ -38,8 +38,20 @@ struct Data<formalism::planning::NumericEffectOperator<formalism::FluentTag>>
 
     Variant value;
 
+    template<typename C>
+    using ViewVariant = std::variant<View<Index<formalism::planning::NumericEffect<formalism::planning::OpAssign, formalism::FluentTag>>, C>,
+                                     View<Index<formalism::planning::NumericEffect<formalism::planning::OpIncrease, formalism::FluentTag>>, C>,
+                                     View<Index<formalism::planning::NumericEffect<formalism::planning::OpDecrease, formalism::FluentTag>>, C>,
+                                     View<Index<formalism::planning::NumericEffect<formalism::planning::OpScaleUp, formalism::FluentTag>>, C>,
+                                     View<Index<formalism::planning::NumericEffect<formalism::planning::OpScaleDown, formalism::FluentTag>>, C>>;
+
     Data() = default;
-    Data(Variant value) : value(value) {}
+    Data(Variant value_) : value(value_) {}
+    // Python constructor
+    template<typename C>
+    Data(ViewVariant<C> value_) : value(std::visit([](const auto& view) -> Variant { return Variant(view.get_index()); }, value_))
+    {
+    }
 
     void clear() noexcept { tyr::clear(value); }
 
@@ -54,8 +66,16 @@ struct Data<formalism::planning::NumericEffectOperator<formalism::AuxiliaryTag>>
 
     Variant value;
 
+    template<typename C>
+    using ViewVariant = std::variant<View<Index<formalism::planning::NumericEffect<formalism::planning::OpIncrease, formalism::AuxiliaryTag>>, C>>;
+
     Data() = default;
-    Data(Variant value) : value(value) {}
+    Data(Variant value_) : value(value_) {}
+    // Python constructor
+    template<typename C>
+    Data(ViewVariant<C> value_) : value(std::visit([](const auto& view) -> Variant { return Variant(view.get_index()); }, value_))
+    {
+    }
 
     void clear() noexcept
     {

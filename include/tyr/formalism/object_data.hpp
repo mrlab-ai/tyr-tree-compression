@@ -32,7 +32,9 @@ struct Data<formalism::Object>
     ::cista::offset::string name;
 
     Data() = default;
-    Data(Index<formalism::Object> index, ::cista::offset::string name) : index(index), name(std::move(name)) {}
+    Data(::cista::offset::string name_) : index(), name(std::move(name)) {}
+    // Python constructor
+    Data(const std::string& name_) : index(), name(name_) {}
     Data(const Data& other) = delete;
     Data& operator=(const Data& other) = delete;
     Data(Data&& other) = default;

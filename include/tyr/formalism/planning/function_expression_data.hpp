@@ -36,8 +36,37 @@ struct Data<formalism::planning::FunctionExpression>
 
     Variant value;
 
+    template<typename C>
+    using ViewVariant = std::variant<float_t,
+                                     View<Data<formalism::planning::ArithmeticOperator<Data<formalism::planning::FunctionExpression>>>, C>,
+                                     View<Index<formalism::planning::FunctionTerm<formalism::StaticTag>>, C>,
+                                     View<Index<formalism::planning::FunctionTerm<formalism::FluentTag>>, C>>;
+
     Data() = default;
-    Data(Variant value) : value(value) {}
+    Data(Variant value_) : value(value_) {}
+    // Python constructor
+    template<typename C>
+    Data(ViewVariant<C> value_) :
+        value(std::visit(
+            [](const auto& arg) -> Variant
+            {
+                using Alternative = std::decay_t<decltype(arg)>;
+
+                if constexpr (std::is_same_v<Alternative, float_t>)
+                    return Variant(arg);
+                else if constexpr (std::is_same_v<Alternative,
+                                                  View<Data<formalism::planning::ArithmeticOperator<Data<formalism::planning::FunctionExpression>>>, C>>)
+                    return Variant(arg.get_data());
+                else if constexpr (std::is_same_v<Alternative, View<Index<formalism::planning::FunctionTerm<formalism::StaticTag>>, C>>)
+                    return Variant(arg.get_index());
+                else if constexpr (std::is_same_v<Alternative, View<Index<formalism::planning::FunctionTerm<formalism::FluentTag>>, C>>)
+                    return Variant(arg.get_index());
+                else
+                    static_assert(dependent_false<Alternative>::value, "Missing case");
+            },
+            value_))
+    {
+    }
 
     void clear() noexcept { tyr::clear(value); }
 

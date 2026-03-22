@@ -25,21 +25,15 @@ def main():
     factory = RepositoryFactory()
     repository = factory.create_repository()  # We can also create object directly into the repository of a task.
 
-    object_builder = ObjectBuilder()
-    predicate_builder = FluentPredicateBuilder()
     ground_atom_builder = FluentGroundAtomBuilder()
     
     # 1. Re-create existing atom (at ball1 rooma)
-    object_builder.name = "ball1"
-    ball1, inserted = repository.get_or_create(object_builder)
+    ball1, inserted = repository.get_or_create(ObjectBuilder("ball1"))
     assert inserted
-    object_builder.name = "rooma"
-    rooma, inserted = repository.get_or_create(object_builder)
+    rooma, inserted = repository.get_or_create(ObjectBuilder("rooma"))
     assert inserted 
 
-    predicate_builder.name = "at"
-    predicate_builder.arity = 2
-    at, inserted = repository.get_or_create(predicate_builder)
+    at, inserted = repository.get_or_create(FluentPredicateBuilder("at", 2))
     assert inserted
 
     row, inserted = repository.get_or_create(at, [ball1.get_index(), rooma.get_index()])
@@ -51,8 +45,7 @@ def main():
     assert inserted
 
     # 2. Create non existing atom (at ball1 roomb)
-    object_builder.name = "roomb"
-    roomb, inserted = repository.get_or_create(object_builder)
+    roomb, inserted = repository.get_or_create(ObjectBuilder("roomb"))
     assert inserted 
 
     row, inserted = repository.get_or_create(at, [ball1.get_index(), roomb.get_index()])

@@ -34,7 +34,9 @@ struct Data<formalism::Function<T>>
     uint_t arity;
 
     Data() = default;
-    Data(Index<formalism::Function<T>>, ::cista::offset::string name, uint_t arity) : index(index), name(std::move(name)), arity(arity) {}
+    Data(::cista::offset::string name_, uint_t arity_) : index(), name(std::move(name_)), arity(arity_) {}
+    // Python constructor
+    Data(const std::string& name_, uint_t arity_) : index(), name(name_), arity(arity_) {}
     Data(const Data& other) = delete;
     Data& operator=(const Data& other) = delete;
     Data(Data&& other) = default;

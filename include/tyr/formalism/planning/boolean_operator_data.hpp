@@ -23,6 +23,8 @@
 #include "tyr/formalism/planning/binary_operator_index.hpp"
 #include "tyr/formalism/planning/declarations.hpp"
 
+#include <variant>
+
 namespace tyr
 {
 template<typename T>
@@ -37,8 +39,21 @@ struct Data<formalism::planning::BooleanOperator<T>>
 
     Variant value;
 
+    template<typename C>
+    using ViewVariant = std::variant<View<Index<formalism::planning::BinaryOperator<formalism::OpEq, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpNe, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpLe, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpLt, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpGe, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpGt, T>>, C>>;
+
     Data() = default;
-    Data(Variant value) : value(value) {}
+    Data(Variant value_) : value(value_) {}
+    // Python constructor
+    template<typename C>
+    Data(ViewVariant<C> value_) : value(std::visit([](const auto& view) -> Variant { return Variant(view.get_index()); }, value_))
+    {
+    }
 
     void clear() noexcept { tyr::clear(value); }
 

@@ -35,11 +35,13 @@ struct Data<formalism::planning::Atom<T>>
     DataList<formalism::Term> terms;
 
     Data() = default;
-    Data(Index<formalism::Predicate<T>> predicate, Index<formalism::planning::Atom<T>> index, DataList<formalism::Term> terms) :
-        index(index),
-        predicate(predicate),
-        terms(std::move(terms))
+    Data(Index<formalism::Predicate<T>> predicate_, DataList<formalism::Term> terms_) : index(), predicate(predicate), terms(std::move(terms)) {}
+    // Python constructor
+    template<typename C>
+    Data(View<Index<formalism::Predicate<T>>, C> predicate_, const std::vector<View<Data<formalism::Term>, C>>& terms_) : index(), predicate(), terms()
     {
+        set(predicate_, predicate);
+        set(terms_, terms);
     }
     Data(const Data& other) = delete;
     Data& operator=(const Data& other) = delete;

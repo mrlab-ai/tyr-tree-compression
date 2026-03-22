@@ -40,18 +40,36 @@ struct Data<formalism::planning::Action>
     IndexList<formalism::planning::ConditionalEffect> effects;
 
     Data() = default;
-    Data(Index<formalism::planning::Action> index,
-         ::cista::offset::string name,
-         uint_t original_arity,
-         IndexList<formalism::Variable> variables,
-         Index<formalism::planning::ConjunctiveCondition> condition,
-         IndexList<formalism::planning::ConditionalEffect> effects) :
-        index(index),
-        name(std::move(name)),
-        variables(std::move(variables)),
-        condition(condition),
-        effects(std::move(effects))
+    Data(::cista::offset::string name_,
+         uint_t original_arity_,
+         IndexList<formalism::Variable> variables_,
+         Index<formalism::planning::ConjunctiveCondition> condition_,
+         IndexList<formalism::planning::ConditionalEffect> effects_) :
+        index(),
+        name(std::move(name_)),
+        original_arity(original_arity_),
+        variables(std::move(variables_)),
+        condition(condition_),
+        effects(std::move(effects_))
     {
+    }
+    // Python constructor
+    template<typename C>
+    Data(const std::string& name_,
+         uint_t original_arity_,
+         const std::vector<View<Index<formalism::Variable>, C>>& variables_,
+         View<Index<formalism::planning::ConjunctiveCondition>, C> condition_,
+         const std::vector<View<Index<formalism::planning::ConditionalEffect>, C>>& effects_) :
+        index(),
+        name(name_),
+        original_arity(original_arity_),
+        variables(),
+        condition(),
+        effects()
+    {
+        set(variables_, variables);
+        set(condition_, condition);
+        set(effects_, effects);
     }
     Data(const Data& other) = delete;
     Data& operator=(const Data& other) = delete;

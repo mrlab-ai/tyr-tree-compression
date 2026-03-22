@@ -25,6 +25,8 @@
 #include "tyr/formalism/planning/multi_operator_index.hpp"
 #include "tyr/formalism/planning/unary_operator_index.hpp"
 
+#include <variant>
+
 namespace tyr
 {
 template<typename T>
@@ -40,8 +42,22 @@ struct Data<formalism::planning::ArithmeticOperator<T>>
 
     Variant value;
 
+    template<typename C>
+    using ViewVariant = std::variant<View<Index<formalism::planning::UnaryOperator<formalism::OpSub, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpAdd, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpSub, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpMul, T>>, C>,
+                                     View<Index<formalism::planning::BinaryOperator<formalism::OpDiv, T>>, C>,
+                                     View<Index<formalism::planning::MultiOperator<formalism::OpAdd, T>>, C>,
+                                     View<Index<formalism::planning::MultiOperator<formalism::OpMul, T>>, C>>;
+
     Data() = default;
-    Data(Variant value) : value(value) {}
+    Data(Variant value_) : value(value_) {}
+    // Python constructor
+    template<typename C>
+    Data(ViewVariant<C> value_) : value(std::visit([](const auto& view) -> Variant { return Variant(view.get_index()); }, value_))
+    {
+    }
 
     void clear() noexcept { tyr::clear(value); }
 

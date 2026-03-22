@@ -34,7 +34,13 @@ struct Data<formalism::Binding>
     IndexList<formalism::Object> objects;
 
     Data() = default;
-    Data(Index<formalism::Binding> index, IndexList<formalism::Object> objects) : index(index), objects(std::move(objects)) {}
+    Data(IndexList<formalism::Object> objects_) : index(), objects(std::move(objects)) {}
+    // Python constructor
+    template<typename C>
+    Data(const std::vector<View<Index<formalism::Object>, C>>& objects_) : index(), objects()
+    {
+        set(objects_, objects);
+    }
     Data(const Data& other) = delete;
     Data& operator=(const Data& other) = delete;
     Data(Data&& other) = default;

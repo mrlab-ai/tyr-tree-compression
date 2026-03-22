@@ -34,8 +34,29 @@ struct Data<formalism::Term>
 
     Variant value;
 
+    template<typename C>
+    using ViewVariant = std::variant<View<Index<formalism::Object>, C>, formalism::ParameterIndex>;
+
     Data() = default;
     Data(Variant value) : value(value) {}
+    // Python constructor
+    template<typename C>
+    Data(ViewVariant<C> value_) :
+        value(std::visit(
+            [](const auto& arg) -> Variant
+            {
+                using Alternative = std::decay_t<decltype(arg)>;
+
+                if constexpr (std::is_same_v<Alternative, formalism::ParameterIndex>)
+                    return Variant(arg);
+                else if constexpr (std::is_same_v<Alternative, View<Index<formalism::Object>, C>>)
+                    return Variant(arg.get_index());
+                else
+                    static_assert(dependent_false<Alternative>::value, "Missing case");
+            },
+            value_))
+    {
+    }
 
     void clear() noexcept { tyr::clear(value); }
 
