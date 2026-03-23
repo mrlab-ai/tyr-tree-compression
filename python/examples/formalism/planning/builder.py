@@ -32,10 +32,14 @@ from pytyr.formalism.planning import (
     ActionBuilder,
     DomainBuilder,
     GroundConjunctiveConditionBuilder,
-    FluentFDRVariableBuilder,
-    FluentFDRFactBuilder,
     LiftedTaskBuilder,
     FDRContext,
+    PlanningDomain,
+    PlanningTask,
+)
+
+from pytyr.planning.lifted import (
+    Task
 )
 
 
@@ -385,8 +389,8 @@ def main():
     # Your GroundConjunctiveConditionBuilder expects fluent goals as FDR facts,
     # not as fluent ground atoms.
     #
-    # For the goal (at ball1 roomb), we create an FDR variable whose domain is
-    # [ (at ball1 rooma), (at ball1 roomb) ] and then select value 1.
+    # We use the FDR context to automatically create binary FDR variables
+    # But we could also initialize the FDRContext with other disjoint mutexes.
     # --------------------------------------------------------------------------
 
     at_ball1_rooma = make_fluent_ground_atom(task_repository, at, [ball1, rooma])
@@ -423,6 +427,31 @@ def main():
     )
 
     print(task)
+
+
+    # --------------------------------------------------------------------------
+    # 3. Group the planning structures and instantiate a ground task
+    #
+    # We wrap the lifted domain and task together with their repositories in the
+    # higher-level planning interface. This allows us to construct a search task
+    # and instantiate the fully grounded representation used for search.
+    # --------------------------------------------------------------------------
+
+    # Combine the lifted domain with its repository and factory.
+    planning_domain = PlanningDomain(domain, domain_repository, factory)
+
+    # Combine the lifted task with the FDR context, task repository, and domain.
+    planning_task = PlanningTask(task, fdr_context, task_repository, planning_domain)
+
+    # Create a search task from the planning task.
+    search_task = Task(planning_task)
+
+    # Instantiate the fully grounded task representation.
+    ground_search_task = search_task.instantiate_ground_task()
+
+    # Print the grounded formalism task.
+    print(ground_search_task.get_formalism_task().get_task())
+
 
 
 if __name__ == "__main__":
