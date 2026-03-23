@@ -413,8 +413,8 @@ void bind_domain_builder(nb::module_& m, const std::string& name)
                         "static_predicates"_a,
                         "fluent_predicates"_a,
                         "derived_predicates"_a,
-                        "static_predicates"_a,
                         "static_functions"_a,
+                        "fluent_functions"_a,
                         "auxiliary_function"_a,
                         "constants"_a,
                         "actions"_a,
@@ -461,27 +461,47 @@ void bind_ground_task_builder(nb::module_& m, const std::string& name)
     using V = Data<FDRTask>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<>())
-                   .def_rw("name", &V::name)
-                   .def_rw("domain", &V::domain)
-                   .def_rw("derived_predicates", &V::derived_predicates)
-                   .def_rw("objects", &V::objects)
-                   .def_rw("static_atoms", &V::static_atoms)
-                   .def_rw("fluent_atoms", &V::fluent_atoms)
-                   .def_rw("derived_atoms", &V::derived_atoms)
-                   .def_rw("static_fterm", &V::static_fterms)
-                   .def_rw("fluent_fterm", &V::fluent_fterms)
-                   .def_rw("auxiliary_fterm", &V::auxiliary_fterm)
-                   .def_rw("static_fterm_values", &V::static_fterm_values)
-                   .def_rw("fluent_fterm_values", &V::fluent_fterm_values)
-                   .def_rw("auxiliary_fterm_value", &V::auxiliary_fterm_value)
-                   .def_rw("goal", &V::goal)
-                   .def_rw("metric", &V::metric)
-                   .def_rw("axioms", &V::axioms)
-                   .def_rw("fluent_variables", &V::fluent_variables)
-                   .def_rw("fluent_facts", &V::fluent_facts)
-                   .def_rw("ground_actions", &V::ground_actions)
-                   .def_rw("ground_axioms", &V::ground_axioms);
+
+                   .def(nb::init<const std::string&,
+                                 DomainView,
+                                 const PredicateViewList<DerivedTag>&,
+                                 const ObjectViewList&,
+                                 const GroundAtomViewList<StaticTag>&,
+                                 const GroundAtomViewList<FluentTag>&,
+                                 const GroundAtomViewList<DerivedTag>&,
+                                 const GroundFunctionTermViewList<StaticTag>&,
+                                 const GroundFunctionTermViewList<FluentTag>&,
+                                 const std::optional<GroundFunctionTermView<AuxiliaryTag>>&,
+                                 const GroundFunctionTermValueViewList<StaticTag>&,
+                                 const GroundFunctionTermValueViewList<FluentTag>&,
+                                 const std::optional<GroundFunctionTermValueView<AuxiliaryTag>>&,
+                                 const std::optional<MetricView>&,
+                                 const AxiomViewList&,
+                                 const FDRVariableViewList<FluentTag>&,
+                                 const FDRFactViewList<FluentTag>&,
+                                 GroundConjunctiveConditionView,
+                                 const GroundActionViewList&,
+                                 const GroundAxiomViewList&>(),
+                        "name"_a,
+                        "domain"_a,
+                        "derived_predicates"_a,
+                        "objects"_a,
+                        "static_atoms"_a,
+                        "fluent_atoms"_a,
+                        "derived_atoms"_a,
+                        "static_fterm"_a,
+                        "fluent_fterm"_a,
+                        "auxiliary_fterm"_a,
+                        "static_fterm_values"_a,
+                        "fluent_fterm_values"_a,
+                        "auxiliary_fterm_value"_a,
+                        "metric"_a,
+                        "axioms"_a,
+                        "fluent_variables"_a,
+                        "fluent_facts"_a,
+                        "goal"_a,
+                        "ground_actions"_a,
+                        "ground_axioms"_a);
     add_print(cls);
     add_hash(cls);
 }

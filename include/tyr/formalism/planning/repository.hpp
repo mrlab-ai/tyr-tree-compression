@@ -212,21 +212,22 @@ using ConjunctiveEffectListView = View<IndexList<ConjunctiveEffect>, Repository>
 using DomainView = View<Index<Domain>, Repository>;
 using DomainListView = View<IndexList<Domain>, Repository>;
 
-template<formalism::FactKind T>
+template<FactKind T>
 using FDRFactView = View<Data<FDRFact<T>>, Repository>;
-template<formalism::FactKind T>
+template<FactKind T>
 using FDRFactListView = View<DataList<FDRFact<T>>, Repository>;
-template<formalism::FactKind T>
+template<FactKind T>
 using FDRFactViewList = std::vector<FDRFactView<T>>;
 
 using FDRTaskView = View<Index<FDRTask>, Repository>;
 using FDRTaskListView = View<IndexList<FDRTask>, Repository>;
 
-template<formalism::FactKind T>
+template<FactKind T>
 using FDRVariableView = View<Index<FDRVariable<T>>, Repository>;
-
-template<formalism::FactKind T>
+template<FactKind T>
 using FDRVariableListView = View<IndexList<FDRVariable<T>>, Repository>;
+template<FactKind T>
+using FDRVariableViewList = std::vector<FDRVariableView<T>>;
 
 using FunctionExpressionView = View<Data<FunctionExpression>, Repository>;
 using FunctionExpressionListView = View<DataList<FunctionExpression>, Repository>;
@@ -245,6 +246,7 @@ using FunctionViewList = std::vector<FunctionView<T>>;
 
 using GroundActionView = View<Index<GroundAction>, Repository>;
 using GroundActionListView = View<IndexList<GroundAction>, Repository>;
+using GroundActionViewList = std::vector<GroundActionView>;
 
 template<FactKind T>
 using GroundAtomView = View<Index<GroundAtom<T>>, Repository>;
@@ -255,6 +257,7 @@ using GroundAtomViewList = std::vector<GroundAtomView<T>>;
 
 using GroundAxiomView = View<Index<GroundAxiom>, Repository>;
 using GroundAxiomListView = View<IndexList<GroundAxiom>, Repository>;
+using GroundAxiomViewList = std::vector<GroundAxiomView>;
 
 using GroundConditionalEffectView = View<Index<GroundConditionalEffect>, Repository>;
 using GroundConditionalEffectListView = View<IndexList<GroundConditionalEffect>, Repository>;
@@ -285,6 +288,8 @@ template<FactKind T>
 using GroundFunctionTermView = View<Index<GroundFunctionTerm<T>>, Repository>;
 template<FactKind T>
 using GroundFunctionTermListView = View<IndexList<GroundFunctionTerm<T>>, Repository>;
+template<FactKind T>
+using GroundFunctionTermViewList = std::vector<GroundFunctionTermView<T>>;
 
 template<FactKind T>
 using GroundLiteralView = View<Index<GroundLiteral<T>>, Repository>;
