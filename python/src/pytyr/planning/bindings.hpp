@@ -287,7 +287,7 @@ void bind_blind_heuristic(nb::module_& m, const std::string& name)
 }
 
 template<typename Task>
-void bind_max_heuristic(nb::module_& m, const std::string& name)
+void bind_rpg_max_heuristic(nb::module_& m, const std::string& name)
 {
     using T = MaxRPGHeuristic<Task>;
 
@@ -299,7 +299,7 @@ void bind_max_heuristic(nb::module_& m, const std::string& name)
 }
 
 template<typename Task>
-void bind_add_heuristic(nb::module_& m, const std::string& name)
+void bind_rpg_add_heuristic(nb::module_& m, const std::string& name)
 {
     using T = AddRPGHeuristic<Task>;
 
@@ -311,7 +311,7 @@ void bind_add_heuristic(nb::module_& m, const std::string& name)
 }
 
 template<typename Task>
-void bind_ff_heuristic(nb::module_& m, const std::string& name)
+void bind_rpg_ff_heuristic(nb::module_& m, const std::string& name)
 {
     using T = FFRPGHeuristic<Task>;
 
