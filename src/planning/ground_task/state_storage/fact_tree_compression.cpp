@@ -34,12 +34,15 @@ FactStorageBackend<GroundTask, TreeCompression>::FactStorageBackend(StateStorage
 typename FactStorageBackend<GroundTask, TreeCompression>::Packed
 FactStorageBackend<GroundTask, TreeCompression>::insert(const typename FactStorageBackend<GroundTask, TreeCompression>::Unpacked& unpacked)
 {
+    auto data = m_buffer.data();
+    const auto& values = unpacked.values;
+
     std::fill(m_buffer.begin(), m_buffer.end(), uint_t(0));
     for (uint_t i = 0; i < m_infos.size(); ++i)
     {
         const auto& info = m_infos[i];
 
-        bit::int_reference(m_buffer.data() + info.begin, info.offset, info.length) = unpacked.values[i];
+        bit::int_reference(data + info.begin, info.offset, info.length) = values[i];
     }
 
     return typename FactStorageBackend<GroundTask, TreeCompression>::Packed { m_array_set.insert(m_buffer) };
@@ -48,13 +51,14 @@ FactStorageBackend<GroundTask, TreeCompression>::insert(const typename FactStora
 void FactStorageBackend<GroundTask, TreeCompression>::unpack(const typename FactStorageBackend<GroundTask, TreeCompression>::Packed& packed,
                                                              typename FactStorageBackend<GroundTask, TreeCompression>::Unpacked& unpacked)
 {
-    const auto fluent_ptr = m_array_set[packed.index];
-    auto& fluent_values = unpacked.values;
+    const auto data = m_array_set[packed.index];
+    auto& values = unpacked.values;
 
     for (uint_t i = 0; i < m_infos.size(); ++i)
     {
         const auto& info = m_infos[i];
-        fluent_values[i] = uint_t(bit::int_reference<uint_t>(fluent_ptr + info.begin, info.offset, info.length));
+
+        values[i] = uint_t(bit::int_reference<uint_t>(data + info.begin, info.offset, info.length));
     }
 }
 

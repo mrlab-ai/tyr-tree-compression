@@ -194,6 +194,37 @@ private:
     Block* m_ptr;
 };
 
+template<std::unsigned_integral Block>
+struct bit_reference
+{
+    Block* data;
+    size_t bit;
+
+    bit_reference(Block* data, size_t bit) noexcept : data(data), bit(bit) {}
+
+    static constexpr size_t bits_per_block = std::numeric_limits<Block>::digits;
+
+    static constexpr size_t block_index(size_t bit) { return bit / bits_per_block; }
+    static constexpr size_t bit_index(size_t bit) { return bit % bits_per_block; }
+
+    bit_reference& operator=(bool value)
+    {
+        Block& block = data[block_index(bit)];
+        const Block mask = Block(1) << bit_index(bit);
+
+        if (value)
+            block |= mask;
+        else
+            block &= ~mask;
+
+        return *this;
+    }
+
+    bit_reference& operator=(const bit_reference& other) noexcept { return *this = static_cast<bool>(other); }
+
+    explicit operator bool() const noexcept { return ((data[block_index(bit)] >> bit_index(bit)) & Block(1)) != 0; }
+};
+
 }
 
 #endif
