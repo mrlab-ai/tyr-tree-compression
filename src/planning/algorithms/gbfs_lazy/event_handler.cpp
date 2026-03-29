@@ -21,7 +21,9 @@
 #include "tyr/formalism/planning/formatter.hpp"
 #include "tyr/planning/formatter.hpp"
 #include "tyr/planning/ground_task.hpp"
+#include "tyr/planning/ground_task/node.hpp"
 #include "tyr/planning/lifted_task.hpp"
+#include "tyr/planning/lifted_task/node.hpp"
 #include "tyr/planning/plan.hpp"
 
 #include <iostream>

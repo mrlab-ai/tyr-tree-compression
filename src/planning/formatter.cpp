@@ -18,40 +18,43 @@
 #include "tyr/planning/formatter.hpp"
 
 #include "tyr/common/chrono.hpp"
-#include "tyr/common/comparators.hpp"                // for operator!=
-#include "tyr/common/config.hpp"                     // for uint_t, flo...
-#include "tyr/common/formatter.hpp"                  // for operator<<
-#include "tyr/common/iostream.hpp"                   // for print_indent
-#include "tyr/common/types.hpp"                      // for make_view
-#include "tyr/common/variant.hpp"                    // for visit
-#include "tyr/formalism/planning/fdr_fact_data.hpp"  // for Data
-#include "tyr/formalism/planning/fdr_value.hpp"      // for FDRValue
-#include "tyr/formalism/planning/formatter.hpp"      // for operator<<
-#include "tyr/formalism/planning/repository.hpp"     // for Repository
+#include "tyr/common/comparators.hpp"
+#include "tyr/common/config.hpp"
+#include "tyr/common/formatter.hpp"
+#include "tyr/common/iostream.hpp"
+#include "tyr/common/types.hpp"
+#include "tyr/common/variant.hpp"
+#include "tyr/formalism/planning/fdr_fact_data.hpp"
+#include "tyr/formalism/planning/fdr_value.hpp"
+#include "tyr/formalism/planning/formatter.hpp"
+#include "tyr/formalism/planning/repository.hpp"
 #include "tyr/formalism/planning/views.hpp"
-#include "tyr/planning/algorithms/statistics.hpp"  // for Statistics
+#include "tyr/planning/algorithms/statistics.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/ground_task.hpp"       // for GroundTask
-#include "tyr/planning/ground_task/node.hpp"  // for Node
+#include "tyr/planning/ground_task.hpp"
+#include "tyr/planning/ground_task/node.hpp"
+#include "tyr/planning/ground_task/state_data.hpp"
 #include "tyr/planning/ground_task/state_repository.hpp"
-#include "tyr/planning/ground_task/state_view.hpp"  // for State
+#include "tyr/planning/ground_task/state_view.hpp"
 #include "tyr/planning/ground_task/unpacked_state.hpp"
 #include "tyr/planning/lifted_task.hpp"
-#include "tyr/planning/lifted_task/node.hpp"  // for Node
+#include "tyr/planning/lifted_task/node.hpp"
+#include "tyr/planning/lifted_task/state_data.hpp"
 #include "tyr/planning/lifted_task/state_repository.hpp"
-#include "tyr/planning/lifted_task/state_view.hpp"  // for State
+#include "tyr/planning/lifted_task/state_view.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
+#include "tyr/planning/plan.hpp"
 
-#include <boost/dynamic_bitset.hpp>  // for dynamic_bitset
-#include <cmath>                     // for isnan
-#include <fmt/base.h>                // for vformat_to
-#include <fmt/ostream.h>             // for print
-#include <memory>                    // for __shared_pt...
-#include <ostream>                   // for char_traits
-#include <string>                    // for basic_string
-#include <tuple>                     // for operator==
-#include <utility>                   // for pair
-#include <vector>                    // for vector
+#include <boost/dynamic_bitset.hpp>
+#include <cmath>
+#include <fmt/base.h>
+#include <fmt/ostream.h>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace tyr
 {

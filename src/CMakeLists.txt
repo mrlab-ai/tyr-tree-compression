@@ -109,6 +109,7 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     planning/formatter.cpp
     planning/ground_task.cpp
     planning/lifted_task.cpp
+    planning/plan.cpp
     planning/task_utils.cpp
 )
 set_target_properties(core PROPERTIES OUTPUT_NAME tyr_core)

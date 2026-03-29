@@ -20,16 +20,7 @@
 
 #include "tyr/common/formatter.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/ground_task.hpp"
-#include "tyr/planning/ground_task/node.hpp"
-#include "tyr/planning/ground_task/state_data.hpp"
-#include "tyr/planning/ground_task/state_view.hpp"
-#include "tyr/planning/ground_task/unpacked_state.hpp"
-#include "tyr/planning/lifted_task/node.hpp"
-#include "tyr/planning/lifted_task/state_data.hpp"
-#include "tyr/planning/lifted_task/state_view.hpp"
-#include "tyr/planning/lifted_task/unpacked_state.hpp"
-#include "tyr/planning/plan.hpp"
+#include "tyr/planning/state_view.hpp"
 
 #include <ostream>
 

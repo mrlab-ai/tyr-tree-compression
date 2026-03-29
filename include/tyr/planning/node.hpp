@@ -33,10 +33,7 @@
 namespace tyr::planning
 {
 template<TaskKind Kind>
-class Node
-{
-    static_assert(dependent_false<Kind>::value, "Node is not defined for type Kind.");
-};
+class Node;
 
 template<TaskKind Kind>
 using NodeList = std::vector<Node<Kind>>;

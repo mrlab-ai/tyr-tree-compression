@@ -25,19 +25,18 @@
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/planning/applicability.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/ground_task.hpp"
 #include "tyr/planning/ground_task/unpacked_state.hpp"
-#include "tyr/planning/lifted_task.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
+#include "tyr/planning/task.hpp"
 
 namespace tyr::planning
 {
 
-template<typename T>
+template<TaskKind Kind>
 float_t evaluate_metric(View<::cista::optional<Index<formalism::planning::Metric>>, formalism::planning::Repository> metric,
                         View<::cista::optional<Index<formalism::planning::GroundFunctionTermValue<formalism::AuxiliaryTag>>>, formalism::planning::Repository>
                             auxiliary_fterm_value,
-                        const StateContext<T>& state_context)
+                        const StateContext<Kind>& state_context)
 {
     if (auxiliary_fterm_value)
         return auxiliary_fterm_value.value().get_value();

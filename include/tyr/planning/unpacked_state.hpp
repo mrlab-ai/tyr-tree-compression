@@ -31,10 +31,7 @@ namespace tyr::planning
 {
 
 template<TaskKind Kind>
-class UnpackedState
-{
-    static_assert(dependent_false<Kind>::value, "UnpackedState is not defined for type T.");
-};
+class UnpackedState;
 
 template<typename T, typename Kind>
 concept UnpackedStateConcept = requires(T& s,
