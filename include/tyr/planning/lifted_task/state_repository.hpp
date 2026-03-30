@@ -28,9 +28,7 @@
 #include "tyr/planning/state_index.hpp"
 //
 #include "tyr/planning/lifted_task/state_storage/hash_set/atom.hpp"
-#include "tyr/planning/lifted_task/state_storage/hash_set/fact.hpp"
 #include "tyr/planning/lifted_task/state_storage/tree_compression/atom.hpp"
-#include "tyr/planning/lifted_task/state_storage/tree_compression/fact.hpp"
 #include "tyr/planning/state_storage/config.hpp"
 #include "tyr/planning/state_storage/hash_set/numeric.hpp"
 #include "tyr/planning/state_storage/tree_compression/numeric.hpp"
@@ -76,7 +74,6 @@ private:
     std::shared_ptr<Task<LiftedTag>> m_task;
 
     StateStorageContext<LiftedTag, StateStoragePolicyTag> m_context;
-    FactStorageBackend<LiftedTag, StateStoragePolicyTag> m_fluent_backend;
     AtomStorageBackend<LiftedTag, StateStoragePolicyTag> m_derived_backend;
     NumericStorageBackend<LiftedTag, StateStoragePolicyTag> m_numeric_backend;
 

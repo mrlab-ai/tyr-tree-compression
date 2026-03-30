@@ -40,7 +40,6 @@ namespace tyr::planning
 StateRepository<LiftedTag>::StateRepository(std::shared_ptr<Task<LiftedTag>> task, ExecutionContextPtr execution_context) :
     m_task(task),
     m_context(),
-    m_fluent_backend(m_context),
     m_derived_backend(m_context),
     m_numeric_backend(m_context),
     m_unpacked_state_pool(),
@@ -73,8 +72,7 @@ StateView<LiftedTag> StateRepository<LiftedTag>::get_registered_state(Index<Stat
     auto unpacked_state = get_unregistered_state();
 
     unpacked_state->set(state_index);
-    m_fluent_backend.unpack(packed_state.template get_atoms<f::FluentTag>(), unpacked_state->template get_atoms<f::FluentTag>());
-    m_derived_backend.unpack(packed_state.template get_atoms<f::DerivedTag>(), unpacked_state->template get_atoms<f::DerivedTag>());
+    m_derived_backend.unpack(packed_state.get_atoms(), unpacked_state->template get_atoms<f::FluentTag>(), unpacked_state->template get_atoms<f::DerivedTag>());
     m_numeric_backend.unpack(packed_state.get_numeric_variables(), unpacked_state->get_numeric_variables());
 
     return StateView<LiftedTag>(shared_from_this(), std::move(unpacked_state));
@@ -119,12 +117,12 @@ StateView<LiftedTag> StateRepository<LiftedTag>::register_state(SharedObjectPool
     if (m_axiom_evaluator)
         m_axiom_evaluator->compute_extended_state(*state);
 
-    state->set(m_packed_states
-                   .insert(Data<State<LiftedTag>>(Index<State<LiftedTag>>(m_packed_states.size()),
-                                                  m_fluent_backend.insert(state->template get_atoms<f::FluentTag>()),
-                                                  m_derived_backend.insert(state->template get_atoms<f::DerivedTag>()),
-                                                  m_numeric_backend.insert(state->get_numeric_variables())))
-                   .first);
+    state->set(
+        m_packed_states
+            .insert(Data<State<LiftedTag>>(Index<State<LiftedTag>>(m_packed_states.size()),
+                                           m_derived_backend.insert(state->template get_atoms<f::FluentTag>(), state->template get_atoms<f::DerivedTag>()),
+                                           m_numeric_backend.insert(state->get_numeric_variables())))
+            .first);
 
     return StateView<LiftedTag>(shared_from_this(), std::move(state));
 }

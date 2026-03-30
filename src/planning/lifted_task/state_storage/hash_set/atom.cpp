@@ -23,27 +23,80 @@
 namespace tyr::planning
 {
 
-AtomStorageBackend<LiftedTag, HashSet>::AtomStorageBackend(StateStorageContext<LiftedTag, HashSet>& ctx) : m_uint_vec_set(ctx.uint_vec_set), m_buffer() {}
+AtomStorageBackend<LiftedTag, HashSet>::AtomStorageBackend(StateStorageContext<LiftedTag, HashSet>& ctx) :
+    m_uint_vec_set(ctx.uint_vec_set),
+    m_atom_to_global(ctx.atom_to_global),
+    m_fact_to_global(ctx.fact_to_global),
+    m_is_atom(ctx.is_atom),
+    m_global_to_local(ctx.global_to_local),
+    m_buffer()
+{
+}
 
 typename AtomStorageBackend<LiftedTag, HashSet>::Packed
-AtomStorageBackend<LiftedTag, HashSet>::insert(const typename AtomStorageBackend<LiftedTag, HashSet>::Unpacked& unpacked)
+AtomStorageBackend<LiftedTag, HashSet>::insert(const typename AtomStorageBackend<LiftedTag, HashSet>::FactUnpacked& fact_unpacked,
+                                               const typename AtomStorageBackend<LiftedTag, HashSet>::AtomUnpacked& atom_unpacked)
 {
     m_buffer.clear();
-    const auto& bits = unpacked.indices;
-    for (auto i = bits.find_first(); i != boost::dynamic_bitset<>::npos; i = bits.find_next(i))
-        m_buffer.push_back(i);
 
-    return AtomStorageBackend<LiftedTag, HashSet>::Packed { m_uint_vec_set.insert(m_buffer) };
+    // Fact
+    const auto& fact_bits = fact_unpacked.indices;
+    for (auto i = fact_bits.find_first(); i != boost::dynamic_bitset<>::npos; i = fact_bits.find_next(i))
+    {
+        if (i >= m_fact_to_global.size())
+        {
+            m_fact_to_global.resize(i + 1, std::numeric_limits<uint_t>::max());
+        }
+        if (m_fact_to_global[i] == std::numeric_limits<uint_t>::max())
+        {
+            const auto g = m_global_to_local.size();
+            m_fact_to_global[i] = g;
+            m_global_to_local.push_back(i);
+            m_is_atom.resize(g + 1, false);
+        }
+        m_buffer.push_back(m_fact_to_global[i]);
+    }
+
+    // Atom
+    const auto& atom_bits = atom_unpacked.indices;
+    for (auto i = atom_bits.find_first(); i != boost::dynamic_bitset<>::npos; i = atom_bits.find_next(i))
+    {
+        if (i >= m_atom_to_global.size())
+        {
+            m_atom_to_global.resize(i + 1, std::numeric_limits<uint_t>::max());
+        }
+        if (m_atom_to_global[i] == std::numeric_limits<uint_t>::max())
+        {
+            const auto g = m_global_to_local.size();
+            m_atom_to_global[i] = g;
+            m_global_to_local.push_back(i);
+            m_is_atom.resize(g + 1, false);
+            m_is_atom[g] = true;
+        }
+        m_buffer.push_back(m_atom_to_global[i]);
+    }
+
+    std::sort(m_buffer.begin(), m_buffer.end());
+    const auto index = m_uint_vec_set.insert(m_buffer);
+    return AtomStorageBackend<LiftedTag, HashSet>::Packed { index };
 }
 
 void AtomStorageBackend<LiftedTag, HashSet>::unpack(const typename AtomStorageBackend<LiftedTag, HashSet>::Packed& packed,
-                                                    typename AtomStorageBackend<LiftedTag, HashSet>::Unpacked& unpacked)
+                                                    typename AtomStorageBackend<LiftedTag, HashSet>::FactUnpacked& fact_unpacked,
+                                                    typename AtomStorageBackend<LiftedTag, HashSet>::AtomUnpacked& atom_unpacked)
 {
     const auto view = m_uint_vec_set[packed.index];
 
-    unpacked.indices.clear();
+    auto& fact_indices = fact_unpacked.indices;
+    fact_indices.clear();
+    auto& atom_indices = atom_unpacked.indices;
+    atom_indices.clear();
+
     for (uint_t i = 0; i < view.size(); ++i)
-        tyr::set(view[i], true, unpacked.indices);
+        if (!m_is_atom[view[i]])
+            tyr::set(m_global_to_local[view[i]], true, fact_indices);
+        else
+            tyr::set(m_global_to_local[view[i]], true, atom_indices);
 }
 
 }

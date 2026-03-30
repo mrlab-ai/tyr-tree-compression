@@ -31,7 +31,6 @@
 #include "tyr/planning/unpacked_state.hpp"
 //
 #include "tyr/planning/lifted_task/state_storage/tree_compression/atom.hpp"
-#include "tyr/planning/lifted_task/state_storage/tree_compression/fact.hpp"
 #include "tyr/planning/state_storage/tree_compression/numeric.hpp"
 
 #include <boost/dynamic_bitset.hpp>
