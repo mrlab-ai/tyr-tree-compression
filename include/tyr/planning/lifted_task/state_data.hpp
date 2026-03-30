@@ -26,9 +26,7 @@
 #include "tyr/planning/state_index.hpp"
 //
 #include "tyr/planning/lifted_task/state_storage/hash_set/atom.hpp"
-#include "tyr/planning/lifted_task/state_storage/hash_set/fact.hpp"
 #include "tyr/planning/lifted_task/state_storage/tree_compression/atom.hpp"
-#include "tyr/planning/lifted_task/state_storage/tree_compression/fact.hpp"
 #include "tyr/planning/state_storage/config.hpp"
 #include "tyr/planning/state_storage/hash_set/numeric.hpp"
 #include "tyr/planning/state_storage/tree_compression/numeric.hpp"
@@ -50,11 +48,9 @@ public:
 
     Data() noexcept = default;
     Data(Index<planning::State<planning::LiftedTag>> index,
-         planning::FactPackedStorage<planning::LiftedTag, planning::StateStoragePolicyTag> fact_storage,
          planning::AtomPackedStorage<planning::LiftedTag, planning::StateStoragePolicyTag> atom_storage,
          planning::NumericPackedStorage<planning::LiftedTag, planning::StateStoragePolicyTag> numeric_storage) noexcept :
         m_index(index),
-        m_fact_storage(fact_storage),
         m_atom_storage(atom_storage),
         m_numeric_storage(numeric_storage)
     {
@@ -66,25 +62,15 @@ public:
      * New
      */
 
-    template<formalism::FactKind T>
-    auto get_atoms() const noexcept
-    {
-        if constexpr (std::same_as<T, formalism::FluentTag>)
-            return m_fact_storage;
-        else if constexpr (std::same_as<T, formalism::DerivedTag>)
-            return m_atom_storage;
-        else
-            static_assert(dependent_false<T>::value, "Missing case");
-    }
+    auto get_atoms() const noexcept { return m_atom_storage; }
 
     auto get_numeric_variables() const noexcept { return m_numeric_storage; }
 
-    auto identifying_members() const noexcept { return std::tie(m_fact_storage, m_atom_storage, m_numeric_storage); }
+    auto identifying_members() const noexcept { return std::tie(m_atom_storage, m_numeric_storage); }
 
 private:
     Index<planning::State<planning::LiftedTag>> m_index;
 
-    planning::FactPackedStorage<planning::LiftedTag, planning::StateStoragePolicyTag> m_fact_storage;
     planning::AtomPackedStorage<planning::LiftedTag, planning::StateStoragePolicyTag> m_atom_storage;
     planning::NumericPackedStorage<planning::LiftedTag, planning::StateStoragePolicyTag> m_numeric_storage;
 };

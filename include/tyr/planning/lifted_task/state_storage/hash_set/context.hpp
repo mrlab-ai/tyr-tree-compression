@@ -41,6 +41,12 @@ struct StateStorageContext<LiftedTag, HashSet>
     RawVectorSet<uint_t, uint_t> uint_vec_set;
     RawVectorSet<uint_t, float_t> float_vec_set;
 
+    std::vector<uint_t> atom_to_global;
+    std::vector<uint_t> fact_to_global;
+
+    std::vector<bool> is_atom;
+    std::vector<uint_t> global_to_local;
+
     size_t memory_usage() const noexcept
     {
         size_t bytes = 0;

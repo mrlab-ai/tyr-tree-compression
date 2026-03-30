@@ -40,19 +40,26 @@ template<>
 class AtomStorageBackend<LiftedTag, TreeCompression>
 {
 public:
-    using Unpacked = AtomUnpackedStorage<LiftedTag>;
     using Packed = AtomPackedStorage<LiftedTag, TreeCompression>;
+    using AtomUnpacked = AtomUnpackedStorage<LiftedTag>;
+    using FactUnpacked = FactUnpackedStorage<LiftedTag>;
 
     explicit AtomStorageBackend(StateStorageContext<LiftedTag, TreeCompression>& ctx);
 
-    Packed insert(const Unpacked& unpacked);
+    Packed insert(const FactUnpacked& fact_unpacked, const AtomUnpacked& atom_unpacked);
 
-    void unpack(const Packed& packed, Unpacked& unpacked);
+    void unpack(const Packed& packed, FactUnpacked& fact_unpacked, AtomUnpacked& atom_unpacked);
 
 private:
     valla::IndexedHashSet<valla::Slot<uint_t>, uint_t>& m_uint_nodes;
 
-    std::vector<uint_t> m_uint_node_buffer;
+    std::vector<uint_t>& m_atom_to_global;
+    std::vector<uint_t>& m_fact_to_global;
+
+    std::vector<bool>& m_is_atom;
+    std::vector<uint_t>& m_global_to_local;
+
+    std::vector<uint_t> m_buffer;
 };
 
 }

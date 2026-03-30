@@ -27,6 +27,7 @@ struct TreeCompression
 struct HashSet
 {
 };
+
 }
 
 #endif
