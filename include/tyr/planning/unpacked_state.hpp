@@ -30,27 +30,25 @@
 namespace tyr::planning
 {
 
-template<typename Task>
-class UnpackedState
-{
-    static_assert(dependent_false<Task>::value, "UnpackedState is not defined for type T.");
-};
+template<TaskKind Kind>
+class UnpackedState;
 
-template<typename T, typename Task>
+template<typename T, typename Kind>
 concept UnpackedStateConcept = requires(T& s,
                                         const T& cs,
-                                        Index<State<Task>> index,
+                                        Index<State<Kind>> index,
                                         Index<formalism::planning::FDRVariable<formalism::FluentTag>> variable,
                                         Data<formalism::planning::FDRFact<formalism::FluentTag>> fact,
                                         Index<formalism::planning::GroundFunctionTerm<formalism::FluentTag>> fterm,
                                         float_t value,
                                         Index<formalism::planning::GroundAtom<formalism::DerivedTag>> atom) {
+    requires TaskKind<Kind>;
     typename T::TaskType;
     { s.clear() };
     { s.clear_unextended_part() };
     { s.clear_extended_part() };
     { s.assign_unextended_part(cs) };
-    { cs.get_index() } -> std::same_as<Index<State<Task>>>;
+    { cs.get_index() } -> std::same_as<Index<State<Kind>>>;
     { s.set(index) };
     { cs.get(variable) } -> std::same_as<formalism::planning::FDRValue>;
     { s.set(fact) };

@@ -26,8 +26,10 @@
 #include "tyr/planning/ground_task/match_tree/match_tree.hpp"
 #include "tyr/planning/lifted_task.hpp"
 #include "tyr/planning/lifted_task/axiom_evaluator.hpp"
+#include "tyr/planning/lifted_task/node.hpp"
 #include "tyr/planning/lifted_task/state_repository.hpp"
 #include "tyr/planning/lifted_task/state_view.hpp"
+#include "tyr/planning/lifted_task/unpacked_state.hpp"
 #include "tyr/planning/programs/action.hpp"
 #include "tyr/planning/successor_generator.hpp"
 #include "tyr/planning/task_utils.hpp"
@@ -41,7 +43,7 @@ namespace tyr::planning
 {
 namespace
 {
-void insert_derived_atoms_to_fact_set(const UnpackedState<LiftedTask>& state,
+void insert_derived_atoms_to_fact_set(const UnpackedState<LiftedTag>& state,
                                       const formalism::planning::Repository& repository,
                                       fp::MergeDatalogContext& merge_context,
                                       datalog::TaggedFactSets<f::FluentTag>& fact_sets)
@@ -50,7 +52,7 @@ void insert_derived_atoms_to_fact_set(const UnpackedState<LiftedTask>& state,
         fact_sets.predicate.insert(fp::merge_p2d<f::DerivedTag, f::FluentTag>(atom, merge_context).first);
 }
 
-void insert_numeric_variables_to_fact_set(const UnpackedState<LiftedTask>& state,
+void insert_numeric_variables_to_fact_set(const UnpackedState<LiftedTag>& state,
                                           const formalism::planning::Repository& repository,
                                           fp::MergeDatalogContext& merge_context,
                                           datalog::TaggedFactSets<f::FluentTag>& fact_sets)
@@ -59,7 +61,7 @@ void insert_numeric_variables_to_fact_set(const UnpackedState<LiftedTask>& state
         fact_sets.function.insert(fp::merge_p2d(fterm, merge_context).first, value);
 }
 
-void insert_extended_state(const UnpackedState<LiftedTask>& unpacked_state,
+void insert_extended_state(const UnpackedState<LiftedTag>& unpacked_state,
                            const fp::Repository& atoms_context,
                            fp::MergeDatalogContext& merge_context,
                            datalog::TaggedFactSets<f::FluentTag>& fact_sets,
@@ -76,7 +78,7 @@ void insert_extended_state(const UnpackedState<LiftedTask>& unpacked_state,
 }
 }
 
-SuccessorGenerator<LiftedTask>::SuccessorGenerator(std::shared_ptr<LiftedTask> task, ExecutionContextPtr execution_context) :
+SuccessorGenerator<LiftedTag>::SuccessorGenerator(std::shared_ptr<Task<LiftedTag>> task, ExecutionContextPtr execution_context) :
     m_task(std::move(task)),
     m_execution_context(std::move(execution_context)),
     m_workspace(m_task->get_action_program().get_program_context(),
@@ -84,37 +86,38 @@ SuccessorGenerator<LiftedTask>::SuccessorGenerator(std::shared_ptr<LiftedTask> t
                 d::NoOrAnnotationPolicy(),
                 d::NoAndAnnotationPolicy(),
                 d::NoTerminationPolicy()),
-    m_state_repository(std::make_shared<StateRepository<LiftedTask>>(m_task, m_execution_context)),
+    m_state_repository(std::make_shared<StateRepository<LiftedTag>>(m_task, m_execution_context)),
     m_executor()
 {
 }
 
-std::shared_ptr<SuccessorGenerator<LiftedTask>> SuccessorGenerator<LiftedTask>::create(std::shared_ptr<LiftedTask> task, ExecutionContextPtr execution_context)
+std::shared_ptr<SuccessorGenerator<LiftedTag>> SuccessorGenerator<LiftedTag>::create(std::shared_ptr<Task<LiftedTag>> task,
+                                                                                     ExecutionContextPtr execution_context)
 {
-    return std::make_shared<SuccessorGenerator<LiftedTask>>(std::move(task), std::move(execution_context));
+    return std::make_shared<SuccessorGenerator<LiftedTag>>(std::move(task), std::move(execution_context));
 }
 
-Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_initial_node()
+Node<LiftedTag> SuccessorGenerator<LiftedTag>::get_initial_node()
 {
     auto initial_state = m_state_repository->get_initial_state();
 
-    const auto state_context = StateContext<LiftedTask>(*m_task, initial_state.get_unpacked_state(), 0);
+    const auto state_context = StateContext<LiftedTag>(*m_task, initial_state.get_unpacked_state(), 0);
 
     const auto state_metric = evaluate_metric(m_task->get_task().get_metric(), m_task->get_task().get_auxiliary_fterm_value(), state_context);
 
-    return Node<LiftedTask>(std::move(initial_state), state_metric);
+    return Node<LiftedTag>(std::move(initial_state), state_metric);
 }
 
-std::vector<LabeledNode<LiftedTask>> SuccessorGenerator<LiftedTask>::get_labeled_successor_nodes(const Node<LiftedTask>& node)
+std::vector<LabeledNode<LiftedTag>> SuccessorGenerator<LiftedTag>::get_labeled_successor_nodes(const Node<LiftedTag>& node)
 {
-    auto result = std::vector<LabeledNode<LiftedTask>> {};
+    auto result = std::vector<LabeledNode<LiftedTag>> {};
 
     get_labeled_successor_nodes(node, result);
 
     return result;
 }
 
-void SuccessorGenerator<LiftedTask>::get_labeled_successor_nodes(const Node<LiftedTask>& node, std::vector<LabeledNode<LiftedTask>>& out_nodes)
+void SuccessorGenerator<LiftedTag>::get_labeled_successor_nodes(const Node<LiftedTag>& node, std::vector<LabeledNode<LiftedTag>>& out_nodes)
 {
     out_nodes.clear();
 
@@ -129,7 +132,7 @@ void SuccessorGenerator<LiftedTask>::get_labeled_successor_nodes(const Node<Lift
 
     m_execution_context->arena().execute([&] { d::solve_bottom_up(ctx); });
 
-    const auto state_context = StateContext<LiftedTask>(*m_task, state.get_unpacked_state(), node.get_metric());
+    const auto state_context = StateContext<LiftedTag>(*m_task, state.get_unpacked_state(), node.get_metric());
 
     out_nodes.clear();
 
@@ -167,22 +170,22 @@ void SuccessorGenerator<LiftedTask>::get_labeled_successor_nodes(const Node<Lift
     }
 }
 
-Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_successor_node(const Node<LiftedTask>& node, fp::GroundActionView action)
+Node<LiftedTag> SuccessorGenerator<LiftedTag>::get_successor_node(const Node<LiftedTag>& node, fp::GroundActionView action)
 {
     const auto& state = node.get_state();
-    const auto state_context = StateContext<LiftedTask>(*m_task, state.get_unpacked_state(), node.get_metric());
+    const auto state_context = StateContext<LiftedTag>(*m_task, state.get_unpacked_state(), node.get_metric());
 
     return m_executor.apply_action(state_context, action, *m_state_repository);
 }
 
-Node<LiftedTask> SuccessorGenerator<LiftedTask>::get_node(Index<State<LiftedTask>> state_index)
+Node<LiftedTag> SuccessorGenerator<LiftedTag>::get_node(Index<State<LiftedTag>> state_index)
 {
     auto state = m_state_repository->get_registered_state(state_index);
-    const auto state_context = StateContext<LiftedTask>(*m_task, state.get_unpacked_state(), 0);
+    const auto state_context = StateContext<LiftedTag>(*m_task, state.get_unpacked_state(), 0);
     const auto state_metric = evaluate_metric(m_task->get_task().get_metric(), m_task->get_task().get_auxiliary_fterm_value(), state_context);
 
-    return Node<LiftedTask>(std::move(state), state_metric);
+    return Node<LiftedTag>(std::move(state), state_metric);
 }
 
-static_assert(SuccessorGeneratorConcept<SuccessorGenerator<LiftedTask>, LiftedTask>);
+static_assert(SuccessorGeneratorConcept<SuccessorGenerator<LiftedTag>, LiftedTag>);
 }
