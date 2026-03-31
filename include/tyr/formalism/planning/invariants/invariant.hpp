@@ -42,6 +42,10 @@ struct TempAtom
     std::vector<Data<Term>> terms;
 
     auto identifying_members() const noexcept { return std::tie(predicate, terms); }
+
+    friend bool operator==(const TempAtom& lhs, const TempAtom& rhs) { return lhs.identifying_members() == rhs.identifying_members(); }
+
+    friend bool operator<(const TempAtom& lhs, const TempAtom& rhs) { return lhs.identifying_members() < rhs.identifying_members(); }
 };
 
 using TempAtomList = std::vector<TempAtom>;
@@ -52,6 +56,10 @@ struct TempLiteral
     bool polarity;
 
     auto identifying_members() const noexcept { return std::tie(atom, polarity); }
+
+    friend bool operator==(const TempLiteral& lhs, const TempLiteral& rhs) { return lhs.identifying_members() == rhs.identifying_members(); }
+
+    friend bool operator<(const TempLiteral& lhs, const TempLiteral& rhs) { return lhs.identifying_members() < rhs.identifying_members(); }
 };
 
 using TempLiteralList = std::vector<TempLiteral>;
@@ -83,6 +91,10 @@ struct Invariant
     UnorderedSet<PredicateView<FluentTag>> predicates;
 
     auto identifying_members() const noexcept { return std::tie(num_rigid_variables, num_counted_variables, atoms); }
+
+    friend bool operator==(const Invariant& lhs, const Invariant& rhs) { return lhs.identifying_members() == rhs.identifying_members(); }
+
+    friend bool operator<(const Invariant& lhs, const Invariant& rhs) { return lhs.identifying_members() < rhs.identifying_members(); }
 };
 
 using InvariantList = std::vector<Invariant>;
