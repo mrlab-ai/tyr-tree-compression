@@ -110,6 +110,95 @@ bool covers(const Invariant& inv, const TempAtom& element)
     return false;
 }
 
+Data<Term> apply_substitution(const Data<Term>& term, const Substitution& sigma)
+{
+    return std::visit(
+        [&](auto&& arg) -> Data<Term>
+        {
+            using T = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<T, ParameterIndex>)
+            {
+                if (sigma.contains(arg))
+                    return *sigma.get(arg);
+                return term;
+            }
+            else if constexpr (std::is_same_v<T, Index<Object>>)
+            {
+                return term;
+            }
+            else
+            {
+                static_assert(dependent_false<T>::value, "Missing case");
+            }
+        },
+        term.value);
+}
+
+TempAtom apply_substitution(const TempAtom& atom, const Substitution& sigma)
+{
+    auto terms = std::vector<Data<Term>> {};
+    terms.reserve(atom.terms.size());
+
+    for (const auto& term : atom.terms)
+        terms.push_back(apply_substitution(term, sigma));
+
+    return TempAtom {
+        .predicate = atom.predicate,
+        .terms = std::move(terms),
+    };
+}
+
+TempLiteral apply_substitution(const TempLiteral& lit, const Substitution& sigma)
+{
+    return TempLiteral {
+        .atom = apply_substitution(lit.atom, sigma),
+        .polarity = lit.polarity,
+    };
+}
+
+TempLiteralList apply_substitution(const TempLiteralList& lits, const Substitution& sigma)
+{
+    auto result = TempLiteralList {};
+    result.reserve(lits.size());
+
+    for (const auto& lit : lits)
+        result.push_back(apply_substitution(lit, sigma));
+
+    return result;
+}
+
+TempAtom make_refinement_atom(PredicateView<FluentTag> predicate, size_t num_rigid_variables, std::optional<size_t> counted_position)
+{
+    const auto arity = static_cast<size_t>(predicate.get_arity());
+    auto terms = std::vector<Data<Term>> {};
+    terms.reserve(arity);
+
+    const bool has_counted = counted_position.has_value();
+    const auto counted_index = ParameterIndex(num_rigid_variables);
+
+    for (size_t i = 0; i < arity; ++i)
+    {
+        if (has_counted && i == *counted_position)
+        {
+            terms.emplace_back(Data<Term>(counted_index));
+        }
+        else
+        {
+            size_t rigid_slot = i;
+            if (has_counted && i > *counted_position)
+                rigid_slot -= 1;
+
+            terms.emplace_back(Data<Term>(ParameterIndex(rigid_slot)));
+        }
+    }
+
+    return TempAtom {
+        .predicate = predicate,
+        .terms = std::move(terms),
+    };
+}
+
 bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
 {
     // TODO:
@@ -307,10 +396,15 @@ InvariantList synthesize_invariants(TaskView task)
 
     auto accepted = InvariantList {};
 
+    auto seen = UnorderedSet<Invariant> {};
+
     while (!queue.empty())
     {
         auto candidate = std::move(queue.back());
         queue.pop_back();
+
+        if (!seen.insert(candidate).second)
+            continue;
 
         auto result = prove_invariant(candidate, ops);
 

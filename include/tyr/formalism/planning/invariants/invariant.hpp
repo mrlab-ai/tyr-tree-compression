@@ -81,6 +81,8 @@ struct Invariant
     size_t num_counted_variables;
     TempAtomList atoms;
     UnorderedSet<PredicateView<FluentTag>> predicates;
+
+    auto identifying_members() const noexcept { return std::tie(num_rigid_variables, num_counted_variables, atoms); }
 };
 
 using InvariantList = std::vector<Invariant>;
