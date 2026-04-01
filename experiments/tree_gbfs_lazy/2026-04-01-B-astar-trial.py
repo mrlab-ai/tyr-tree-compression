@@ -119,11 +119,9 @@ MEMORY_LIMIT = 3000
 
 HEURISTICS = ["blind"]
 
-parser = SearchParser()
-parser.add_astar_patterns()
 # Create a new experiment.
 exp = Experiment(environment=ENV)
-exp.add_parser(parser)
+exp.add_parser(SearchParser("astar"))
 exp.add_parser(DatalogParser())
 
 PLANNER_DIR = REPO / "build" / "exe" / "astar_eager"

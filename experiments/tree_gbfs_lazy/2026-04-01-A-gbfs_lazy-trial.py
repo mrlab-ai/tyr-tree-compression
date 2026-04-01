@@ -119,11 +119,9 @@ MEMORY_LIMIT = 3000
 
 HEURISTICS = ["ff", "goalcount"]
 
-parser = SearchParser()
-parser.add_gbfs_patterns()
 # Create a new experiment.
 exp = Experiment(environment=ENV)
-exp.add_parser(parser)
+exp.add_parser(SearchParser("gbfs"))
 exp.add_parser(DatalogParser())
 
 PLANNER_DIR = REPO / "build" / "exe" / "gbfs_lazy"
