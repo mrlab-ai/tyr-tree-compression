@@ -32,6 +32,7 @@ int main(int argc, char** argv)
     program.add_argument("-N", "--num-worker-threads").default_value(size_t(1)).scan<'u', size_t>().help("The number of worker threads.");
     program.add_argument("-R", "--random-seed").default_value(uint64_t(0)).scan<'u', uint64_t>().help("The random seed.");
     program.add_argument("-S", "--shuffle-labeled-succ-nodes").default_value(false).implicit_value(true).help("Toggle shuffling the labeled successor nodes.");
+    program.add_argument("-H", "--heuristic").default_value(std::string("blind")).help("Heuristic used for search. Options: ff, goalcount, blind.");
     program.add_argument("-V", "--verbosity")
         .default_value(size_t(0))
         .scan<'u', size_t>()
@@ -89,9 +90,29 @@ int main(int argc, char** argv)
         options.random_seed = random_seed;
         options.shuffle_labeled_succ_nodes = shuffle_labeled_succ_nodes;
 
-        auto ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+        auto heuristic_name = program.get<std::string>("--heuristic");
+        std::shared_ptr<planning::Heuristic<planning::LiftedTag>> heuristic;
+        std::shared_ptr<planning::FFRPGHeuristic<planning::LiftedTag>> ff_heuristic;
+        if (heuristic_name == "ff")
+        {
+            ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+            heuristic = ff_heuristic;
+        }
+        else if (heuristic_name == "goalcount")
+        {
+            heuristic = planning::GoalCountHeuristic<planning::LiftedTag>::create(lifted_task);
+        }
+        else if (heuristic_name == "blind")
+        {
+            heuristic = planning::BlindHeuristic<planning::LiftedTag>::create();
+        }
+        else
+        {
+            std::cerr << "Unknown heuristic: " << heuristic_name << ". Choose from: ff, goalcount, blind.\n";
+            std::exit(1);
+        }
 
-        auto result = planning::gbfs_lazy::find_solution(*lifted_task, successor_generator, *ff_heuristic, options);
+        auto result = planning::gbfs_lazy::find_solution(*lifted_task, successor_generator, *heuristic, options);
 
         if (result.status == planning::SearchStatus::SOLVED)
         {
@@ -130,25 +151,28 @@ int main(int argc, char** argv)
                 axiom_evaluator_rule_worker_statistics.push_back(worker.solve.statistics);
         std::cout << datalog::compute_aggregated_rule_worker_statistics(axiom_evaluator_rule_worker_statistics) << std::endl;
 
-        std::cout << "[FFRPGHeuristic] Summary" << std::endl;
-        std::cout << ff_heuristic->get_workspace().statistics << std::endl;
-        auto ff_heuristic_rule_statistics = std::vector<datalog::RuleStatistics> {};
-        for (size_t i = 0; i < ff_heuristic->get_workspace().rules.size(); ++i)
+        if (ff_heuristic)
         {
-            const auto& ws_rule = ff_heuristic->get_workspace().rules[i];
-            const auto& cws_rule = lifted_task->get_rpg_program().get_const_program_workspace().rules[i];
-            ff_heuristic_rule_statistics.push_back(ws_rule->common.statistics);
-            // std::cout << cws_rule.get_rule() << std::endl;
-            // std::cout << ws_rule->common.statistics << std::endl;
-            // for (const auto& worker : ws_rule->worker)
-            //     std::cout << worker.solve.statistics << std::endl;
+            std::cout << "[FFRPGHeuristic] Summary" << std::endl;
+            std::cout << ff_heuristic->get_workspace().statistics << std::endl;
+            auto ff_heuristic_rule_statistics = std::vector<datalog::RuleStatistics> {};
+            for (size_t i = 0; i < ff_heuristic->get_workspace().rules.size(); ++i)
+            {
+                const auto& ws_rule = ff_heuristic->get_workspace().rules[i];
+                const auto& cws_rule = lifted_task->get_rpg_program().get_const_program_workspace().rules[i];
+                ff_heuristic_rule_statistics.push_back(ws_rule->common.statistics);
+                // std::cout << cws_rule.get_rule() << std::endl;
+                // std::cout << ws_rule->common.statistics << std::endl;
+                // for (const auto& worker : ws_rule->worker)
+                //     std::cout << worker.solve.statistics << std::endl;
+            }
+            std::cout << datalog::compute_aggregated_rule_statistics(ff_heuristic_rule_statistics) << std::endl;
+            auto ff_heuristic_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+            for (const auto& ws_rule : ff_heuristic->get_workspace().rules)
+                for (const auto& worker : ws_rule->worker)
+                    ff_heuristic_rule_worker_statistics.push_back(worker.solve.statistics);
+            std::cout << datalog::compute_aggregated_rule_worker_statistics(ff_heuristic_rule_worker_statistics) << std::endl;
         }
-        std::cout << datalog::compute_aggregated_rule_statistics(ff_heuristic_rule_statistics) << std::endl;
-        auto ff_heuristic_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
-        for (const auto& ws_rule : ff_heuristic->get_workspace().rules)
-            for (const auto& worker : ws_rule->worker)
-                ff_heuristic_rule_worker_statistics.push_back(worker.solve.statistics);
-        std::cout << datalog::compute_aggregated_rule_worker_statistics(ff_heuristic_rule_worker_statistics) << std::endl;
 
         std::cout << "[Total] Number of fluent atoms: " << lifted_task->get_repository()->size<formalism::planning::GroundAtom<formalism::FluentTag>>()
                   << std::endl;

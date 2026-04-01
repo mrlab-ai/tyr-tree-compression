@@ -32,6 +32,7 @@ int main(int argc, char** argv)
     program.add_argument("-N", "--num-worker-threads").default_value(size_t(1)).scan<'u', size_t>().help("The number of worker threads.");
     program.add_argument("-R", "--random-seed").default_value(uint64_t(0)).scan<'u', uint64_t>().help("The random seed.");
     program.add_argument("-S", "--shuffle-labeled-succ-nodes").default_value(false).implicit_value(true).help("Toggle shuffling the labeled successor nodes.");
+    program.add_argument("-H", "--heuristic").default_value(std::string("blind")).help("Heuristic used for search. Options: ff, goalcount, blind.");
     program.add_argument("-V", "--verbosity")
         .default_value(size_t(0))
         .scan<'u', size_t>()
@@ -87,9 +88,27 @@ int main(int argc, char** argv)
         options.random_seed = random_seed;
         options.shuffle_labeled_succ_nodes = shuffle_labeled_succ_nodes;
 
-        auto ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+        auto heuristic_name = program.get<std::string>("--heuristic");
+        std::shared_ptr<planning::Heuristic<planning::LiftedTag>> heuristic;
+        if (heuristic_name == "ff")
+        {
+            heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+        }
+        else if (heuristic_name == "goalcount")
+        {
+            heuristic = planning::GoalCountHeuristic<planning::LiftedTag>::create(lifted_task);
+        }
+        else if (heuristic_name == "blind")
+        {
+            heuristic = planning::BlindHeuristic<planning::LiftedTag>::create();
+        }
+        else
+        {
+            std::cerr << "Unknown heuristic: " << heuristic_name << ". Choose from: ff, goalcount, blind.\n";
+            std::exit(1);
+        }
 
-        auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *ff_heuristic, options);
+        auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *heuristic, options);
 
         if (result.status == planning::SearchStatus::SOLVED)
         {
