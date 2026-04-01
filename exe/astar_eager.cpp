@@ -31,16 +31,8 @@ int main(int argc, char** argv)
     program.add_argument("-O", "--plan-filepath").default_value(std::string("plan.out")).help("The path to the output plan file.");
     program.add_argument("-N", "--num-worker-threads").default_value(size_t(1)).scan<'u', size_t>().help("The number of worker threads.");
     program.add_argument("-R", "--random-seed").default_value(uint64_t(0)).scan<'u', uint64_t>().help("The random seed.");
-    program.add_argument("-S", "--shuffle-labeled-succ-nodes").default_value(false).implicit_value(true).help("Enable shuffling the labeled successor nodes.");
-    program.add_argument("-G", "--instantiate-ground-task")
-        .default_value(false)
-        .implicit_value(true)
-        .help("Enable instantiating the ground task before search.");
-    program.add_argument("--disable-invariant-synthesis")
-        .default_value(false)
-        .implicit_value(true)
-        .help("Disable invariant synthesis during ground task instantiation.");
-    program.add_argument("-H", "--heuristic-type").default_value("blind").choices("blind", "goal_count", "rpg_max", "rpg_add", "rpg_ff");
+    program.add_argument("-S", "--shuffle-labeled-succ-nodes").default_value(false).implicit_value(true).help("Toggle shuffling the labeled successor nodes.");
+    program.add_argument("-H", "--heuristic").default_value(std::string("blind")).help("Heuristic used for search. Options: ff, goalcount, blind.");
     program.add_argument("-V", "--verbosity")
         .default_value(size_t(0))
         .scan<'u', size_t>()
@@ -91,7 +83,37 @@ int main(int argc, char** argv)
 
         auto execution_context = ExecutionContext::create(num_worker_threads);
 
-        if (!instantiate_ground_task)
+        auto successor_generator = planning::SuccessorGenerator<planning::LiftedTag>(lifted_task, execution_context);
+
+        auto options = planning::astar_eager::Options<planning::LiftedTag>();
+        options.start_node = successor_generator.get_initial_node();
+        options.event_handler = planning::astar_eager::DefaultEventHandler<planning::LiftedTag>::create(verbosity);
+        options.random_seed = random_seed;
+        options.shuffle_labeled_succ_nodes = shuffle_labeled_succ_nodes;
+
+        auto heuristic_name = program.get<std::string>("--heuristic");
+        std::shared_ptr<planning::Heuristic<planning::LiftedTag>> heuristic;
+        if (heuristic_name == "ff")
+        {
+            heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+        }
+        else if (heuristic_name == "goalcount")
+        {
+            heuristic = planning::GoalCountHeuristic<planning::LiftedTag>::create(lifted_task);
+        }
+        else if (heuristic_name == "blind")
+        {
+            heuristic = planning::BlindHeuristic<planning::LiftedTag>::create();
+        }
+        else
+        {
+            std::cerr << "Unknown heuristic: " << heuristic_name << ". Choose from: ff, goalcount, blind.\n";
+            std::exit(1);
+        }
+
+        auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *heuristic, options);
+
+        if (result.status == planning::SearchStatus::SOLVED)
         {
             auto successor_generator = planning::SuccessorGenerator<planning::LiftedTag>(lifted_task, execution_context);
 
