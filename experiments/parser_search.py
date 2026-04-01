@@ -78,8 +78,13 @@ class SearchParser(Parser):
 
     """
 
-    def __init__(self):
+    def __init__(self, search_algo: str = "gbfs"):
         super().__init__()
+
+        if search_algo == "gbfs":
+            self.add_gbfs_patterns()
+        elif search_algo == "astar":
+            self.add_astar_patterns()
 
         self.add_pattern(
             "search_time_ms", r"\[Search\] Search time: (\d+) ms", type=int
