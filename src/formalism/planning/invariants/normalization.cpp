@@ -127,53 +127,6 @@ void remove_unused_parameters(Invariant& inv)
     inv.num_counted_variables = next - new_num_rigid;
 }
 
-bool has_consistent_rigid_role_pattern(const Invariant& inv)
-{
-    if (inv.atoms.empty())
-        return true;
-
-    // For each rigid variable p, remember in which predicate/argument positions
-    // it occurs. For the invariant families from the paper, inconsistent swaps
-    // like in(V1,V0) versus in(V0,V1) should be rejected.
-    for (size_t rigid = 0; rigid < inv.num_rigid_variables; ++rigid)
-    {
-        std::map<PredicateView<FluentTag>, std::vector<size_t>> positions_by_predicate;
-
-        for (const auto& atom : inv.atoms)
-        {
-            std::vector<size_t> positions;
-
-            for (size_t i = 0; i < atom.terms.size(); ++i)
-            {
-                const auto& term = atom.terms[i];
-                std::visit(
-                    [&](auto&& arg)
-                    {
-                        using T = std::decay_t<decltype(arg)>;
-                        if constexpr (std::is_same_v<T, ParameterIndex>)
-                        {
-                            if (static_cast<uint_t>(arg) == rigid)
-                                positions.push_back(i);
-                        }
-                    },
-                    term.value);
-            }
-
-            auto it = positions_by_predicate.find(atom.predicate);
-            if (it == positions_by_predicate.end())
-            {
-                positions_by_predicate.emplace(atom.predicate, std::move(positions));
-            }
-            else
-            {
-                if (it->second != positions)
-                    return false;
-            }
-        }
-    }
-
-    return true;
-}
 }
 
 void normalize_invariant(Invariant& inv)
@@ -182,7 +135,5 @@ void normalize_invariant(Invariant& inv)
     remove_unused_parameters(inv);
     inv.canonicalize();
 }
-
-bool is_well_shaped_invariant(const Invariant& inv) { return has_consistent_rigid_role_pattern(inv); }
 
 }

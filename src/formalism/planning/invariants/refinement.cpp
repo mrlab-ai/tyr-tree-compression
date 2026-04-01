@@ -116,11 +116,13 @@ void try_refinement(InvariantList& result,
 
     normalize_invariant(refined);
 
-    // if (!is_well_shaped_invariant(refined))
-    //     return;
-
     if (!is_add_effect_unbalanced(op, effect, add_atom, refined))
         result.push_back(std::move(refined));
+}
+
+bool uses_predicate(const Invariant& inv, PredicateView<FluentTag> predicate)
+{
+    return std::ranges::any_of(inv.atoms, [&](const auto& atom) { return atom.predicate == predicate; });
 }
 
 }  // namespace
@@ -135,6 +137,9 @@ InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const
 
     for (const auto predicate : predicates)
     {
+        if (uses_predicate(inv, predicate))
+            continue;
+
         const auto arity = static_cast<size_t>(predicate.get_arity());
 
         if (arity == inv.num_rigid_variables)

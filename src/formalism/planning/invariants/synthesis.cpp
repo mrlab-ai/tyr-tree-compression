@@ -17,7 +17,6 @@
 
 #include "tyr/formalism/planning/invariants/synthesis.hpp"
 
-#include "initial_state.hpp"
 #include "normalization.hpp"
 #include "refinement.hpp"
 #include "tyr/common/comparators.hpp"
@@ -57,13 +56,7 @@ InvariantList synthesize_invariants(TaskView task)
 
         normalize_invariant(candidate);
 
-        // if (!is_well_shaped_invariant(candidate))
-        //     continue;
-
         if (!seen.insert(candidate).second)
-            continue;
-
-        if (!holds_in_initial_state(candidate, task.get_atoms<FluentTag>()))
             continue;
 
         auto result = prove_invariant(candidate, ops);
