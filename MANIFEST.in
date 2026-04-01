@@ -1,5 +1,4 @@
 include dependencies/cista/CMakeLists.txt
-include dependencies/CMakeLists.txt
 include dependencies/abseil/CMakeLists.txt
 include dependencies/nanobind/CMakeLists.txt
 include dependencies/boost/CMakeLists.txt
@@ -9,6 +8,8 @@ include dependencies/loki/CMakeLists.txt
 include dependencies/oneTBB/CMakeLists.txt
 include dependencies/googletest/CMakeLists.txt
 include dependencies/benchmark/CMakeLists.txt
+include dependencies/valla/CMakeLists.txt
+include dependencies/argparse/CMakeLists.txt
 include dependencies/CMakeLists.txt
 
 include CMakeLists.txt
