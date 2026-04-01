@@ -57,8 +57,8 @@ InvariantList synthesize_invariants(TaskView task)
 
         normalize_invariant(candidate);
 
-        if (!is_well_shaped_invariant(candidate))
-            continue;
+        // if (!is_well_shaped_invariant(candidate))
+        //     continue;
 
         if (!seen.insert(candidate).second)
             continue;

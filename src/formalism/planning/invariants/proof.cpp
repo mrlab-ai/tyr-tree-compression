@@ -18,18 +18,25 @@
 #include "proof.hpp"
 
 #include "matching.hpp"
-#include "tyr/formalism/planning/invariants/formatter.hpp"
+
+#include <algorithm>
+#include <optional>
+#include <variant>
+#include <vector>
 
 namespace tyr::formalism::planning::invariant
 {
 namespace
 {
+
 bool is_effect_local_parameter(ParameterIndex parameter, size_t num_action_variables) { return static_cast<uint_t>(parameter) >= num_action_variables; }
 
 uint_t get_effect_local_index(ParameterIndex parameter, size_t num_action_variables) { return static_cast<uint_t>(parameter) - num_action_variables; }
 
 bool is_contradictory(const TempLiteral& lhs, const TempLiteral& rhs) { return lhs.atom == rhs.atom && lhs.polarity != rhs.polarity; }
 
+// Syntactic consistency check used by the invariant synthesis procedure.
+// This is not general satisfiability; it only rejects explicit contradictions.
 bool satisfiable(const TempLiteralList& lits)
 {
     for (size_t i = 0; i < lits.size(); ++i)
@@ -44,12 +51,13 @@ bool satisfiable(const TempLiteralList& lits)
     return true;
 }
 
+// Syntactic entailment check used by the balancing test.
+// rhs is entailed iff every literal in rhs occurs literally in lhs.
 bool entails(const TempLiteralList& lhs, const TempLiteralList& rhs)
 {
     for (const auto& rhs_lit : rhs)
     {
-        const auto it = std::find_if(lhs.begin(), lhs.end(), [&](const auto& lhs_lit) { return lhs_lit == rhs_lit; });
-
+        const auto it = std::find(lhs.begin(), lhs.end(), rhs_lit);
         if (it == lhs.end())
             return false;
     }
@@ -116,10 +124,16 @@ TempLiteralList alpha_rename_effect_condition(const TempLiteralList& lits, size_
 
     return result;
 }
-}
+
+}  // namespace
 
 bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
 {
+    // Fig. 8 style check:
+    // duplicate quantified effects conceptually by alpha-renaming their local variables,
+    // then test whether two distinct add effects affecting predicates in the invariant
+    // may simultaneously establish two covered atoms.
+
     size_t max_num_effect_variables = 0;
     for (const auto& eff : op.effects)
         max_num_effect_variables = std::max(max_num_effect_variables, eff.num_effect_variables);
@@ -155,7 +169,6 @@ bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
                             continue;
 
                         const auto atom_rhs_alpha = alpha_rename_effect_atom(atom_rhs_raw, op.num_variables, fresh_base_rhs);
-
                         const auto atom_rhs = apply_substitution(atom_rhs_alpha, sigma_op);
 
                         if (atom_lhs == atom_rhs)
@@ -164,18 +177,18 @@ bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
                         if (!covers(inv, atom_rhs))
                             continue;
 
-                        auto lhs = apply_substitution(op.precondition, sigma_op);
+                        auto test_formula = apply_substitution(op.precondition, sigma_op);
 
                         auto cond_lhs = apply_substitution(eff_lhs_cond, sigma_op);
-                        lhs.insert(lhs.end(), cond_lhs.begin(), cond_lhs.end());
+                        test_formula.insert(test_formula.end(), cond_lhs.begin(), cond_lhs.end());
 
                         auto cond_rhs = apply_substitution(eff_rhs_cond, sigma_op);
-                        lhs.insert(lhs.end(), cond_rhs.begin(), cond_rhs.end());
+                        test_formula.insert(test_formula.end(), cond_rhs.begin(), cond_rhs.end());
 
-                        lhs.push_back(TempLiteral { .atom = atom_lhs, .polarity = false });
-                        lhs.push_back(TempLiteral { .atom = atom_rhs, .polarity = false });
+                        test_formula.push_back(TempLiteral { .atom = atom_lhs, .polarity = false });
+                        test_formula.push_back(TempLiteral { .atom = atom_rhs, .polarity = false });
 
-                        if (satisfiable(lhs))
+                        if (satisfiable(test_formula))
                             return true;
                     }
                 }
@@ -234,7 +247,7 @@ ProofResult prove_invariant(const Invariant& inv, const TempActionList& ops)
         const auto& op = ops[op_index];
 
         if (is_operator_too_heavy(op, inv))
-            return { ProofStatus::TooHeavy, Threat { op_index, 0, 0 } };  // { Reject the candidate. }
+            return { ProofStatus::TooHeavy, std::nullopt };
 
         for (size_t effect_index = 0; effect_index < op.effects.size(); ++effect_index)
         {
@@ -249,13 +262,13 @@ ProofResult prove_invariant(const Invariant& inv, const TempActionList& ops)
 
                 if (is_add_effect_unbalanced(op, conj_eff, atom, inv))
                 {
-                    std::cout << atom << std::endl;
-                    return { ProofStatus::UnbalancedAddEffect, Threat { op_index, effect_index, add_index } };  // { Reject the candidate. }
+                    return { ProofStatus::UnbalancedAddEffect, Threat { op_index, effect_index, add_index } };
                 }
             }
         }
     }
 
-    return { ProofStatus::Proven, std::nullopt };  // { Accept the candidate. }
+    return { ProofStatus::Proven, std::nullopt };
 }
-}
+
+}  // namespace tyr::formalism::planning::invariant

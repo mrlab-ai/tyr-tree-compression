@@ -42,12 +42,12 @@ bool uses_parameter(const Data<Term>& term, ParameterIndex parameter)
 
 bool uses_parameter(const TempAtom& atom, ParameterIndex parameter)
 {
-    return std::find_if(atom.terms.begin(), atom.terms.end(), [&](const auto& term) { return uses_parameter(term, parameter); }) != atom.terms.end();
+    return std::ranges::any_of(atom.terms, [&](const auto& term) { return uses_parameter(term, parameter); });
 }
 
 bool uses_parameter(const Invariant& inv, ParameterIndex parameter)
 {
-    return std::find_if(inv.atoms.begin(), inv.atoms.end(), [&](const auto& atom) { return uses_parameter(atom, parameter); }) != inv.atoms.end();
+    return std::ranges::any_of(inv.atoms, [&](const auto& atom) { return uses_parameter(atom, parameter); });
 }
 
 void remove_covered_atoms(Invariant& inv)
@@ -78,10 +78,6 @@ void remove_covered_atoms(Invariant& inv)
     }
 
     inv.atoms = std::move(kept);
-
-    inv.predicates.clear();
-    for (const auto& atom : inv.atoms)
-        inv.predicates.insert(atom.predicate);
 }
 
 void remove_unused_parameters(Invariant& inv)
@@ -119,7 +115,7 @@ void remove_unused_parameters(Invariant& inv)
                     if constexpr (std::is_same_v<T, ParameterIndex>)
                         return Data<Term>(*remap[static_cast<uint_t>(arg)]);
                     else if constexpr (std::is_same_v<T, Index<Object>>)
-                        return term;
+                        return Data<Term>(arg);
                     else
                         static_assert(dependent_false<T>::value, "Missing case");
                 },
@@ -184,7 +180,7 @@ void normalize_invariant(Invariant& inv)
 {
     remove_covered_atoms(inv);
     remove_unused_parameters(inv);
-    inv = Invariant(inv.num_rigid_variables, inv.num_counted_variables, std::move(inv.atoms));
+    inv.canonicalize();
 }
 
 bool is_well_shaped_invariant(const Invariant& inv) { return has_consistent_rigid_role_pattern(inv); }
