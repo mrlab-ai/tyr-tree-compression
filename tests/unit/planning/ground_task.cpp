@@ -57,8 +57,8 @@ TEST(TyrTests, TyrPlanningGroundTaskAirport)
 {
     auto ground_task = compute_ground_task(absolute("airport/domain.pddl"), absolute("airport/test_problem.pddl"));
 
-    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 59);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 379);
+    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 58);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 355);
     EXPECT_EQ(ground_task->get_num_actions(), 43);
     EXPECT_EQ(ground_task->get_num_axioms(), 420);
 
@@ -72,7 +72,7 @@ TEST(TyrTests, TyrPlanningGroundTaskAssembly)
     auto ground_task = compute_ground_task(absolute("assembly/domain.pddl"), absolute("assembly/test_problem.pddl"));
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 7);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 8);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 2);
     EXPECT_EQ(ground_task->get_num_actions(), 6);
     EXPECT_EQ(ground_task->get_num_axioms(), 2);
 
@@ -87,7 +87,7 @@ TEST(TyrTests, TyrPlanningGroundTaskBarman)
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 26);
     EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 0);
-    EXPECT_EQ(ground_task->get_num_actions(), 84);
+    EXPECT_EQ(ground_task->get_num_actions(), 66);
     EXPECT_EQ(ground_task->get_num_axioms(), 0);
 
     auto successor_generator = create_successor_generator(ground_task);
@@ -199,7 +199,7 @@ TEST(TyrTests, TyrPlanningGroundTaskGrid)
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 21);
     EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 0);
-    EXPECT_EQ(ground_task->get_num_actions(), 35);
+    EXPECT_EQ(ground_task->get_num_actions(), 29);
     EXPECT_EQ(ground_task->get_num_axioms(), 0);
 
     auto successor_generator = create_successor_generator(ground_task);
@@ -268,7 +268,7 @@ TEST(TyrTests, TyrPlanningGroundTaskMiconicFulladl)
     auto ground_task = compute_ground_task(absolute("miconic-fulladl/domain.pddl"), absolute("miconic-fulladl/test_problem.pddl"));
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 9);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 22);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 7);
     EXPECT_EQ(ground_task->get_num_actions(), 10);
     EXPECT_EQ(ground_task->get_num_axioms(), 15);
 
@@ -337,8 +337,8 @@ TEST(TyrTests, TyrPlanningGroundTaskPsrMiddle)
 {
     auto ground_task = compute_ground_task(absolute("psr-middle/domain.pddl"), absolute("psr-middle/test_problem.pddl"));
 
-    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 14);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 363);
+    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 13);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 351);
     EXPECT_EQ(ground_task->get_num_actions(), 28);
     EXPECT_EQ(ground_task->get_num_axioms(), 467);
 

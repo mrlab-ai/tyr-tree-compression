@@ -97,7 +97,9 @@ int main(int argc, char** argv)
 
             auto ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
 
-            auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *ff_heuristic, options);
+            auto blind_heuristic = planning::BlindHeuristic<planning::LiftedTag>::create();
+
+            auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *blind_heuristic, options);
 
             if (result.status == planning::SearchStatus::SOLVED)
             {
