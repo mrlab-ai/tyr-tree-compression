@@ -46,7 +46,6 @@ FFRPGHeuristic<LiftedTag>::FFRPGHeuristic(std::shared_ptr<Task<LiftedTag>> task,
             task->get_rpg_program().get_program_context().get_program().get_predicates<formalism::FluentTag>().size())),
     m_markings(task->get_rpg_program().get_program_context().get_program().get_predicates<formalism::FluentTag>().size()),
     m_binding(),
-    m_assign(),
     m_iter_workspace(),
     m_effect_families(),
     m_relaxed_plan(),
@@ -137,7 +136,6 @@ void FFRPGHeuristic<LiftedTag>::extract_relaxed_plan_and_preferred_actions(forma
         const auto ground_action = formalism::planning::ground(action,
                                                                grounder_context,
                                                                m_task->get_parameter_domains_per_cond_effect_per_action()[uint_t(action.get_index())],
-                                                               m_assign,
                                                                m_iter_workspace,
                                                                *m_task->get_fdr_context())
                                        .first;

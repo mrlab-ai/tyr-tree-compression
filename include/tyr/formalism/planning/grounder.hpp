@@ -76,18 +76,15 @@ std::pair<GroundNumericEffectView<Op, T>, bool> ground(NumericEffectView<Op, T> 
 template<FactKind T>
 Data<GroundNumericEffectOperator<T>> ground(NumericEffectOperatorView<T> element, GrounderContext& context);
 
-std::pair<GroundConjunctiveEffectView, bool>
-ground(ConjunctiveEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr);
+std::pair<GroundConjunctiveEffectView, bool> ground(ConjunctiveEffectView element, GrounderContext& context, FDRContext& fdr);
 
-std::pair<GroundConditionalEffectView, bool>
-ground(ConditionalEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr);
+std::pair<GroundConditionalEffectView, bool> ground(ConditionalEffectView element, GrounderContext& context, FDRContext& fdr);
 
 std::pair<ActionBindingView, bool> ground(ActionView action, GrounderContext& context);
 
 std::pair<GroundActionView, bool> ground(ActionView element,
                                          GrounderContext& context,
                                          const analysis::DomainListListList& cond_effect_domains,
-                                         UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign,
                                          itertools::cartesian_set::Workspace<Index<formalism::Object>>& iter_workspace,
                                          FDRContext& fdr);
 

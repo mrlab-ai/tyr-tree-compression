@@ -245,7 +245,6 @@ std::optional<fp::GroundConjunctiveConditionView> ground_pruned(fp::ConjunctiveC
 
 std::optional<fp::GroundConjunctiveEffectView> ground_pruned(fp::ConjunctiveEffectView element,
                                                              const UnorderedSet<fp::GroundAtomView<f::FluentTag>>& fluent_atoms,
-                                                             UnorderedMap<Index<fp::FDRVariable<f::FluentTag>>, fp::FDRValue>& assign,
                                                              fp::GrounderContext& context,
                                                              fp::FDRContext& fdr)
 {
@@ -254,41 +253,21 @@ std::optional<fp::GroundConjunctiveEffectView> ground_pruned(fp::ConjunctiveEffe
     auto& conj_eff = *conj_effect_ptr;
     conj_eff.clear();
 
-    // 1) create facts and variables
     for (const auto literal : element.get_literals())
     {
-        const auto new_literal = ground(literal, context).first;
-
-        if (!fluent_atoms.contains(new_literal.get_atom()))
-            continue;  // no-op
-
-        conj_eff.facts.push_back(fdr.get_fact(new_literal));
+        const auto new_fact = ground(literal.get_atom(), context, fdr);
+        if (literal.get_polarity())
+            conj_eff.add_facts.push_back(new_fact);
+        else
+            conj_eff.del_facts.push_back(new_fact);
     }
-
-    // 2) deletes first
-    assign.clear();
-    for (const auto fact : conj_eff.facts)
-        if (fact.value == fp::FDRValue::none())
-            assign[fact.variable] = fp::FDRValue::none();
-
-    // 3) adds second (overwrite delete)
-    for (const auto fact : conj_eff.facts)
-        if (fact.value != fp::FDRValue::none())
-            assign[fact.variable] = fact.value;
-
-    // 4) materialize
-    conj_eff.facts.clear();
-    for (const auto& [var, val] : assign)
-        conj_eff.facts.push_back(Data<fp::FDRFact<f::FluentTag>>(var, val));
-
-    // Fill remaining data
     for (const auto numeric_effect : element.get_numeric_effects())
         conj_eff.numeric_effects.push_back(ground(numeric_effect, context));
     if (element.get_auxiliary_numeric_effect().has_value())
         conj_eff.auxiliary_numeric_effect = ground(element.get_auxiliary_numeric_effect().value(), context);
 
     // Prune no-op effects
-    if (conj_eff.facts.empty() && conj_eff.numeric_effects.empty() && !conj_eff.auxiliary_numeric_effect.has_value())
+    if (conj_eff.add_facts.empty() && conj_eff.del_facts.empty() && conj_eff.numeric_effects.empty())
         return std::nullopt;  // no-op
 
     // Canonicalize and Serialize
@@ -299,7 +278,6 @@ std::optional<fp::GroundConjunctiveEffectView> ground_pruned(fp::ConjunctiveEffe
 std::optional<fp::GroundConditionalEffectView> ground_pruned(fp::ConditionalEffectView element,
                                                              const UnorderedSet<fp::GroundAtomView<f::FluentTag>>& fluent_atoms,
                                                              const UnorderedSet<fp::GroundAtomView<f::DerivedTag>>& derived_atoms,
-                                                             UnorderedMap<Index<fp::FDRVariable<f::FluentTag>>, fp::FDRValue>& assign,
                                                              fp::GrounderContext& context,
                                                              fp::FDRContext& fdr_context)
 {
@@ -315,7 +293,7 @@ std::optional<fp::GroundConditionalEffectView> ground_pruned(fp::ConditionalEffe
 
     cond_effect.condition = new_condition_or_nullopt->get_index();
 
-    const auto new_effect_or_nullopt = ground_pruned(element.get_effect(), fluent_atoms, assign, context, fdr_context);
+    const auto new_effect_or_nullopt = ground_pruned(element.get_effect(), fluent_atoms, context, fdr_context);
     if (!new_effect_or_nullopt)
         return std::nullopt;
 
@@ -330,7 +308,6 @@ std::optional<fp::GroundActionView> ground_pruned(fp::ActionView element,
                                                   const UnorderedSet<fp::GroundAtomView<f::FluentTag>>& fluent_atoms,
                                                   const UnorderedSet<fp::GroundAtomView<f::DerivedTag>>& derived_atoms,
                                                   const analysis::DomainListListList& cond_effect_domains,
-                                                  UnorderedMap<Index<fp::FDRVariable<f::FluentTag>>, fp::FDRValue>& fluent_assign,
                                                   itertools::cartesian_set::Workspace<Index<f::Object>>& iter_workspace,
                                                   fp::GrounderContext& context,
                                                   fp::FDRContext& fdr_context)
@@ -369,7 +346,7 @@ std::optional<fp::GroundActionView> ground_pruned(fp::ActionView element,
                                                        context.binding.insert(context.binding.end(), binding_cond.begin(), binding_cond.end());
 
                                                        const auto ground_cond_effect_or_nullopt =
-                                                           ground_pruned(cond_effect, fluent_atoms, derived_atoms, fluent_assign, context, fdr_context);
+                                                           ground_pruned(cond_effect, fluent_atoms, derived_atoms, context, fdr_context);
                                                        if (ground_cond_effect_or_nullopt.has_value())
                                                            action.effects.push_back(ground_cond_effect_or_nullopt->get_index());
                                                    });
@@ -601,7 +578,6 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_c
                                                                     fluent_atoms_set,
                                                                     derived_atoms_set,
                                                                     lifted_task.get_parameter_domains_per_cond_effect_per_action()[uint_t(action.get_index())],
-                                                                    fluent_assign,
                                                                     iter_workspace,
                                                                     grounder_context,
                                                                     *fdr_context);

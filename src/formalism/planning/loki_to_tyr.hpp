@@ -1400,8 +1400,9 @@ private:
                         static_literals.push_back(literal_index);
                     else if constexpr (std::is_same_v<T, Data<FDRFact<FluentTag>>>)
                     {
+                        // TODO: fix this hack!!
                         if (literal_index.value == FDRValue::none())
-                            negative_facts.push_back(Data<FDRFact<FluentTag>>(literal_index.variable, FDRValue::none()));
+                            negative_facts.push_back(Data<FDRFact<FluentTag>>(literal_index.variable, FDRValue { 1 }));
                         else
                             positive_facts.push_back(Data<FDRFact<FluentTag>>(literal_index.variable, FDRValue { 1 }));
                     }

@@ -65,7 +65,6 @@ private:
 
     /// For grounding actions
     IndexList<formalism::Object> m_binding;
-    UnorderedMap<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::FDRValue> m_assign;
     itertools::cartesian_set::Workspace<Index<formalism::Object>> m_iter_workspace;
     formalism::planning::EffectFamilyList m_effect_families;
 

@@ -284,35 +284,21 @@ Data<GroundNumericEffectOperator<T>> ground(NumericEffectOperatorView<T> element
     return visit([&](auto&& arg) { return Data<GroundNumericEffectOperator<T>>(ground(arg, context).first.get_index()); }, element.get_variant());
 }
 
-TYR_INLINE_IMPL std::pair<GroundConjunctiveEffectView, bool>
-ground(ConjunctiveEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr)
+TYR_INLINE_IMPL std::pair<GroundConjunctiveEffectView, bool> ground(ConjunctiveEffectView element, GrounderContext& context, FDRContext& fdr)
 {
     // Fetch and clear
     auto conj_effect_ptr = context.builder.template get_builder<GroundConjunctiveEffect>();
     auto& conj_eff = *conj_effect_ptr;
     conj_eff.clear();
 
-    // 1) create facts and variables
     for (const auto literal : element.get_literals())
-        conj_eff.facts.push_back(ground(literal, context, fdr));
-
-    // 2) deletes first
-    assign.clear();
-    for (const auto fact : conj_eff.facts)
-        if (fact.value == FDRValue::none())
-            assign[fact.variable] = fact.value;  // should be none()
-
-    // 3) adds second (overwrite delete)
-    for (const auto fact : conj_eff.facts)
-        if (fact.value != FDRValue::none())
-            assign[fact.variable] = fact.value;
-
-    // 4) materialize
-    conj_eff.facts.clear();
-    for (const auto& [var, val] : assign)
-        conj_eff.facts.push_back(Data<FDRFact<FluentTag>>(var, val));
-
-    // Fill remaining data
+    {
+        const auto new_fact = ground(literal.get_atom(), context, fdr);
+        if (literal.get_polarity())
+            conj_eff.add_facts.push_back(new_fact);
+        else
+            conj_eff.del_facts.push_back(new_fact);
+    }
     for (const auto numeric_effect : element.get_numeric_effects())
         conj_eff.numeric_effects.push_back(ground(numeric_effect, context));
     if (element.get_auxiliary_numeric_effect().has_value())
@@ -323,8 +309,7 @@ ground(ConjunctiveEffectView element, GrounderContext& context, UnorderedMap<Ind
     return context.destination.get_or_create(conj_eff);
 }
 
-TYR_INLINE_IMPL std::pair<GroundConditionalEffectView, bool>
-ground(ConditionalEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr)
+TYR_INLINE_IMPL std::pair<GroundConditionalEffectView, bool> ground(ConditionalEffectView element, GrounderContext& context, FDRContext& fdr)
 {
     // Fetch and clear
     auto cond_effect_ptr = context.builder.template get_builder<GroundConditionalEffect>();
@@ -333,7 +318,7 @@ ground(ConditionalEffectView element, GrounderContext& context, UnorderedMap<Ind
 
     // Fill data
     cond_effect.condition = ground(element.get_condition(), context, fdr).first.get_index();
-    cond_effect.effect = ground(element.get_effect(), context, assign, fdr).first.get_index();
+    cond_effect.effect = ground(element.get_effect(), context, fdr).first.get_index();
 
     // Canonicalize and Serialize
     canonicalize(cond_effect);
@@ -358,7 +343,6 @@ TYR_INLINE_IMPL std::pair<ActionBindingView, bool> ground(ActionView action, Gro
 TYR_INLINE_IMPL std::pair<GroundActionView, bool> ground(ActionView element,
                                                          GrounderContext& context,
                                                          const analysis::DomainListListList& cond_effect_domains,
-                                                         UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign,
                                                          itertools::cartesian_set::Workspace<Index<formalism::Object>>& iter_workspace,
                                                          FDRContext& fdr)
 {
@@ -390,7 +374,7 @@ TYR_INLINE_IMPL std::pair<GroundActionView, bool> ground(ActionView element,
                                                        context.binding.resize(binding_size);
                                                        context.binding.insert(context.binding.end(), binding_cond.begin(), binding_cond.end());
 
-                                                       action.effects.push_back(ground(cond_effect, context, assign, fdr).first.get_index());
+                                                       action.effects.push_back(ground(cond_effect, context, fdr).first.get_index());
                                                    });
     }
     context.binding.resize(binding_size);  ///< important to restore the binding in case of grounding other actions

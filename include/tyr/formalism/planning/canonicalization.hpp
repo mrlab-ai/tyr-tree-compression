@@ -152,7 +152,10 @@ inline bool is_canonical(const Data<GroundConditionalEffect>& data) { return tru
 
 inline bool is_canonical(const Data<ConjunctiveEffect>& data) { return is_canonical(data.literals) && is_canonical(data.numeric_effects); }
 
-inline bool is_canonical(const Data<GroundConjunctiveEffect>& data) { return is_canonical(data.facts) && is_canonical(data.numeric_effects); }
+inline bool is_canonical(const Data<GroundConjunctiveEffect>& data)
+{
+    return is_canonical(data.add_facts) && is_canonical(data.del_facts) && is_canonical(data.numeric_effects);
+}
 
 inline bool is_canonical(const Data<Action>& data) { return true; }
 
@@ -346,7 +349,8 @@ inline void canonicalize(Data<ConjunctiveEffect>& data)
 
 inline void canonicalize(Data<GroundConjunctiveEffect>& data)
 {
-    canonicalize(data.facts);
+    canonicalize(data.add_facts);
+    canonicalize(data.del_facts);
     canonicalize(data.numeric_effects);
 }
 

@@ -204,7 +204,9 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::GroundConj
     {
         IndentScope scope(os);
 
-        os << print_indent << "fluent facts = " << el.facts << "\n";
+        os << print_indent << "add facts = " << el.add_facts << "\n";
+
+        os << print_indent << "del facts = " << el.del_facts << "\n";
 
         os << print_indent << "fluent numeric effects = " << el.numeric_effects << "\n";
 
@@ -221,7 +223,9 @@ std::ostream& print(std::ostream& os, const formalism::planning::GroundConjuncti
     {
         IndentScope scope(os);
 
-        os << print_indent << "fluent facts = " << el.get_facts() << "\n";
+        os << print_indent << "add facts = " << el.get_facts<formalism::PositiveTag>() << "\n";
+
+        os << print_indent << "del facts = " << el.get_facts<formalism::NegativeTag>() << "\n";
 
         os << print_indent << "fluent numeric effects = " << el.get_numeric_effects() << "\n";
 
