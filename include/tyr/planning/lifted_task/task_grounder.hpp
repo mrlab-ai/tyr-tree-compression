@@ -24,7 +24,14 @@
 namespace tyr::planning
 {
 
-extern GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_context);
+GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_context);
+
+struct GroundTaskOptions
+{
+    bool enable_invariant_synthesis = true;
+};
+
+GroundTaskPtr ground_task_2(LiftedTask& lifted_task, ExecutionContext& execution_context, const GroundTaskOptions& options = GroundTaskOptions());
 
 }
 

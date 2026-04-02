@@ -19,6 +19,8 @@
 
 #include "tyr/analysis/domains.hpp"
 #include "tyr/common/dynamic_bitset.hpp"
+#include "tyr/common/equal_to.hpp"
+#include "tyr/common/hash.hpp"
 #include "tyr/common/vector.hpp"
 #include "tyr/datalog/bottom_up.hpp"
 #include "tyr/datalog/contexts/program.hpp"
@@ -419,6 +421,98 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_c
     canonicalize(ground_axioms);
 
     return create_fdr_task(lifted_task.get_formalism_task(), fluent_atoms, derived_atoms, fluent_fterms, ground_actions, ground_axioms);
+}
+
+GroundTaskPtr ground_task_2(LiftedTask& lifted_task, ExecutionContext& execution_context, const GroundTaskOptions& options)
+{
+    /**
+     * Execute datalog program.
+     */
+
+    auto ground_program = GroundTaskProgram(lifted_task.get_task());
+    const auto const_workspace = d::ConstProgramWorkspace(ground_program.get_program_context());
+    auto workspace = d::ProgramWorkspace<d::NoOrAnnotationPolicy, d::NoAndAnnotationPolicy, d::NoTerminationPolicy>(ground_program.get_program_context(),
+                                                                                                                    const_workspace,
+                                                                                                                    d::NoOrAnnotationPolicy(),
+                                                                                                                    d::NoAndAnnotationPolicy(),
+                                                                                                                    d::NoTerminationPolicy());
+    auto ctx = d::ProgramExecutionContext(workspace, const_workspace);
+    ctx.clear();
+
+    execution_context.arena().execute([&] { d::solve_bottom_up(ctx); });
+    workspace.d2p.clear();
+
+    /**
+     * Create basic structures of task
+     */
+
+    const auto& planning_task = lifted_task.get_formalism_task();
+    const auto& planning_domain = planning_task.get_domain();
+
+    auto task = planning_task.get_task();
+    auto repository = planning_domain.get_repository_factory()->create_shared(planning_domain.get_repository().get());
+    auto builder = fp::Builder();
+
+    auto fdr_task_ptr = builder.get_builder<fp::FDRTask>();
+    auto& fdr_task = *fdr_task_ptr;
+    fdr_task.clear();
+
+    auto merge_context = fp::MergeContext { builder, *repository };
+
+    fdr_task.name = task.get_name();
+    fdr_task.domain = task.get_domain().get_index();
+    for (const auto predicate : task.get_derived_predicates())
+        fdr_task.derived_predicates.push_back(merge_p2p(predicate, merge_context).first.get_index());
+    for (const auto object : task.get_objects())
+        fdr_task.objects.push_back(merge_p2p(object, merge_context).first.get_index());
+
+    /**
+     * Create ground atoms
+     */
+
+    auto fluent_predicates = task.get_domain().get_predicates<f::FluentTag>();
+    auto fluent_predicates_set = UnorderedSet<fp::PredicateView<f::FluentTag>>(fluent_predicates.begin(), fluent_predicates.end());
+    auto fluent_atoms = fp::GroundAtomViewList<f::FluentTag> {};
+    auto derived_predicates = task.get_domain().get_predicates<f::DerivedTag>();
+    auto derived_predicates_set = UnorderedSet<fp::PredicateView<f::DerivedTag>>(derived_predicates.begin(), derived_predicates.end());
+    auto derived_atoms = fp::GroundAtomViewList<f::DerivedTag> {};
+    {
+        auto merge_planning_context = fp::MergePlanningContext { builder, *repository };
+        auto fluent_atom_ptr = builder.get_builder<fp::GroundAtom<f::FluentTag>>();
+        auto& fluent_atom = *fluent_atom_ptr;
+        auto derived_atom_ptr = builder.get_builder<fp::GroundAtom<f::DerivedTag>>();
+        auto& derived_atom = *derived_atom_ptr;
+        for (const auto& set : workspace.facts.fact_sets.predicate.get_sets())
+        {
+            if (ground_program.get_predicate_to_fluent_mapping().contains(set.get_predicate()))
+            {
+                for (const auto& binding : set.get_bindings())
+                {
+                    fluent_atom.clear();
+                    fluent_atom.binding = fp::merge_d2p<f::FluentTag, f::FluentTag>(binding, merge_planning_context).first.get_index();
+                    canonicalize(fluent_atom);
+                    fluent_atoms.push_back(repository->get_or_create(fluent_atom).first);
+                }
+            }
+            else if (ground_program.get_predicate_to_derived_mapping().contains(set.get_predicate()))
+            {
+                for (const auto& binding : set.get_bindings())
+                {
+                    derived_atom.clear();
+                    derived_atom.binding = fp::merge_d2p<f::FluentTag, f::DerivedTag>(binding, merge_planning_context).first.get_index();
+                    canonicalize(derived_atom);
+                    derived_atoms.push_back(repository->get_or_create(derived_atom).first);
+                }
+            }
+        }
+    }
+
+    std::cout << "Fluent atoms:" << std::endl;
+    std::cout << fluent_atoms << std::endl;
+    std::cout << "Derived atoms:" << std::endl;
+    std::cout << derived_atoms << std::endl;
+
+    std::terminate();
 }
 
 }

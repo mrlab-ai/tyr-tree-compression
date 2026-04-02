@@ -299,6 +299,8 @@ static void translate_axiom_to_delete_free_axiom_rules(fp::AxiomView axiom,
 }
 
 static auto create_program(fp::TaskView task,
+                           GroundTaskProgram::PredicateToFluentMapping& predicate_to_fluent,
+                           GroundTaskProgram::PredicateToDerivedMapping& predicate_to_derived,
                            GroundTaskProgram::AppPredicateToActionsMapping& predicate_to_actions,
                            GroundTaskProgram::AppPredicateToAxiomsMapping& predicate_to_axioms,
                            fd::Repository& destination)
@@ -313,13 +315,25 @@ static auto create_program(fp::TaskView task,
         program.static_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
 
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d(predicate, context).first;
+        predicate_to_fluent.emplace(new_predicate, predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
 
     for (const auto predicate : task.get_domain().get_predicates<f::DerivedTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
+        predicate_to_derived.emplace(new_predicate, predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
 
     for (const auto predicate : task.get_derived_predicates())
-        program.fluent_predicates.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
+        predicate_to_derived.emplace(new_predicate, predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
 
     for (const auto function : task.get_domain().get_functions<f::StaticTag>())
         program.static_functions.push_back(fp::merge_p2d(function, context).first.get_index());
@@ -360,12 +374,14 @@ static auto create_program(fp::TaskView task,
 }
 
 static auto create_program_context(fp::TaskView task,
+                                   GroundTaskProgram::PredicateToFluentMapping& predicate_to_fluent,
+                                   GroundTaskProgram::PredicateToDerivedMapping& predicate_to_derived,
                                    GroundTaskProgram::AppPredicateToActionsMapping& predicate_to_actions,
                                    GroundTaskProgram::AppPredicateToAxiomsMapping& predicate_to_axioms)
 {
     auto factory = std::make_shared<fd::RepositoryFactory>();
     auto repository = factory->create_shared();
-    auto program = create_program(task, predicate_to_actions, predicate_to_axioms, *repository);
+    auto program = create_program(task, predicate_to_fluent, predicate_to_derived, predicate_to_actions, predicate_to_axioms, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
@@ -378,11 +394,15 @@ static auto create_program_context(fp::TaskView task,
 GroundTaskProgram::GroundTaskProgram(fp::TaskView task) :
     m_predicate_to_actions(),
     m_predicate_to_axioms(),
-    m_program_context(ground::create_program_context(task, m_predicate_to_actions, m_predicate_to_axioms)),
+    m_program_context(ground::create_program_context(task, m_predicate_to_fluent, m_predicate_to_derived, m_predicate_to_actions, m_predicate_to_axioms)),
     m_program_workspace(m_program_context)
 {
     // std::cout << m_program_context.get_program() << std::endl;
 }
+
+const GroundTaskProgram::PredicateToFluentMapping& GroundTaskProgram::get_predicate_to_fluent_mapping() const noexcept { return m_predicate_to_fluent; }
+
+const GroundTaskProgram::PredicateToDerivedMapping& GroundTaskProgram::get_predicate_to_derived_mapping() const noexcept { return m_predicate_to_derived; }
 
 const GroundTaskProgram::AppPredicateToActionsMapping& GroundTaskProgram::get_predicate_to_actions_mapping() const noexcept { return m_predicate_to_actions; }
 

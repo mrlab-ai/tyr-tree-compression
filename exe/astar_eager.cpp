@@ -31,7 +31,12 @@ int main(int argc, char** argv)
     program.add_argument("-O", "--plan-filepath").default_value(std::string("plan.out")).help("The path to the output plan file.");
     program.add_argument("-N", "--num-worker-threads").default_value(size_t(1)).scan<'u', size_t>().help("The number of worker threads.");
     program.add_argument("-R", "--random-seed").default_value(uint64_t(0)).scan<'u', uint64_t>().help("The random seed.");
-    program.add_argument("-S", "--shuffle-labeled-succ-nodes").default_value(false).implicit_value(true).help("Toggle shuffling the labeled successor nodes.");
+    program.add_argument("-S", "--shuffle-labeled-succ-nodes").default_value(false).implicit_value(true).help("Enable shuffling the labeled successor nodes.");
+    program.add_argument("-G", "--instantiate-ground-task")
+        .default_value(false)
+        .implicit_value(true)
+        .help("Enable instantiating the ground task before search.");
+    program.add_argument("-H", "--heuristic-type").default_value("ff").choices("blind", "perfect", "max", "add", "setadd", "ff");
     program.add_argument("-V", "--verbosity")
         .default_value(size_t(0))
         .scan<'u', size_t>()
@@ -58,6 +63,7 @@ int main(int argc, char** argv)
         auto num_worker_threads = program.get<std::size_t>("--num-worker-threads");
         auto random_seed = program.get<uint64_t>("--random-seed");
         auto shuffle_labeled_succ_nodes = program.get<bool>("--shuffle-labeled-succ-nodes");
+        auto instantiate_ground_task = program.get<bool>("--instantiate-ground-task");
         auto verbosity = program.get<size_t>("--verbosity");
 
         std::cout << "[INPUT] Num worker threads: " << num_worker_threads << std::endl;
@@ -71,12 +77,6 @@ int main(int argc, char** argv)
 
         auto lifted_task = planning::LiftedTask::create(parser.parse_task(problem_filepath));
 
-        auto invariants = formalism::planning::invariant::synthesize_invariants(lifted_task->get_formalism_task().get_task().get_domain());
-
-        std::cout << "[Total] Synthesized invariants: " << invariants.size() << std::endl;
-        tyr::print(std::cout, invariants);
-        std::cout << std::endl;
-
         if (verbosity > 0)
             std::cout << domain << std::endl;
 
@@ -85,38 +85,45 @@ int main(int argc, char** argv)
 
         auto execution_context = ExecutionContext::create(num_worker_threads);
 
-        auto successor_generator = planning::SuccessorGenerator<planning::LiftedTag>(lifted_task, execution_context);
-
-        auto options = planning::astar_eager::Options<planning::LiftedTag>();
-        options.start_node = successor_generator.get_initial_node();
-        options.event_handler = planning::astar_eager::DefaultEventHandler<planning::LiftedTag>::create(verbosity);
-        options.random_seed = random_seed;
-        options.shuffle_labeled_succ_nodes = shuffle_labeled_succ_nodes;
-
-        auto ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
-
-        auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *ff_heuristic, options);
-
-        if (result.status == planning::SearchStatus::SOLVED)
+        if (!instantiate_ground_task)
         {
-            std::ofstream plan_file;
-            plan_file.open(plan_filepath);
-            if (!plan_file.is_open())
-            {
-                std::cerr << "Error opening file!" << std::endl;
-                return 1;
-            }
-            plan_file << result.plan.value();
-            plan_file.close();
-        }
+            auto successor_generator = planning::SuccessorGenerator<planning::LiftedTag>(lifted_task, execution_context);
 
-        std::cout << "[Total] Number of fluent atoms: " << lifted_task->get_repository()->size<formalism::planning::GroundAtom<formalism::FluentTag>>()
-                  << std::endl;
-        std::cout << "[Total] Number of derived atoms: " << lifted_task->get_repository()->size<formalism::planning::GroundAtom<formalism::DerivedTag>>()
-                  << std::endl;
-        std::cout << "[Total] Number of fluent fterms: " << lifted_task->get_repository()->size<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>()
-                  << std::endl;
-        std::cout << "[Total] States memory usage: " << successor_generator.get_state_repository()->memory_usage() << " bytes" << std::endl;
+            auto options = planning::astar_eager::Options<planning::LiftedTag>();
+            options.start_node = successor_generator.get_initial_node();
+            options.event_handler = planning::astar_eager::DefaultEventHandler<planning::LiftedTag>::create(verbosity);
+            options.random_seed = random_seed;
+            options.shuffle_labeled_succ_nodes = shuffle_labeled_succ_nodes;
+
+            auto ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+
+            auto result = planning::astar_eager::find_solution(*lifted_task, successor_generator, *ff_heuristic, options);
+
+            if (result.status == planning::SearchStatus::SOLVED)
+            {
+                std::ofstream plan_file;
+                plan_file.open(plan_filepath);
+                if (!plan_file.is_open())
+                {
+                    std::cerr << "Error opening file!" << std::endl;
+                    return 1;
+                }
+                plan_file << result.plan.value();
+                plan_file.close();
+            }
+
+            std::cout << "[Total] Number of fluent atoms: " << lifted_task->get_repository()->size<formalism::planning::GroundAtom<formalism::FluentTag>>()
+                      << std::endl;
+            std::cout << "[Total] Number of derived atoms: " << lifted_task->get_repository()->size<formalism::planning::GroundAtom<formalism::DerivedTag>>()
+                      << std::endl;
+            std::cout << "[Total] Number of fluent fterms: "
+                      << lifted_task->get_repository()->size<formalism::planning::GroundFunctionTerm<formalism::FluentTag>>() << std::endl;
+            std::cout << "[Total] States memory usage: " << successor_generator.get_state_repository()->memory_usage() << " bytes" << std::endl;
+        }
+        else
+        {
+            auto ground_task = lifted_task->instantiate_ground_task(*execution_context);
+        }
     }
 
     std::cout << "[Total] Peak memory usage: " << get_peak_memory_usage_in_bytes() << " bytes" << std::endl;
