@@ -55,7 +55,7 @@ SearchSummary run_blind_astar(const fs::path& domain_filepath, const fs::path& p
 
     TaskPtr task;
     if constexpr (std::same_as<Kind, p::GroundTag>)
-        task = p::LiftedTask(fp::Parser(domain_filepath).parse_task(problem_filepath)).instantiate_ground_task(*execution_context);
+        task = p::LiftedTask(fp::Parser(domain_filepath).parse_task(problem_filepath)).instantiate_ground_task(*execution_context).task;
     else if constexpr (std::same_as<Kind, p::LiftedTag>)
         task = p::LiftedTask::create(fp::Parser(domain_filepath).parse_task(problem_filepath));
     else

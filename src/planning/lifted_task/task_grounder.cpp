@@ -393,7 +393,9 @@ std::optional<fp::GroundAxiomView> ground_pruned(fp::AxiomView element,
 }
 }
 
-GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_context, const GroundTaskOptions& options)
+GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,  //
+                                                      ExecutionContext& execution_context,
+                                                      const GroundTaskInstantiationOptions& options)
 {
     /**
      * Execute datalog program.
@@ -493,7 +495,11 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_c
 
     auto fdr_context = std::shared_ptr<fp::FDRContext> { nullptr };
 
-    if (options.enable_invariant_synthesis)
+    if (options.disable_invariant_synthesis)
+    {
+        fdr_context = std::make_shared<fp::FDRContext>(fluent_atoms, repository);
+    }
+    else
     {
         auto invariants = fpi::synthesize_invariants(planning_domain.get_domain());
         auto mutex_groups = fpi::compute_mutex_groups(initial_atoms, fluent_atoms, invariants);
@@ -507,16 +513,11 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_c
 
         fdr_context = std::make_shared<fp::FDRContext>(mutex_groups, repository);
     }
-    else
-    {
-        fdr_context = std::make_shared<fp::FDRContext>(fluent_atoms, repository);
-    }
 
     for (const auto atom : task.get_atoms<f::StaticTag>())
         fdr_task.static_atoms.push_back(merge_p2p(atom, merge_context).first.get_index());
     for (const auto atom : fluent_atoms)
         fdr_task.fluent_atoms.push_back(merge_p2p(atom, merge_context).first.get_index());
-
     for (const auto atom : derived_atoms)
         fdr_task.derived_atoms.push_back(merge_p2p(atom, merge_context).first.get_index());
 
@@ -544,9 +545,7 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_c
     if (goal_or_nullopt.has_value())
         fdr_task.goal = goal_or_nullopt->get_index();
     else
-    {
-        return nullptr;
-    }
+        return GroundTaskInstantiationResult { nullptr, GroundTaskInstantiationStatus::PROVEN_UNSOLVABLE };
 
     /// --- Create FDR actions and axioms
 
@@ -636,8 +635,11 @@ GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_c
 
     canonicalize(fdr_task);
 
-    return std::make_shared<GroundTask>(
-        fp::PlanningFDRTask(repository->get_or_create(fdr_task).first, std::move(fdr_context), repository, planning_task.get_domain()));
+    return GroundTaskInstantiationResult {
+        std::make_shared<GroundTask>(
+            fp::PlanningFDRTask(repository->get_or_create(fdr_task).first, std::move(fdr_context), repository, planning_task.get_domain())),
+        GroundTaskInstantiationStatus::SUCCESS
+    };
 }
 
 }

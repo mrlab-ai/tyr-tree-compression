@@ -27,6 +27,7 @@
 #include "tyr/formalism/planning/planning_task.hpp"
 #include "tyr/formalism/planning/views.hpp"  // for View
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/lifted_task/task_grounder_decl.hpp"
 #include "tyr/planning/programs/action.hpp"
 #include "tyr/planning/programs/axiom.hpp"
 #include "tyr/planning/programs/rpg.hpp"
@@ -48,7 +49,8 @@ public:
 
     static std::shared_ptr<Task<LiftedTag>> create(formalism::planning::PlanningTask task);
 
-    GroundTaskPtr instantiate_ground_task(ExecutionContext& execution_context);
+    GroundTaskInstantiationResult instantiate_ground_task(ExecutionContext& execution_context,
+                                                          const GroundTaskInstantiationOptions& options = GroundTaskInstantiationOptions());
 
     /**
      * Getters

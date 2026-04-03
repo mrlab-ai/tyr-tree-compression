@@ -15,19 +15,31 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_PLANNING_LIFTED_TASK_TASK_GROUNDER_HPP_
-#define TYR_PLANNING_LIFTED_TASK_TASK_GROUNDER_HPP_
+#ifndef TYR_PLANNING_LIFTED_TASK_TASK_GROUNDER_DECL_HPP_
+#define TYR_PLANNING_LIFTED_TASK_TASK_GROUNDER_DECL_HPP_
 
 #include "tyr/common/onetbb.hpp"
 #include "tyr/planning/declarations.hpp"
-#include "tyr/planning/lifted_task/task_grounder_decl.hpp"
 
 namespace tyr::planning
 {
 
-GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,
-                                                      ExecutionContext& execution_context,
-                                                      const GroundTaskInstantiationOptions& options = GroundTaskInstantiationOptions());
+enum class GroundTaskInstantiationStatus
+{
+    SUCCESS,
+    PROVEN_UNSOLVABLE,
+};
+
+struct GroundTaskInstantiationResult
+{
+    GroundTaskPtr task;
+    GroundTaskInstantiationStatus status;
+};
+
+struct GroundTaskInstantiationOptions
+{
+    bool disable_invariant_synthesis = false;
+};
 
 }
 

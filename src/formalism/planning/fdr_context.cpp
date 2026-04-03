@@ -86,7 +86,11 @@ FDRContext::FDRContext(const std::vector<GroundAtomViewList<FluentTag>>& mutexes
     }
 }
 
-FDRContext::FDRContext(const GroundAtomViewList<FluentTag>& all_atoms, RepositoryPtr context)
+FDRContext::FDRContext(const GroundAtomViewList<FluentTag>& all_atoms, RepositoryPtr context) :
+    m_context(std::move(context)),
+    m_builder(),
+    m_variables(),
+    m_mapping()
 {
     auto variable = Data<FDRVariable<FluentTag>>();
 

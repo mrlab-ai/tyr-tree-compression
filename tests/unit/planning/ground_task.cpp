@@ -30,7 +30,7 @@ namespace
 p::GroundTaskPtr compute_ground_task(const fs::path& domain_filepath, const fs::path& problem_filepath)
 {
     auto execution_context = ExecutionContext(1);
-    return p::LiftedTask(fp::Parser(domain_filepath).parse_task(problem_filepath)).instantiate_ground_task(execution_context);
+    return p::LiftedTask(fp::Parser(domain_filepath).parse_task(problem_filepath)).instantiate_ground_task(execution_context).task;
 }
 
 p::SuccessorGenerator<p::GroundTag> create_successor_generator(std::shared_ptr<p::Task<p::GroundTag>> task)
