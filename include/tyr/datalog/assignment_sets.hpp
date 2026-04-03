@@ -119,7 +119,8 @@ template<formalism::FactKind T>
 class FunctionAssignmentSet
 {
 private:
-    Index<formalism::Function<T>> m_function;
+    formalism::datalog::FunctionView<T> m_function;
+    Index<formalism::Function<T>> m_function_index;
 
     PerfectAssignmentHash m_hash;
     std::vector<ClosedInterval<float_t>> m_set;

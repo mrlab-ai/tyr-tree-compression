@@ -30,12 +30,32 @@
 namespace tyr::planning
 {
 
-// Fact Set
-
 extern void insert_fluent_atoms_to_fact_set(const UnpackedState<LiftedTag>& state,
                                             const formalism::planning::Repository& repository,
                                             formalism::planning::MergeDatalogContext& merge_context,
                                             datalog::TaggedFactSets<formalism::FluentTag>& fact_sets);
+
+void insert_derived_atoms_to_fact_set(const UnpackedState<LiftedTag>& state,
+                                      const formalism::planning::Repository& repository,
+                                      formalism::planning::MergeDatalogContext& merge_context,
+                                      datalog::TaggedFactSets<formalism::FluentTag>& fact_sets);
+
+void insert_numeric_variables_to_fact_set(const UnpackedState<LiftedTag>& state,
+                                          const formalism::planning::Repository& repository,
+                                          formalism::planning::MergeDatalogContext& merge_context,
+                                          datalog::TaggedFactSets<formalism::FluentTag>& fact_sets);
+
+void insert_extended_state(const UnpackedState<LiftedTag>& unpacked_state,
+                           const formalism::planning::Repository& atoms_context,
+                           formalism::planning::MergeDatalogContext& merge_context,
+                           datalog::TaggedFactSets<formalism::FluentTag>& fact_sets,
+                           datalog::TaggedAssignmentSets<formalism::FluentTag>& assignment_sets);
+
+void insert_unextended_state(const UnpackedState<LiftedTag>& unpacked_state,
+                             const formalism::planning::Repository& atoms_context,
+                             formalism::planning::MergeDatalogContext& merge_context,
+                             datalog::TaggedFactSets<formalism::FluentTag>& fact_sets,
+                             datalog::TaggedAssignmentSets<formalism::FluentTag>& assignment_sets);
 
 }
 

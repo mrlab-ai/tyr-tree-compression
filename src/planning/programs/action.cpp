@@ -75,23 +75,17 @@ static auto create_program(fp::TaskView task, ApplicableActionProgram::AppPredic
 
     for (const auto predicate : task.get_domain().get_predicates<f::StaticTag>())
         program.static_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
-
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
         program.fluent_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
-
     for (const auto predicate : task.get_domain().get_predicates<f::DerivedTag>())
         program.fluent_predicates.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first.get_index());
-
     for (const auto predicate : task.get_derived_predicates())
         program.fluent_predicates.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first.get_index());
 
     for (const auto function : task.get_domain().get_functions<f::StaticTag>())
         program.static_functions.push_back(fp::merge_p2d(function, context).first.get_index());
-
     for (const auto function : task.get_domain().get_functions<f::FluentTag>())
         program.fluent_functions.push_back(fp::merge_p2d(function, context).first.get_index());
-
-    // We can ignore auxiliary function total-cost because it never occurs in a condition
 
     for (const auto object : task.get_domain().get_constants())
         program.objects.push_back(fp::merge_p2d(object, context).first.get_index());
@@ -100,12 +94,13 @@ static auto create_program(fp::TaskView task, ApplicableActionProgram::AppPredic
 
     for (const auto atom : task.get_atoms<f::StaticTag>())
         program.static_atoms.push_back(fp::merge_p2d(atom, context).first.get_index());
-
     for (const auto atom : task.get_atoms<f::FluentTag>())
         program.fluent_atoms.push_back(fp::merge_p2d(atom, context).first.get_index());
 
     for (const auto fterm_value : task.get_fterm_values<f::StaticTag>())
         program.static_fterm_values.push_back(fp::merge_p2d(fterm_value, context).first.get_index());
+    for (const auto fterm_value : task.get_fterm_values<f::FluentTag>())
+        program.fluent_fterm_values.push_back(fp::merge_p2d(fterm_value, context).first.get_index());
 
     for (const auto action : task.get_domain().get_actions())
     {

@@ -46,25 +46,12 @@ namespace fp = tyr::formalism::planning;
 
 namespace tyr::planning
 {
-
-static void insert_unextended_state(const UnpackedState<LiftedTag>& unpacked_state,
-                                    const fp::Repository& atoms_context,
-                                    fp::MergeDatalogContext& merge_context,
-                                    d::TaggedFactSets<f::FluentTag>& fact_sets,
-                                    d::TaggedAssignmentSets<f::FluentTag>& assignment_sets)
+namespace
 {
-    fact_sets.reset();
-    assignment_sets.reset();
-
-    insert_fluent_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
-
-    assignment_sets.insert(fact_sets);
-}
-
-static void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram& axiom_program,
-                                                    UnpackedState<LiftedTag>& unpacked_state,
-                                                    fp::MergePlanningContext& merge_context,
-                                                    d::TaggedFactSets<f::FluentTag>& fact_sets)
+void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram& axiom_program,
+                                             UnpackedState<LiftedTag>& unpacked_state,
+                                             fp::MergePlanningContext& merge_context,
+                                             d::TaggedFactSets<f::FluentTag>& fact_sets)
 {
     for (const auto& set : fact_sets.predicate.get_sets())
     {
@@ -78,6 +65,7 @@ static void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram&
             }
         }
     }
+}
 }
 
 AxiomEvaluator<LiftedTag>::AxiomEvaluator(std::shared_ptr<Task<LiftedTag>> task, ExecutionContextPtr execution_context) :

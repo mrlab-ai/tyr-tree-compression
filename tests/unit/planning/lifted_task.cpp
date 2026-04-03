@@ -24,18 +24,20 @@ namespace fp = tyr::formalism::planning;
 
 namespace tyr::tests
 {
-
-static p::LiftedTaskPtr compute_lifted_task(const fs::path& domain_filepath, const fs::path& problem_filepath)
+namespace
+{
+p::LiftedTaskPtr compute_lifted_task(const fs::path& domain_filepath, const fs::path& problem_filepath)
 {
     return p::LiftedTask::create(fp::Parser(domain_filepath).parse_task(problem_filepath));
 }
 
-static p::SuccessorGenerator<p::LiftedTag> create_successor_generator(std::shared_ptr<p::Task<p::LiftedTag>> task)
+p::SuccessorGenerator<p::LiftedTag> create_successor_generator(std::shared_ptr<p::Task<p::LiftedTag>> task)
 {
     return p::SuccessorGenerator<p::LiftedTag>(task, ExecutionContext::create(1));
 }
 
-static fs::path absolute(const std::string& subdir) { return fs::path(std::string(DATA_DIR)) / subdir; }
+fs::path absolute(const std::string& subdir) { return fs::path(std::string(DATA_DIR)) / subdir; }
+}
 
 TEST(TyrTests, TyrPlanningLiftedTaskAgricola)
 {

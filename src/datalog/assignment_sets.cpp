@@ -306,7 +306,8 @@ template<formalism::FactKind T>
 FunctionAssignmentSet<T>::FunctionAssignmentSet(formalism::datalog::FunctionView<T> function,
                                                 const analysis::DomainListList& parameter_domains,
                                                 size_t num_objects) :
-    m_function(function.get_index()),
+    m_function(function),
+    m_function_index(function.get_index()),
     m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
     m_set(m_hash.size(), ClosedInterval<float_t>())
 {
@@ -324,26 +325,37 @@ void FunctionAssignmentSet<T>::insert(formalism::datalog::FunctionBindingView<T>
     const auto objects = binding.get_objects();
     const auto arity = objects.size();
 
-    auto& empty_assignment_bound = m_set[EmptyAssignment::rank];
-    empty_assignment_bound = hull(empty_assignment_bound, ClosedInterval<float_t>(value, value));
+    {
+        const auto rank = EmptyAssignment::rank;
+
+        auto& empty_assignment_bound = m_set[rank];
+        empty_assignment_bound = hull(empty_assignment_bound, ClosedInterval<float_t>(value, value));
+    }
 
     for (uint_t first_index = 0; first_index < arity; ++first_index)
     {
         const auto first_object = objects[first_index];
 
         // Complete vertex.
-        auto& single_assignment_bound = m_set[m_hash.get_rank<false>(VertexAssignment(formalism::ParameterIndex(first_index), first_object.get_index()))];
-        single_assignment_bound = hull(single_assignment_bound, ClosedInterval<float_t>(value, value));
+        {
+            const auto rank = m_hash.get_rank<false>(VertexAssignment(formalism::ParameterIndex(first_index), first_object.get_index()));
+
+            auto& single_assignment_bound = m_set[rank];
+            single_assignment_bound = hull(single_assignment_bound, ClosedInterval<float_t>(value, value));
+        }
 
         for (uint_t second_index = first_index + 1; second_index < arity; ++second_index)
         {
             const auto second_object = objects[second_index];
 
             // Ordered complete edge.
-            auto& double_assignment_bound = m_set[m_hash.get_rank<false>(EdgeAssignment(formalism::ParameterIndex(first_index),
-                                                                                        first_object.get_index(),
-                                                                                        formalism::ParameterIndex(second_index),
-                                                                                        second_object.get_index()))];
+
+            const auto rank = m_hash.get_rank<false>(EdgeAssignment(formalism::ParameterIndex(first_index),
+                                                                    first_object.get_index(),
+                                                                    formalism::ParameterIndex(second_index),
+                                                                    second_object.get_index()));
+
+            auto& double_assignment_bound = m_set[rank];
             double_assignment_bound = hull(double_assignment_bound, ClosedInterval<float_t>(value, value));
         }
     }
@@ -532,6 +544,7 @@ void TaggedAssignmentSets<T>::insert(const TaggedFactSets<T>& fact_sets)
         const auto& remap = other.get_remap();
         const auto& bindings = other.get_bindings();
         const auto& values = other.get_values();
+
         for (uint_t j = 0; j < remap.size(); ++j)
         {
             if (remap[j] == std::numeric_limits<uint_t>::max())
