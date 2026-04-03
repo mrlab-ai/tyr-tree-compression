@@ -27,19 +27,21 @@
 namespace tyr
 {
 
-extern std::ostream& print(std::ostream& os, const planning::LiftedTask& el);
+std::ostream& print(std::ostream& os, const planning::LiftedTask& el);
 
-extern std::ostream& print(std::ostream& os, const planning::GroundTask& el);
+std::ostream& print(std::ostream& os, const planning::GroundTask& el);
 
-extern std::ostream& print(std::ostream& os, const Data<planning::State<planning::LiftedTag>>& el);
+std::ostream& print(std::ostream& os, const Data<planning::State<planning::LiftedTag>>& el);
 
-extern std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::LiftedTag>& el);
+std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::LiftedTag>& el);
 
-extern std::ostream& print(std::ostream& os, const Data<planning::State<planning::GroundTag>>& el);
+std::ostream& print(std::ostream& os, const Data<planning::State<planning::GroundTag>>& el);
 
-extern std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::GroundTag>& el);
+std::ostream& print(std::ostream& os, const planning::UnpackedState<planning::GroundTag>& el);
 
-extern std::ostream& print(std::ostream& os, const planning::Statistics& el);
+std::ostream& print(std::ostream& os, const planning::Statistics& el);
+
+std::ostream& print(std::ostream& os, const planning::ProgressStatistics& el);
 
 template<planning::TaskKind Kind>
 std::ostream& print(std::ostream& os, const planning::StateView<Kind>& el);
@@ -53,19 +55,21 @@ std::ostream& print(std::ostream& os, const planning::Plan<Kind>& el);
 namespace planning
 {
 
-extern std::ostream& operator<<(std::ostream& os, const LiftedTask& el);
+std::ostream& operator<<(std::ostream& os, const LiftedTask& el);
 
-extern std::ostream& operator<<(std::ostream& os, const GroundTask& el);
+std::ostream& operator<<(std::ostream& os, const GroundTask& el);
 
-extern std::ostream& operator<<(std::ostream& os, const Data<State<LiftedTag>>& el);
+std::ostream& operator<<(std::ostream& os, const Data<State<LiftedTag>>& el);
 
-extern std::ostream& operator<<(std::ostream& os, const UnpackedState<LiftedTag>& el);
+std::ostream& operator<<(std::ostream& os, const UnpackedState<LiftedTag>& el);
 
-extern std::ostream& operator<<(std::ostream& os, const Data<State<GroundTag>>& el);
+std::ostream& operator<<(std::ostream& os, const Data<State<GroundTag>>& el);
 
-extern std::ostream& operator<<(std::ostream& os, const UnpackedState<GroundTag>& el);
+std::ostream& operator<<(std::ostream& os, const UnpackedState<GroundTag>& el);
 
-extern std::ostream& operator<<(std::ostream& os, const Statistics& el);
+std::ostream& operator<<(std::ostream& os, const Statistics& el);
+
+std::ostream& operator<<(std::ostream& os, const ProgressStatistics& el);
 
 template<TaskKind Kind>
 std::ostream& operator<<(std::ostream& os, const StateView<Kind>& el);

@@ -65,6 +65,7 @@ template<TaskKind Kind>
 class Plan;
 
 class Statistics;
+class ProgressStatistics;
 
 namespace astar_eager
 {

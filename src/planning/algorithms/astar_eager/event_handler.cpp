@@ -87,7 +87,7 @@ void DefaultEventHandler<Kind>::on_finish_f_layer_impl(float_t f_value, uint64_t
 template<TaskKind Kind>
 void DefaultEventHandler<Kind>::on_end_search_impl() const
 {
-    std::cout << "[ASTAR] Search ended.\n" << this->m_statistics << std::endl;
+    std::cout << "[ASTAR] Search ended.\n" << this->get_statistics() << "\n" << this->get_progress_statistics() << std::endl;
 }
 
 template<TaskKind Kind>
