@@ -16,6 +16,8 @@
  */
 
 #include "tyr/formalism/unification/apply_substitution.hpp"
+#include "tyr/formalism/unification/match.hpp"
+#include "tyr/formalism/unification/match_term.hpp"
 
 #include <gtest/gtest.h>
 
@@ -27,6 +29,8 @@ namespace tyr::tests
 namespace
 {
 using TermSubstitution = fu::SubstitutionFunction<Data<f::Term>>;
+
+static_assert(fu::UnifiableStructure<Data<f::Term>>);
 
 Data<f::Term> parameter(size_t index) { return Data<f::Term>(f::ParameterIndex(index)); }
 
@@ -44,6 +48,17 @@ TEST(TyrTests, TyrFormalismUnificationApplySubstitutionFixpoint)
     EXPECT_EQ(fu::apply_substitution_once(parameter(0), sigma), parameter(1));
     EXPECT_EQ(fu::apply_substitution_fixpoint(parameter(0), sigma), object(7));
     EXPECT_EQ(fu::apply_substitution_fixpoint(parameter(2), sigma), parameter(2));
+}
+
+TEST(TyrTests, TyrFormalismUnificationApplySubstitutionFixpointStopsOnCycle)
+{
+    auto sigma = TermSubstitution::from_range(f::ParameterIndex(0), 2);
+
+    EXPECT_TRUE(sigma.assign(f::ParameterIndex(0), parameter(1)));
+    EXPECT_TRUE(sigma.assign(f::ParameterIndex(1), parameter(0)));
+
+    EXPECT_EQ(fu::apply_substitution_fixpoint(parameter(0), sigma), parameter(0));
+    EXPECT_EQ(fu::apply_substitution_fixpoint(parameter(1), sigma), parameter(1));
 }
 
 TEST(TyrTests, TyrFormalismUnificationComposeSubstitutions)
@@ -88,6 +103,75 @@ TEST(TyrTests, TyrFormalismUnificationSubstitutionTryGet)
     ASSERT_NE(slot, nullptr);
     ASSERT_TRUE(slot->has_value());
     EXPECT_EQ(**slot, object(11));
+    EXPECT_TRUE(sigma.has_binding(f::ParameterIndex(1)));
+    EXPECT_FALSE(sigma.has_binding(f::ParameterIndex(0)));
+}
+
+TEST(TyrTests, TyrFormalismUnificationSubstitutionForEachBindingAndIdentity)
+{
+    auto sigma = TermSubstitution::from_range(f::ParameterIndex(0), 3);
+    EXPECT_TRUE(sigma.is_identity());
+
+    EXPECT_TRUE(sigma.assign(f::ParameterIndex(0), object(1)));
+    EXPECT_TRUE(sigma.assign(f::ParameterIndex(2), object(2)));
+    EXPECT_FALSE(sigma.is_identity());
+
+    auto seen = std::vector<std::pair<f::ParameterIndex, Data<f::Term>>> {};
+    sigma.for_each_binding([&](const auto parameter, const auto& value) { seen.emplace_back(parameter, value); });
+
+    ASSERT_EQ(seen.size(), 2);
+    EXPECT_EQ(seen[0].first, f::ParameterIndex(0));
+    EXPECT_EQ(seen[0].second, object(1));
+    EXPECT_EQ(seen[1].first, f::ParameterIndex(2));
+    EXPECT_EQ(seen[1].second, object(2));
+}
+
+TEST(TyrTests, TyrFormalismUnificationMatchTermBindsSigmaParameters)
+{
+    fu::TermMatchState state {
+        .sigma = TermSubstitution::from_range(f::ParameterIndex(0), 1),
+        .counted = TermSubstitution {},
+    };
+
+    EXPECT_TRUE(fu::match_term(parameter(0), object(3), state));
+    ASSERT_TRUE(state.sigma[f::ParameterIndex(0)].has_value());
+    EXPECT_EQ(*state.sigma[f::ParameterIndex(0)], object(3));
+}
+
+TEST(TyrTests, TyrFormalismUnificationMatchTermRejectsConflictingBindings)
+{
+    fu::TermMatchState state {
+        .sigma = TermSubstitution::from_range(f::ParameterIndex(0), 1),
+        .counted = TermSubstitution {},
+    };
+
+    EXPECT_TRUE(fu::match_term(parameter(0), object(3), state));
+    EXPECT_FALSE(fu::match_term(parameter(0), object(4), state));
+}
+
+TEST(TyrTests, TyrFormalismUnificationMatchTermRequiresRigidEquality)
+{
+    fu::TermMatchState state {
+        .sigma = TermSubstitution {},
+        .counted = TermSubstitution {},
+    };
+
+    EXPECT_TRUE(fu::match_term(parameter(2), parameter(2), state));
+    EXPECT_FALSE(fu::match_term(parameter(2), parameter(5), state));
+    EXPECT_FALSE(fu::match_term(parameter(2), object(1), state));
+}
+
+TEST(TyrTests, TyrFormalismUnificationMatchExReportsFailure)
+{
+    auto sigma = TermSubstitution::from_range(f::ParameterIndex(0), 1);
+    fu::TermMatchState state { std::move(sigma), TermSubstitution {} };
+
+    const auto result = fu::match_ex(parameter(0), object(8), std::move(state));
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result.failure, fu::MatchFailure::none);
+    ASSERT_TRUE(result.state->sigma[f::ParameterIndex(0)].has_value());
+    EXPECT_EQ(*result.state->sigma[f::ParameterIndex(0)], object(8));
 }
 
 }  // namespace tyr::tests

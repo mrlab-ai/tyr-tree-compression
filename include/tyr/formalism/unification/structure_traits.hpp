@@ -18,6 +18,11 @@
 #ifndef TYR_FORMALISM_UNIFICATION_STRUCTURE_TRAITS_HPP_
 #define TYR_FORMALISM_UNIFICATION_STRUCTURE_TRAITS_HPP_
 
+#include "tyr/formalism/term_data.hpp"
+
+#include <concepts>
+#include <utility>
+
 namespace tyr::formalism::unification
 {
 
@@ -29,6 +34,32 @@ struct structure_traits
 
     template<typename F>
     static T transform_terms(const T& value, F&& f);
+};
+
+template<>
+struct structure_traits<Data<Term>>
+{
+    template<typename F>
+    static bool zip_terms(const Data<Term>& lhs, const Data<Term>& rhs, F&& f)
+    {
+        return f(lhs, rhs);
+    }
+
+    template<typename F>
+    static Data<Term> transform_terms(const Data<Term>& value, F&& f)
+    {
+        return f(value);
+    }
+};
+
+template<typename T>
+concept UnifiableStructure = requires(const T& lhs, const T& rhs) {
+    {
+        structure_traits<T>::zip_terms(lhs, rhs, [](const Data<Term>&, const Data<Term>&) { return true; })
+        } -> std::same_as<bool>;
+    {
+        structure_traits<T>::transform_terms(lhs, [](const Data<Term>& term) { return term; })
+        } -> std::same_as<T>;
 };
 
 }  // namespace tyr::formalism::unification

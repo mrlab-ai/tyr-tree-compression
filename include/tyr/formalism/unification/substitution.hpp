@@ -71,6 +71,12 @@ public:
 
     [[nodiscard]] bool is_unbound(ParameterIndex p) const noexcept { return !is_bound(p); }
 
+    [[nodiscard]] bool has_binding(ParameterIndex p) const noexcept
+    {
+        const auto slot = try_get(p);
+        return slot != nullptr && slot->has_value();
+    }
+
     [[nodiscard]] const std::optional<T>* try_get(ParameterIndex p) const noexcept
     {
         const auto it = m_positions.find(p);
@@ -111,6 +117,21 @@ public:
             return true;
         }
         return *slot == value;
+    }
+
+    [[nodiscard]] bool is_identity() const noexcept
+    {
+        return std::all_of(m_data.begin(), m_data.end(), [](const auto& slot) { return !slot.has_value(); });
+    }
+
+    template<typename F>
+    void for_each_binding(F&& f) const
+    {
+        for (size_t i = 0; i < m_parameters.size(); ++i)
+        {
+            if (m_data[i].has_value())
+                std::forward<F>(f)(m_parameters[i], *m_data[i]);
+        }
     }
 
     void reset() noexcept { std::fill(m_data.begin(), m_data.end(), std::nullopt); }

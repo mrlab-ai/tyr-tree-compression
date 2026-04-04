@@ -31,25 +31,4 @@ inline Data<Term> make_temp_effect_term(TermView element, size_t /*num_action_va
 
 }
 
-namespace tyr::formalism::unification
-{
-
-template<>
-struct structure_traits<Data<Term>>
-{
-    template<typename F>
-    static bool zip_terms(const Data<Term>& lhs, const Data<Term>& rhs, F&& f)
-    {
-        return f(lhs, rhs);
-    }
-
-    template<typename F>
-    static Data<Term> transform_terms(const Data<Term>& value, F&& f)
-    {
-        return f(value);
-    }
-};
-
-}  // namespace tyr::formalism::unification
-
 #endif
