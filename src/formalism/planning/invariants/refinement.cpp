@@ -20,6 +20,7 @@
 #include "matching.hpp"
 #include "normalization.hpp"
 #include "proof.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <optional>
@@ -64,21 +65,6 @@ TempAtom make_initial_atom(PredicateView<FluentTag> predicate, size_t counted_po
         .predicate = predicate,
         .terms = std::move(terms),
     };
-}
-
-bool uses_predicate(const Invariant& inv, PredicateView<FluentTag> predicate)
-{
-    return std::ranges::any_of(inv.atoms, [&](const auto& atom) { return atom.predicate == predicate; });
-}
-
-const TempAtom* find_matching_part(const Invariant& inv, const TempAtom& add_atom)
-{
-    for (const auto& part : inv.atoms)
-    {
-        if (part.predicate == add_atom.predicate)
-            return &part;
-    }
-    return nullptr;
 }
 
 using PositionMapping = std::vector<std::pair<size_t, std::optional<ParameterIndex>>>;
@@ -286,7 +272,7 @@ InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const
     const auto& effect = op.effects[threat.effect_index];
     const auto& add_atom = effect.add_effects[threat.add_index];
 
-    const TempAtom* part = find_matching_part(inv, add_atom);
+    const TempAtom* part = find_part(inv, add_atom.predicate);
     if (part == nullptr)
         return result;
 
@@ -294,7 +280,7 @@ InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const
     {
         for (const auto& del_atom : del_eff.del_effects)
         {
-            if (uses_predicate(inv, del_atom.predicate))
+            if (inv.predicates.contains(del_atom.predicate))
                 continue;
 
             for (auto phi_prime : possible_matches(*part, add_atom, del_atom, inv.num_rigid_variables))

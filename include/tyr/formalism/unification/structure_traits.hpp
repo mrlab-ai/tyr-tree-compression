@@ -22,12 +22,6 @@ namespace tyr::formalism::unification
 {
 
 template<typename T>
-struct structure_traits;
-
-template<typename T>
-concept TermStructure = requires(const T& lhs, const T& rhs) { typename structure_traits<T>; };
-
-template<typename T>
 struct structure_traits
 {
     template<typename F>

@@ -18,7 +18,9 @@
 #ifndef TYR_FORMALISM_PLANNING_INVARIANTS_CONSTRAINTS_HPP_
 #define TYR_FORMALISM_PLANNING_INVARIANTS_CONSTRAINTS_HPP_
 
+#include "tyr/formalism/planning/invariants/atom.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/invariants/literal.hpp"
 
 #include <map>
 #include <optional>

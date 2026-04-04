@@ -52,7 +52,7 @@ std::optional<std::vector<Index<Object>>> extract_rigid_values(const Invariant& 
 
     for (size_t i = 0; i < inv.num_rigid_variables; ++i)
     {
-        const auto value = sigma->get(ParameterIndex(i));
+        const auto& value = (*sigma)[ParameterIndex(i)];
         if (!value.has_value())
             return std::nullopt;
 
@@ -349,7 +349,6 @@ std::vector<GroundAtomViewList<FluentTag>> choose_groups_greedily(const std::vec
         mark_group_covered(result.back(), uncovered, num_uncovered);
     }
 
-    // Singleton groups for facts not covered by any selected group.
     for (size_t pos = 0; pos < all_atoms.size(); ++pos)
     {
         if (uncovered[pos])
@@ -364,16 +363,12 @@ std::vector<GroundAtomViewList<FluentTag>> choose_groups_greedily(const std::vec
 std::vector<GroundAtomViewList<FluentTag>>
 compute_mutex_groups(const GroundAtomViewList<FluentTag>& initial_atoms, const GroundAtomViewList<FluentTag>& all_atoms, const InvariantList& invariants)
 {
-    // Ensure that all_atoms are indexed from 0 to size-1 without gaps, as we rely on this when marking atoms as covered.
     for (uint_t i = 0; i < all_atoms.size(); ++i)
         assert(uint_t(all_atoms[i].get_index()) == i);
 
     auto groups = precompute_groups(initial_atoms, all_atoms, invariants);
     std::sort(groups.begin(), groups.end());
 
-    // Greedy set cover:
-    // repeatedly pick the group that covers the largest number of still-uncovered atoms,
-    // then add singleton groups for anything left.
     return choose_groups_greedily(groups, all_atoms);
 }
 

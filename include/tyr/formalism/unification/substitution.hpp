@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025-2026 Dominik Drexler
+ * Copyright (C) 2025 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,18 +22,18 @@
 #include "tyr/formalism/term_data.hpp"
 
 #include <cassert>
+#include <optional>
+#include <vector>
 
 namespace tyr::formalism::unification
 {
-/// @brief SubstitutionFunction represents a partial function from an
-/// explicitly represented finite set of parameters to objects.
-///
-/// Slot i corresponds to parameter m_parameters[i]:
-/// - m_data[i] stores an object iff m_parameters[i] is bound;
-/// - m_data[i] == std::nullopt iff m_parameters[i] is unbound.
+
+template<typename T>
 class SubstitutionFunction
 {
 public:
+    using value_type = T;
+
     SubstitutionFunction() = default;
 
     explicit SubstitutionFunction(std::vector<ParameterIndex> parameters) : m_parameters(std::move(parameters)), m_data(m_parameters.size())
@@ -67,19 +67,28 @@ public:
 
     bool is_unbound(ParameterIndex p) const noexcept { return !is_bound(p); }
 
-    const std::optional<Index<Object>>& operator[](ParameterIndex p) const noexcept { return m_data[m_positions.at(p)]; }
+    const std::optional<T>& operator[](ParameterIndex p) const noexcept { return m_data[m_positions.at(p)]; }
 
-    std::optional<Index<Object>>& operator[](ParameterIndex p) noexcept { return m_data[m_positions.at(p)]; }
+    std::optional<T>& operator[](ParameterIndex p) noexcept { return m_data[m_positions.at(p)]; }
 
-    bool assign_or_check(ParameterIndex p, Index<Object> object)
+    bool assign(ParameterIndex p, const T& value)
+    {
+        auto& slot = m_data[m_positions.at(p)];
+        if (slot.has_value())
+            return false;
+        slot = value;
+        return true;
+    }
+
+    bool assign_or_check(ParameterIndex p, const T& value)
     {
         auto& slot = m_data[m_positions.at(p)];
         if (!slot.has_value())
         {
-            slot = object;
+            slot = value;
             return true;
         }
-        return *slot == object;
+        return *slot == value;
     }
 
     void reset() noexcept { std::fill(m_data.begin(), m_data.end(), std::nullopt); }
@@ -96,20 +105,27 @@ private:
     }
 
     std::vector<ParameterIndex> m_parameters;
-    std::vector<std::optional<Index<Object>>> m_data;
+    std::vector<std::optional<T>> m_data;
     UnorderedMap<ParameterIndex, size_t> m_positions;
 };
 
-template<typename S>
-concept ObjectSubstitution = requires(S s, const S cs, ParameterIndex p, Index<Object> o) {
+template<typename S, typename V>
+concept SubstitutionFor = requires(S s, const S cs, ParameterIndex p, const V& v) {
+    typename S::value_type;
+    requires std::same_as<typename S::value_type, V>;
     { cs.contains_parameter(p) } -> std::same_as<bool>;
     { cs.is_bound(p) } -> std::same_as<bool>;
     { cs.is_unbound(p) } -> std::same_as<bool>;
-    { cs[p] } -> std::same_as<const std::optional<Index<Object>>&>;
-    { s[p] } -> std::same_as<std::optional<Index<Object>>&>;
-    { s.assign_or_check(p, o) } -> std::same_as<bool>;
+    { cs[p] } -> std::same_as<const std::optional<V>&>;
+    { s[p] } -> std::same_as<std::optional<V>&>;
+    { s.assign_or_check(p, v) } -> std::same_as<bool>;
 };
 
-}
+template<typename S>
+concept ObjectSubstitution = SubstitutionFor<S, Index<Object>>;
 
+template<typename S>
+concept TermSubstitution = SubstitutionFor<S, Data<Term>>;
+
+}
 #endif

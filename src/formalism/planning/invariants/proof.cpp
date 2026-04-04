@@ -18,6 +18,9 @@
 #include "proof.hpp"
 
 #include "constraints.hpp"
+#include "tyr/formalism/unification/apply_substitution.hpp"
+#include "tyr/formalism/unification/substitution.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <map>
@@ -28,85 +31,24 @@ namespace tyr::formalism::planning::invariant
 {
 namespace
 {
-struct EffectLiteralRef
+struct EffectAtomRef
 {
     const TempEffect* effect;
     const TempAtom* atom;
-    bool negated;
 };
 
-bool is_effect_local_parameter(ParameterIndex parameter, size_t num_action_variables) { return static_cast<uint_t>(parameter) >= num_action_variables; }
+using Renaming = tyr::formalism::unification::SubstitutionFunction<Data<Term>>;
 
-uint_t get_effect_local_index(ParameterIndex parameter, size_t num_action_variables) { return static_cast<uint_t>(parameter) - num_action_variables; }
-
-const TempAtom* find_part(const Invariant& inv, PredicateView<FluentTag> predicate)
+Renaming make_effect_alpha_renaming(size_t num_action_variables, size_t num_effect_variables, size_t fresh_base)
 {
-    const auto it = std::find_if(inv.atoms.begin(), inv.atoms.end(), [&](const auto& atom) { return atom.predicate == predicate; });
+    auto sigma = Renaming::from_range(ParameterIndex { uint_t(num_action_variables) }, num_effect_variables);
 
-    if (it == inv.atoms.end())
-        return nullptr;
+    for (size_t i = 0; i < num_effect_variables; ++i)
+    {
+        sigma.assign(ParameterIndex { uint_t(num_action_variables + i) }, Data<Term>(ParameterIndex { uint_t(fresh_base + i) }));
+    }
 
-    return &(*it);
-}
-
-Data<Term> alpha_rename_effect_term(const Data<Term>& term, size_t num_action_variables, size_t fresh_base)
-{
-    return std::visit(
-        [&](auto&& arg) -> Data<Term>
-        {
-            using T = std::decay_t<decltype(arg)>;
-
-            if constexpr (std::is_same_v<T, ParameterIndex>)
-            {
-                if (!is_effect_local_parameter(arg, num_action_variables))
-                    return term;
-
-                const auto local_index = get_effect_local_index(arg, num_action_variables);
-                return Data<Term>(ParameterIndex(fresh_base + local_index));
-            }
-            else if constexpr (std::is_same_v<T, Index<Object>>)
-            {
-                return term;
-            }
-            else
-            {
-                static_assert(dependent_false<T>::value, "Missing case");
-            }
-        },
-        term.value);
-}
-
-TempAtom alpha_rename_effect_atom(const TempAtom& atom, size_t num_action_variables, size_t fresh_base)
-{
-    std::vector<Data<Term>> terms;
-    terms.reserve(atom.terms.size());
-
-    for (const auto& term : atom.terms)
-        terms.push_back(alpha_rename_effect_term(term, num_action_variables, fresh_base));
-
-    return TempAtom {
-        .predicate = atom.predicate,
-        .terms = std::move(terms),
-    };
-}
-
-TempLiteral alpha_rename_effect_literal(const TempLiteral& lit, size_t num_action_variables, size_t fresh_base)
-{
-    return TempLiteral {
-        .atom = alpha_rename_effect_atom(lit.atom, num_action_variables, fresh_base),
-        .polarity = lit.polarity,
-    };
-}
-
-TempLiteralList alpha_rename_effect_condition(const TempLiteralList& lits, size_t num_action_variables, size_t fresh_base)
-{
-    TempLiteralList result;
-    result.reserve(lits.size());
-
-    for (const auto& lit : lits)
-        result.push_back(alpha_rename_effect_literal(lit, num_action_variables, fresh_base));
-
-    return result;
+    return sigma;
 }
 
 EqualityConjunction make_cover_equality_conjunction(const TempAtom& pattern, const TempAtom& atom, const Invariant& inv)
@@ -136,32 +78,17 @@ EqualityConjunction make_cover_equality_conjunction(const TempAtom& pattern, con
     return EqualityConjunction(std::move(equalities));
 }
 
-std::vector<EffectLiteralRef> collect_relevant_add_effects(const TempAction& op, const Invariant& inv)
+template<typename Accessor>
+std::vector<EffectAtomRef> collect_relevant_effect_atoms(const TempAction& op, const Invariant& inv, Accessor accessor)
 {
-    std::vector<EffectLiteralRef> result;
+    std::vector<EffectAtomRef> result;
 
     for (const auto& eff : op.effects)
     {
-        for (const auto& atom : eff.add_effects)
+        for (const auto& atom : accessor(eff))
         {
             if (inv.predicates.contains(atom.predicate))
-                result.push_back(EffectLiteralRef { .effect = &eff, .atom = &atom, .negated = false });
-        }
-    }
-
-    return result;
-}
-
-std::vector<EffectLiteralRef> collect_relevant_del_effects(const TempAction& op, const Invariant& inv)
-{
-    std::vector<EffectLiteralRef> result;
-
-    for (const auto& eff : op.effects)
-    {
-        for (const auto& atom : eff.del_effects)
-        {
-            if (inv.predicates.contains(atom.predicate))
-                result.push_back(EffectLiteralRef { .effect = &eff, .atom = &atom, .negated = true });
+                result.push_back(EffectAtomRef { .effect = &eff, .atom = &atom });
         }
     }
 
@@ -271,7 +198,7 @@ std::optional<ConstraintSystem> make_balance_system(const TempEffect& add_effect
 
 bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
 {
-    const auto add_effects = collect_relevant_add_effects(op, inv);
+    const auto add_effects = collect_relevant_effect_atoms(op, inv, [](const auto& eff) -> const auto& { return eff.add_effects; });
 
     if (add_effects.size() <= 1)
         return false;
@@ -290,11 +217,14 @@ bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
             const auto& eff1 = add_effects[i];
             const auto& eff2 = add_effects[j];
 
-            const auto lhs_atom = alpha_rename_effect_atom(*eff1.atom, eff1.effect->num_action_variables, fresh_base_lhs);
-            const auto rhs_atom = alpha_rename_effect_atom(*eff2.atom, eff2.effect->num_action_variables, fresh_base_rhs);
+            const auto lhs_sigma = make_effect_alpha_renaming(eff1.effect->num_action_variables, eff1.effect->num_effect_variables, fresh_base_lhs);
+            const auto rhs_sigma = make_effect_alpha_renaming(eff2.effect->num_action_variables, eff2.effect->num_effect_variables, fresh_base_rhs);
 
-            const auto lhs_cond = alpha_rename_effect_condition(eff1.effect->condition, eff1.effect->num_action_variables, fresh_base_lhs);
-            const auto rhs_cond = alpha_rename_effect_condition(eff2.effect->condition, eff2.effect->num_action_variables, fresh_base_rhs);
+            const auto lhs_atom = tyr::formalism::unification::apply_substitution(*eff1.atom, lhs_sigma);
+            const auto rhs_atom = tyr::formalism::unification::apply_substitution(*eff2.atom, rhs_sigma);
+
+            const auto lhs_cond = tyr::formalism::unification::apply_substitution(eff1.effect->condition, lhs_sigma);
+            const auto rhs_cond = tyr::formalism::unification::apply_substitution(eff2.effect->condition, rhs_sigma);
 
             const auto* lhs_pattern = find_part(inv, lhs_atom.predicate);
             const auto* rhs_pattern = find_part(inv, rhs_atom.predicate);
@@ -333,7 +263,7 @@ bool is_add_effect_unbalanced(const TempAction& op, const TempEffect& add_effect
     auto param_system = make_param_system(op, add_effect, add_cover);
     const auto produced_by_pred = build_add_effect_produced_by_pred(op, add_effect, add_atom);
 
-    const auto del_effects = collect_relevant_del_effects(op, inv);
+    const auto del_effects = collect_relevant_effect_atoms(op, inv, [](const auto& eff) -> const auto& { return eff.del_effects; });
 
     for (const auto& del_ref : del_effects)
     {

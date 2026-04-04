@@ -15,42 +15,23 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_FORMALISM_PLANNING_INVARIANTS_PROOF_HPP_
-#define TYR_FORMALISM_PLANNING_INVARIANTS_PROOF_HPP_
+#ifndef TYR_SRC_FORMALISM_PLANNING_INVARIANTS_UTILS_HPP_
+#define TYR_SRC_FORMALISM_PLANNING_INVARIANTS_UTILS_HPP_
 
-#include "tyr/formalism/planning/invariants/action.hpp"
 #include "tyr/formalism/planning/invariants/atom.hpp"
-#include "tyr/formalism/planning/invariants/effect.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/repository.hpp"
 
 namespace tyr::formalism::planning::invariant
 {
 
-bool is_operator_too_heavy(const TempAction& op, const Invariant& inv);
-
-bool is_add_effect_unbalanced(const TempAction& op, const TempEffect& effect, const TempAtom& add_atom, const Invariant& inv);
-
-struct Threat
+inline const TempAtom* find_part(const Invariant& inv, PredicateView<FluentTag> predicate)
 {
-    size_t op_index;
-    size_t effect_index;
-    size_t add_index;
-};
+    const auto it = std::find_if(inv.atoms.begin(), inv.atoms.end(), [&](const auto& atom) { return atom.predicate == predicate; });
 
-enum class ProofStatus
-{
-    Proven,
-    TooHeavy,
-    UnbalancedAddEffect
-};
+    return (it == inv.atoms.end()) ? nullptr : &*it;
+}
 
-struct ProofResult
-{
-    ProofStatus status;
-    std::optional<Threat> threat;
-};
-
-ProofResult prove_invariant(const Invariant& inv, const TempActionList& ops);
 }
 
 #endif

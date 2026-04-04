@@ -25,6 +25,7 @@
 #include "tyr/common/hash.hpp"
 #include "tyr/formalism/planning/expression_arity.hpp"
 #include "tyr/formalism/planning/grounder.hpp"
+#include "tyr/formalism/planning/invariants/action.hpp"
 #include "tyr/formalism/planning/invariants/formatter.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
 #include "tyr/formalism/planning/planning_task.hpp"

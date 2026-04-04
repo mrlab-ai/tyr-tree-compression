@@ -19,6 +19,7 @@
 #define TYR_FORMALISM_PLANNING_INVARIANTS_REFINEMENT_HPP_
 
 #include "proof.hpp"
+#include "tyr/formalism/planning/invariants/action.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 

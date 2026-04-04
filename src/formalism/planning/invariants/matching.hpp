@@ -18,10 +18,17 @@
 #ifndef TYR_FORMALISM_PLANNING_INVARIANTS_MATCHING_HPP_
 #define TYR_FORMALISM_PLANNING_INVARIANTS_MATCHING_HPP_
 
+#include "tyr/formalism/planning/invariants/atom.hpp"
+#include "tyr/formalism/planning/invariants/effect.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/unification/substitution.hpp"
 
 namespace tyr::formalism::planning::invariant
 {
+
+using ActionSubstitution = tyr::formalism::unification::SubstitutionFunction<Data<Term>>;
+using EffectSubstitution = tyr::formalism::unification::SubstitutionFunction<Data<Term>>;
+using InvariantSubstitution = tyr::formalism::unification::SubstitutionFunction<Data<Term>>;
 
 struct ActionAlignment
 {

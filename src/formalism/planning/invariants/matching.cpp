@@ -17,302 +17,151 @@
 
 #include "matching.hpp"
 
+#include "tyr/formalism/unification/apply_substitution.hpp"
+#include "tyr/formalism/unification/match_state.hpp"
+#include "tyr/formalism/unification/match_term.hpp"
+
+#include <algorithm>
+
 namespace tyr::formalism::planning::invariant
 {
 namespace
 {
 
+using TermMatchState = tyr::formalism::unification::MatchState<Data<Term>>;
+using ParameterRole = tyr::formalism::unification::ParameterRole;
+using DefaultMatchPolicy = tyr::formalism::unification::DefaultMatchPolicy;
+
 bool is_effect_local_parameter(ParameterIndex parameter, size_t num_action_variables) { return static_cast<uint_t>(parameter) >= num_action_variables; }
 
-ParameterIndex to_effect_local_parameter(ParameterIndex parameter, size_t num_action_variables)
+struct ActionAlignmentPolicy : tyr::formalism::unification::DefaultMatchPolicy
 {
-    return ParameterIndex(static_cast<uint_t>(parameter) - num_action_variables);
-}
+    size_t num_rigid_variables;
+    size_t num_action_variables;
 
-template<typename Substitution, typename Matcher>
-std::optional<Substitution> match_atom(const TempAtom& pattern, const TempAtom& element, Substitution substitution, Matcher&& matcher)
-{
-    if (pattern.predicate != element.predicate)
-        return std::nullopt;
-
-    if (pattern.terms.size() != element.terms.size())
-        return std::nullopt;
-
-    for (uint_t i = 0; i < pattern.terms.size(); ++i)
+    template<typename T>
+    bool match_parameter_parameter(ParameterIndex lhs, ParameterIndex rhs, tyr::formalism::unification::MatchState<T>& state) const
     {
-        if (!matcher(pattern.terms[i], element.terms[i], substitution))
-            return std::nullopt;
+        const bool lhs_is_counted = uint_t(lhs) >= num_rigid_variables;
+        const bool rhs_is_action_parameter = uint_t(rhs) < num_action_variables;
+
+        if (lhs_is_counted)
+            return true;
+
+        if (rhs_is_action_parameter)
+            return state.sigma.assign_or_check(rhs, T(lhs));
+
+        return lhs == rhs;
     }
 
-    return substitution;
-}
+    template<typename T>
+    bool match_parameter_object(ParameterIndex lhs, const T&, tyr::formalism::unification::MatchState<T>&) const
+    {
+        return uint_t(lhs) >= num_rigid_variables;
+    }
 
-bool match_cover_term(const Invariant& inv, const Data<Term>& lhs, const Data<Term>& rhs, InvariantSubstitution& substitution)
+    template<typename T>
+    bool match_object_parameter(const T& lhs, ParameterIndex rhs, tyr::formalism::unification::MatchState<T>& state) const
+    {
+        if (uint_t(rhs) < num_action_variables)
+            return state.sigma.assign_or_check(rhs, lhs);
+
+        return false;
+    }
+};
+
+struct EffectCoverPolicy : tyr::formalism::unification::DefaultMatchPolicy
 {
-    return std::visit(
-        [&](auto&& lhs_arg) -> bool
+    size_t num_rigid_variables;
+    size_t num_action_variables;
+
+    template<typename T>
+    bool match_parameter_parameter(ParameterIndex lhs, ParameterIndex rhs, tyr::formalism::unification::MatchState<T>& state) const
+    {
+        const bool lhs_is_counted = uint_t(lhs) >= num_rigid_variables;
+        const bool rhs_is_effect_local = uint_t(rhs) >= num_action_variables;
+
+        if (!lhs_is_counted)
         {
-            using Lhs = std::decay_t<decltype(lhs_arg)>;
+            if (rhs_is_effect_local)
+                return state.sigma.assign_or_check(rhs, T(lhs));
 
-            return std::visit(
-                [&](auto&& rhs_arg) -> bool
-                {
-                    using Rhs = std::decay_t<decltype(rhs_arg)>;
+            return lhs == rhs;
+        }
 
-                    if constexpr (std::is_same_v<Lhs, ParameterIndex>)
-                    {
-                        const bool is_counted = (static_cast<uint_t>(lhs_arg) >= inv.num_rigid_variables);
+        if (rhs_is_effect_local)
+        {
+            if (state.counted.is_bound(lhs))
+                return state.sigma.assign_or_check(rhs, *state.counted[lhs]);
 
-                        if (is_counted)
-                            return substitution.assign_or_check(lhs_arg, rhs);
+            return true;
+        }
 
-                        if constexpr (std::is_same_v<Rhs, ParameterIndex>)
-                            return lhs_arg == rhs_arg;
-                        else
-                            return false;
-                    }
-                    else if constexpr (std::is_same_v<Lhs, Index<Object>>)
-                    {
-                        if constexpr (std::is_same_v<Rhs, Index<Object>>)
-                            return lhs_arg == rhs_arg;
-                        else
-                            return false;
-                    }
-                    else
-                    {
-                        static_assert(dependent_false<Lhs>::value, "Missing case");
-                    }
-                },
-                rhs.value);
-        },
-        lhs.value);
-}
+        if (state.counted.is_unbound(lhs))
+            return state.counted.assign(lhs, T(rhs));
 
-bool match_ground_term(const Data<Term>& lhs, const Data<Term>& rhs, InvariantSubstitution& substitution)
+        return *state.counted[lhs] == T(rhs);
+    }
+
+    template<typename T>
+    bool match_parameter_object(ParameterIndex lhs, const T& rhs, tyr::formalism::unification::MatchState<T>& state) const
+    {
+        if (uint_t(lhs) < num_rigid_variables)
+            return false;
+
+        if (state.counted.is_unbound(lhs))
+            return state.counted.assign(lhs, rhs);
+
+        return *state.counted[lhs] == rhs;
+    }
+
+    template<typename T>
+    bool match_object_parameter(const T& lhs, ParameterIndex rhs, tyr::formalism::unification::MatchState<T>& state) const
+    {
+        if (uint_t(rhs) >= num_action_variables)
+            return state.sigma.assign_or_check(rhs, lhs);
+
+        return false;
+    }
+};
+
+template<typename T, typename State, typename Matcher>
+std::optional<State> match_structure(const T& pattern, const T& element, State state, Matcher&& matcher)
 {
-    return std::visit(
-        [&](auto&& lhs_arg) -> bool
-        {
-            using Lhs = std::decay_t<decltype(lhs_arg)>;
+    const bool ok =
+        tyr::formalism::unification::structure_traits<T>::zip_terms(pattern,
+                                                                    element,
+                                                                    [&](const Data<Term>& lhs, const Data<Term>& rhs) { return matcher(lhs, rhs, state); });
 
-            return std::visit(
-                [&](auto&& rhs_arg) -> bool
-                {
-                    using Rhs = std::decay_t<decltype(rhs_arg)>;
+    if (!ok)
+        return std::nullopt;
 
-                    if constexpr (std::is_same_v<Lhs, ParameterIndex>)
-                    {
-                        return substitution.assign_or_check(lhs_arg, rhs);
-                    }
-                    else if constexpr (std::is_same_v<Lhs, Index<Object>>)
-                    {
-                        if constexpr (std::is_same_v<Rhs, Index<Object>>)
-                            return lhs_arg == rhs_arg;
-                        else
-                            return false;
-                    }
-                    else
-                    {
-                        static_assert(dependent_false<Lhs>::value, "Missing case");
-                    }
-                },
-                rhs.value);
-        },
-        lhs.value);
-}
-
-bool match_action_alignment_term(const Invariant& inv,
-                                 const Data<Term>& lhs,
-                                 const Data<Term>& rhs,
-                                 size_t num_action_variables,
-                                 ActionSubstitution& substitution)
-{
-    return std::visit(
-        [&](auto&& lhs_arg) -> bool
-        {
-            using Lhs = std::decay_t<decltype(lhs_arg)>;
-
-            return std::visit(
-                [&](auto&& rhs_arg) -> bool
-                {
-                    using Rhs = std::decay_t<decltype(rhs_arg)>;
-
-                    if constexpr (std::is_same_v<Lhs, ParameterIndex>)
-                    {
-                        const bool is_counted = (static_cast<uint_t>(lhs_arg) >= inv.num_rigid_variables);
-
-                        if (is_counted)
-                            return true;
-
-                        if constexpr (std::is_same_v<Rhs, ParameterIndex>)
-                        {
-                            if (static_cast<uint_t>(rhs_arg) >= num_action_variables)
-                                return false;
-
-                            return substitution.assign_or_check(rhs_arg, Data<Term>(lhs_arg));
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    else if constexpr (std::is_same_v<Lhs, Index<Object>>)
-                    {
-                        if constexpr (std::is_same_v<Rhs, ParameterIndex>)
-                        {
-                            if (static_cast<uint_t>(rhs_arg) >= num_action_variables)
-                                return false;
-
-                            return substitution.assign_or_check(rhs_arg, Data<Term>(lhs_arg));
-                        }
-                        else if constexpr (std::is_same_v<Rhs, Index<Object>>)
-                        {
-                            return lhs_arg == rhs_arg;
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        static_assert(dependent_false<Lhs>::value, "Missing case");
-                    }
-                },
-                rhs.value);
-        },
-        lhs.value);
-}
-
-bool match_effect_cover_term(const Invariant& inv,
-                             const Data<Term>& lhs,
-                             const Data<Term>& rhs,
-                             size_t num_action_variables,
-                             std::vector<std::optional<Data<Term>>>& counted_bindings,
-                             EffectSubstitution& sigma)
-{
-    return std::visit(
-        [&](auto&& lhs_arg) -> bool
-        {
-            using Lhs = std::decay_t<decltype(lhs_arg)>;
-
-            return std::visit(
-                [&](auto&& rhs_arg) -> bool
-                {
-                    using Rhs = std::decay_t<decltype(rhs_arg)>;
-
-                    if constexpr (std::is_same_v<Lhs, ParameterIndex>)
-                    {
-                        const auto lhs_index = static_cast<uint_t>(lhs_arg);
-                        const bool lhs_is_counted = lhs_index >= inv.num_rigid_variables;
-
-                        if (!lhs_is_counted)
-                        {
-                            if constexpr (std::is_same_v<Rhs, ParameterIndex>)
-                            {
-                                if (is_effect_local_parameter(rhs_arg, num_action_variables))
-                                {
-                                    const auto local = to_effect_local_parameter(rhs_arg, num_action_variables);
-                                    return sigma.assign_or_check(local, Data<Term>(lhs_arg));
-                                }
-
-                                return lhs_arg == rhs_arg;
-                            }
-                            else if constexpr (std::is_same_v<Rhs, Index<Object>>)
-                            {
-                                return false;
-                            }
-                            else
-                            {
-                                static_assert(dependent_false<Rhs>::value, "Missing case");
-                            }
-                        }
-                        else
-                        {
-                            const auto counted_index = lhs_index - inv.num_rigid_variables;
-                            auto& binding = counted_bindings[counted_index];
-
-                            if constexpr (std::is_same_v<Rhs, ParameterIndex>)
-                            {
-                                if (is_effect_local_parameter(rhs_arg, num_action_variables))
-                                {
-                                    const auto local = to_effect_local_parameter(rhs_arg, num_action_variables);
-
-                                    if (binding.has_value())
-                                        return sigma.assign_or_check(local, *binding);
-
-                                    return true;
-                                }
-
-                                if (!binding.has_value())
-                                {
-                                    binding = Data<Term>(rhs_arg);
-                                    return true;
-                                }
-
-                                return *binding == Data<Term>(rhs_arg);
-                            }
-                            else if constexpr (std::is_same_v<Rhs, Index<Object>>)
-                            {
-                                if (!binding.has_value())
-                                {
-                                    binding = Data<Term>(rhs_arg);
-                                    return true;
-                                }
-
-                                return *binding == Data<Term>(rhs_arg);
-                            }
-                            else
-                            {
-                                static_assert(dependent_false<Rhs>::value, "Missing case");
-                            }
-                        }
-                    }
-                    else if constexpr (std::is_same_v<Lhs, Index<Object>>)
-                    {
-                        if constexpr (std::is_same_v<Rhs, ParameterIndex>)
-                        {
-                            if (is_effect_local_parameter(rhs_arg, num_action_variables))
-                            {
-                                const auto local = to_effect_local_parameter(rhs_arg, num_action_variables);
-                                return sigma.assign_or_check(local, Data<Term>(lhs_arg));
-                            }
-
-                            return false;
-                        }
-                        else if constexpr (std::is_same_v<Rhs, Index<Object>>)
-                        {
-                            return lhs_arg == rhs_arg;
-                        }
-                        else
-                        {
-                            static_assert(dependent_false<Rhs>::value, "Missing case");
-                        }
-                    }
-                    else
-                    {
-                        static_assert(dependent_false<Lhs>::value, "Missing case");
-                    }
-                },
-                rhs.value);
-        },
-        lhs.value);
+    return state;
 }
 
 std::optional<InvariantSubstitution> match_cover_against_atom(const Invariant& inv, const TempAtom& pattern, const TempAtom& element)
 {
-    return match_atom(pattern,
-                      element,
-                      InvariantSubstitution(inv.num_rigid_variables + inv.num_counted_variables),
-                      [&](const Data<Term>& lhs, const Data<Term>& rhs, InvariantSubstitution& substitution) -> bool
-                      { return match_cover_term(inv, lhs, rhs, substitution); });
+    auto state = TermMatchState {
+        .sigma = InvariantSubstitution::from_range(ParameterIndex { uint_t(inv.num_rigid_variables) }, inv.num_counted_variables),
+        .counted = InvariantSubstitution {},
+    };
+
+    auto result = match_structure(pattern,
+                                  element,
+                                  std::move(state),
+                                  [&](const Data<Term>& lhs, const Data<Term>& rhs, TermMatchState& st) -> bool
+                                  { return tyr::formalism::unification::match_term(lhs, rhs, st, DefaultMatchPolicy {}); });
+
+    if (!result.has_value())
+        return std::nullopt;
+
+    return std::move(result->sigma);
 }
 
 std::optional<EffectSubstitution>
 match_effect_cover_against_atom(const Invariant& inv, const TempAtom& pattern, const TempAtom& element, size_t num_action_variables)
 {
-    uint_t max_local_index = 0;
-    bool has_local = false;
+    auto effect_parameters = std::vector<ParameterIndex> {};
 
     for (const auto& term : element.terms)
     {
@@ -325,25 +174,34 @@ match_effect_cover_against_atom(const Invariant& inv, const TempAtom& pattern, c
                 {
                     if (is_effect_local_parameter(arg, num_action_variables))
                     {
-                        has_local = true;
-                        max_local_index = std::max(max_local_index, static_cast<uint_t>(to_effect_local_parameter(arg, num_action_variables)));
+                        if (std::find(effect_parameters.begin(), effect_parameters.end(), arg) == effect_parameters.end())
+                            effect_parameters.push_back(arg);
                     }
                 }
             },
             term.value);
     }
 
-    EffectSubstitution sigma_eff;
-    if (has_local)
-        sigma_eff.resize(max_local_index + 1);
+    auto state = TermMatchState {
+        .sigma = EffectSubstitution(std::move(effect_parameters)),
+        .counted = EffectSubstitution::from_range(ParameterIndex { uint_t(inv.num_rigid_variables) }, inv.num_counted_variables),
+    };
 
-    auto counted_bindings = std::vector<std::optional<Data<Term>>>(inv.num_counted_variables, std::nullopt);
+    const auto policy = EffectCoverPolicy {
+        .num_rigid_variables = inv.num_rigid_variables,
+        .num_action_variables = num_action_variables,
+    };
 
-    return match_atom(pattern,
-                      element,
-                      std::move(sigma_eff),
-                      [&](const Data<Term>& lhs, const Data<Term>& rhs, EffectSubstitution& sigma) -> bool
-                      { return match_effect_cover_term(inv, lhs, rhs, num_action_variables, counted_bindings, sigma); });
+    auto result = match_structure(pattern,
+                                  element,
+                                  std::move(state),
+                                  [&](const Data<Term>& lhs, const Data<Term>& rhs, TermMatchState& st) -> bool
+                                  { return tyr::formalism::unification::match_term(lhs, rhs, st, policy); });
+
+    if (!result.has_value())
+        return std::nullopt;
+
+    return std::move(result->sigma);
 }
 
 }  // namespace
@@ -361,26 +219,52 @@ bool covers(const Invariant& inv, const TempAtom& element)
 
 std::optional<InvariantSubstitution> match_invariant_against_ground_atom(const Invariant& inv, const TempAtom& pattern, const TempAtom& ground_atom)
 {
-    return match_atom(pattern,
-                      ground_atom,
-                      InvariantSubstitution(inv.num_rigid_variables + inv.num_counted_variables),
-                      [&](const Data<Term>& lhs, const Data<Term>& rhs, InvariantSubstitution& sigma) -> bool { return match_ground_term(lhs, rhs, sigma); });
+    auto state = TermMatchState {
+        .sigma = InvariantSubstitution::from_range(ParameterIndex { 0 }, inv.num_rigid_variables + inv.num_counted_variables),
+        .counted = InvariantSubstitution {},
+    };
+
+    auto result = match_structure(pattern,
+                                  ground_atom,
+                                  std::move(state),
+                                  [&](const Data<Term>& lhs, const Data<Term>& rhs, TermMatchState& st) -> bool
+                                  { return tyr::formalism::unification::match_term(lhs, rhs, st, DefaultMatchPolicy {}); });
+
+    if (!result.has_value())
+        return std::nullopt;
+
+    return std::move(result->sigma);
 }
 
 std::vector<ActionAlignment> enumerate_action_alignments(const Invariant& inv, const TempAtom& element, size_t num_action_variables)
 {
     auto result = std::vector<ActionAlignment> {};
 
+    const auto policy = ActionAlignmentPolicy {
+        .num_rigid_variables = inv.num_rigid_variables,
+        .num_action_variables = num_action_variables,
+    };
+
     for (const auto& pattern : inv.atoms)
     {
-        auto sigma = match_atom(pattern,
-                                element,
-                                ActionSubstitution(num_action_variables),
-                                [&](const Data<Term>& lhs, const Data<Term>& rhs, ActionSubstitution& substitution) -> bool
-                                { return match_action_alignment_term(inv, lhs, rhs, num_action_variables, substitution); });
+        auto state = TermMatchState {
+            .sigma = ActionSubstitution::from_range(ParameterIndex { 0 }, num_action_variables),
+            .counted = ActionSubstitution {},
+        };
 
-        if (sigma.has_value())
-            result.push_back(ActionAlignment { .pattern = pattern, .sigma = std::move(*sigma) });
+        auto matched = match_structure(pattern,
+                                       element,
+                                       std::move(state),
+                                       [&](const Data<Term>& lhs, const Data<Term>& rhs, TermMatchState& st) -> bool
+                                       { return tyr::formalism::unification::match_term(lhs, rhs, st, policy); });
+
+        if (matched.has_value())
+        {
+            result.push_back(ActionAlignment {
+                .pattern = pattern,
+                .sigma = std::move(matched->sigma),
+            });
+        }
     }
 
     return result;
@@ -391,7 +275,7 @@ enumerate_effect_renamings(const TempEffect& effect, const TempAtom& element, co
 {
     auto result = std::vector<EffectSubstitution> {};
 
-    const auto partially_renamed = apply_substitution(element, sigma_op);
+    const auto partially_renamed = tyr::formalism::unification::apply_substitution(element, sigma_op);
 
     for (const auto& pattern : inv.atoms)
     {
@@ -400,7 +284,7 @@ enumerate_effect_renamings(const TempEffect& effect, const TempAtom& element, co
         if (!sigma_eff.has_value())
             continue;
 
-        const auto fully_renamed = apply_substitution(partially_renamed, *sigma_eff, effect.num_action_variables);
+        const auto fully_renamed = tyr::formalism::unification::apply_substitution(partially_renamed, *sigma_eff);
 
         if (covers(inv, fully_renamed))
             result.push_back(std::move(*sigma_eff));
