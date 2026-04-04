@@ -49,7 +49,7 @@ RANDOM_SEED = 0
 if REMOTE:
     ENV = TetralithEnvironment(
         setup=TetralithEnvironment.DEFAULT_SETUP,
-        memory_per_cpu="2840M",
+        memory_per_cpu="8000M",
         cpus_per_task=1,
         extra_options="#SBATCH --account=naiss2025-5-382")
     
@@ -97,7 +97,7 @@ ATTRIBUTES = [
 ATTRIBUTES += SearchParser.get_attributes()
 ATTRIBUTES += AStarEagerParser.get_attributes()
 
-MEMORY_LIMIT = 2840
+MEMORY_LIMIT = 8000
 
 # Create a new experiment.
 exp = Experiment(environment=ENV)
