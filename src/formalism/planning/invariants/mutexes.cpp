@@ -30,20 +30,9 @@ namespace tyr::formalism::planning::invariant
 namespace
 {
 
-TempAtom make_temp_ground_atom(GroundAtomView<FluentTag> atom)
+std::optional<std::vector<Index<Object>>> extract_rigid_values(const Invariant& inv, const MutableAtom<FluentTag>& pattern, GroundAtomView<FluentTag> atom)
 {
-    std::vector<Data<Term>> terms;
-    terms.reserve(atom.get_row().get_objects().size());
-
-    for (const auto object : atom.get_row().get_objects())
-        terms.emplace_back(Data<Term>(object.get_index()));
-
-    return TempAtom { .predicate = atom.get_predicate(), .terms = std::move(terms) };
-}
-
-std::optional<std::vector<Index<Object>>> extract_rigid_values(const Invariant& inv, const TempAtom& pattern, GroundAtomView<FluentTag> atom)
-{
-    const auto sigma = match_invariant_against_ground_atom(inv, pattern, make_temp_ground_atom(atom));
+    const auto sigma = match_invariant_against_ground_atom(inv, pattern, MutableAtom<FluentTag>(atom));
     if (!sigma.has_value())
         return std::nullopt;
 
@@ -84,7 +73,7 @@ std::optional<std::vector<Index<Object>>> extract_rigid_values(const Invariant& 
     return rigid_values;
 }
 
-bool instantiate_matches_ground_atom(const TempAtom& pattern,
+bool instantiate_matches_ground_atom(const MutableAtom<FluentTag>& pattern,
                                      const std::vector<Index<Object>>& rigid_values,
                                      std::optional<Index<Object>> counted_value,
                                      GroundAtomView<FluentTag> ground_atom)
@@ -128,9 +117,9 @@ bool instantiate_matches_ground_atom(const TempAtom& pattern,
     return true;
 }
 
-bool initial_atom_matches_part(const Invariant& inv, const TempAtom& part, GroundAtomView<FluentTag> atom)
+bool initial_atom_matches_part(const Invariant& inv, const MutableAtom<FluentTag>& part, GroundAtomView<FluentTag> atom)
 {
-    return match_invariant_against_ground_atom(inv, part, make_temp_ground_atom(atom)).has_value();
+    return match_invariant_against_ground_atom(inv, part, MutableAtom<FluentTag>(atom)).has_value();
 }
 
 GroundAtomViewList<FluentTag>

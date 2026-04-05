@@ -23,8 +23,9 @@
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
 #include "tyr/formalism/planning/grounder.hpp"
-#include "tyr/formalism/planning/invariants/atom.hpp"
+#include "tyr/formalism/planning/mutable/atom.hpp"
 #include "tyr/formalism/planning/repository.hpp"
+#include "tyr/formalism/unification/structure_traits_impl.hpp"
 
 namespace tyr::formalism::planning::invariant
 {
@@ -33,18 +34,28 @@ struct Invariant
 {
     size_t num_rigid_variables = 0;
     size_t num_counted_variables = 0;
-    TempAtomList atoms;
+    MutableAtomList<FluentTag> atoms;
     UnorderedSet<PredicateView<FluentTag>> predicates;
 
     Invariant() = default;
 
-    Invariant(size_t num_rigid_variables_, size_t num_counted_variables_, TempAtomList atoms_) :
+    Invariant(size_t num_rigid_variables_, size_t num_counted_variables_, MutableAtomList<FluentTag> atoms_) :
         num_rigid_variables(num_rigid_variables_),
         num_counted_variables(num_counted_variables_),
         atoms(std::move(atoms_)),
         predicates()
     {
         canonicalize();
+    }
+    Invariant(size_t num_rigid_variables_,
+              size_t num_counted_variables_,
+              MutableAtomList<FluentTag> atoms_,
+              UnorderedSet<PredicateView<FluentTag>> predicates_) :
+        num_rigid_variables(num_rigid_variables_),
+        num_counted_variables(num_counted_variables_),
+        atoms(std::move(atoms_)),
+        predicates(std::move(predicates_))
+    {
     }
 
     void canonicalize()
@@ -74,33 +85,23 @@ namespace tyr::formalism::unification
 template<>
 struct structure_traits<tyr::formalism::planning::invariant::Invariant>
 {
-    using T = tyr::formalism::planning::invariant::Invariant;
-    using Atom = tyr::formalism::planning::invariant::TempAtom;
+    using Type = tyr::formalism::planning::invariant::Invariant;
 
     template<typename F>
-    static bool zip_terms(const T& lhs, const T& rhs, F&& f)
+    static bool zip_terms(const Type& lhs, const Type& rhs, F&& f)
     {
         if (lhs.num_rigid_variables != rhs.num_rigid_variables)
             return false;
         if (lhs.num_counted_variables != rhs.num_counted_variables)
             return false;
 
-        return detail::zip_vector_terms<Atom>(lhs.atoms, rhs.atoms, f);
+        return zip_terms(lhs.atoms, rhs.atoms, f);
     }
 
     template<typename F>
-    static T transform_terms(const T& value, F&& f)
+    static Type transform_terms(const Type& value, F&& f)
     {
-        T result;
-        result.num_rigid_variables = value.num_rigid_variables;
-        result.num_counted_variables = value.num_counted_variables;
-        result.atoms = detail::transform_vector_terms<Atom>(value.atoms, f);
-
-        result.predicates.clear();
-        for (const auto& atom : result.atoms)
-            result.predicates.insert(atom.predicate);
-
-        return result;
+        return Type(value.num_rigid_variables, value.num_counted_variables, transform_terms(value.atoms, f), value.predicates);
     }
 };
 

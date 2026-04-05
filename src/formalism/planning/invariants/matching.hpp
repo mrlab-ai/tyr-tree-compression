@@ -18,9 +18,9 @@
 #ifndef TYR_FORMALISM_PLANNING_INVARIANTS_MATCHING_HPP_
 #define TYR_FORMALISM_PLANNING_INVARIANTS_MATCHING_HPP_
 
-#include "tyr/formalism/planning/invariants/atom.hpp"
-#include "tyr/formalism/planning/invariants/effect.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/mutable/atom.hpp"
+#include "tyr/formalism/planning/mutable/conditional_effect.hpp"
 #include "tyr/formalism/unification/substitution.hpp"
 
 namespace tyr::formalism::planning::invariant
@@ -32,20 +32,23 @@ using InvariantSubstitution = tyr::formalism::unification::SubstitutionFunction<
 
 struct ActionAlignment
 {
-    TempAtom pattern;
+    MutableAtom<FluentTag> pattern;
     ActionSubstitution sigma;
 
     friend bool operator==(const ActionAlignment&, const ActionAlignment&) = default;
 };
 
-bool covers(const Invariant& inv, const TempAtom& element);
+bool covers(const Invariant& inv, const MutableAtom<FluentTag>& element);
 
-std::optional<InvariantSubstitution> match_invariant_against_ground_atom(const Invariant& inv, const TempAtom& pattern, const TempAtom& ground_atom);
+std::optional<InvariantSubstitution>
+match_invariant_against_ground_atom(const Invariant& inv, const MutableAtom<FluentTag>& pattern, const MutableAtom<FluentTag>& ground_atom);
 
-std::vector<ActionAlignment> enumerate_action_alignments(const Invariant& inv, const TempAtom& element, size_t num_action_variables);
+std::vector<ActionAlignment> enumerate_action_alignments(const Invariant& inv, const MutableAtom<FluentTag>& element, size_t num_action_variables);
 
-std::vector<EffectSubstitution>
-enumerate_effect_renamings(const TempEffect& effect, const TempAtom& element, const Invariant& inv, const ActionSubstitution& sigma_op);
+std::vector<EffectSubstitution> enumerate_effect_renamings(const MutableConditionalEffect& effect,
+                                                           const MutableAtom<FluentTag>& element,
+                                                           const Invariant& inv,
+                                                           const ActionSubstitution& sigma_op);
 
 }  // namespace tyr::formalism::planning::invariant
 

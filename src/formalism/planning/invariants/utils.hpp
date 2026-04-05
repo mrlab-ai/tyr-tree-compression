@@ -18,21 +18,21 @@
 #ifndef TYR_SRC_FORMALISM_PLANNING_INVARIANTS_UTILS_HPP_
 #define TYR_SRC_FORMALISM_PLANNING_INVARIANTS_UTILS_HPP_
 
-#include "tyr/formalism/planning/invariants/atom.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/mutable/atom.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 
 namespace tyr::formalism::planning::invariant
 {
 
-inline const TempAtom* find_part(const Invariant& inv, PredicateView<FluentTag> predicate)
+inline const MutableAtom<FluentTag>* find_part(const Invariant& inv, PredicateView<FluentTag> predicate)
 {
     const auto it = std::find_if(inv.atoms.begin(), inv.atoms.end(), [&](const auto& atom) { return atom.predicate == predicate; });
 
     return (it == inv.atoms.end()) ? nullptr : &*it;
 }
 
-inline size_t part_arity(const TempAtom& part, size_t num_rigid_variables)
+inline size_t part_arity(const MutableAtom<FluentTag>& part, size_t num_rigid_variables)
 {
     bool has_counted = false;
 
@@ -54,7 +54,7 @@ inline size_t part_arity(const TempAtom& part, size_t num_rigid_variables)
     return has_counted ? part.terms.size() - 1 : part.terms.size();
 }
 
-inline bool atom_uses_counted(const TempAtom& atom, size_t num_rigid_variables)
+inline bool atom_uses_counted(const MutableAtom<FluentTag>& atom, size_t num_rigid_variables)
 {
     return std::ranges::any_of(atom.terms,
                                [&](const auto& term)
@@ -71,7 +71,7 @@ inline bool atom_uses_counted(const TempAtom& atom, size_t num_rigid_variables)
                                });
 }
 
-inline TempAtom make_initial_atom(PredicateView<FluentTag> predicate, size_t counted_position)
+inline MutableAtom<FluentTag> make_initial_atom(PredicateView<FluentTag> predicate, size_t counted_position)
 {
     const auto arity = static_cast<size_t>(predicate.get_arity());
 
@@ -101,10 +101,7 @@ inline TempAtom make_initial_atom(PredicateView<FluentTag> predicate, size_t cou
         }
     }
 
-    return TempAtom {
-        .predicate = predicate,
-        .terms = std::move(terms),
-    };
+    return MutableAtom<FluentTag>(predicate, std::move(terms));
 }
 
 }

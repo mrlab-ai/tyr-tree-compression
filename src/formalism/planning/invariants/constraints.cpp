@@ -297,7 +297,7 @@ ConstraintTerm make_constraint_term(const Data<Term>& term)
 
 ConstraintTerm make_invariant_parameter_term(size_t index) { return InvariantParameter { index }; }
 
-EqualityConjunction make_cover_equality_conjunction(const TempAtom& pattern, const TempAtom& atom, const Invariant& inv)
+EqualityConjunction make_cover_equality_conjunction(const MutableAtom<FluentTag>& pattern, const MutableAtom<FluentTag>& atom, const Invariant& inv)
 {
     assert(pattern.predicate == atom.predicate);
     assert(pattern.terms.size() == atom.terms.size());
@@ -326,12 +326,12 @@ EqualityConjunction make_cover_equality_conjunction(const TempAtom& pattern, con
     return EqualityConjunction(std::move(equalities));
 }
 
-void ensure_cover(ConstraintSystem& system, const TempAtom& pattern, const TempAtom& atom, const Invariant& inv)
+void ensure_cover(ConstraintSystem& system, const MutableAtom<FluentTag>& pattern, const MutableAtom<FluentTag>& atom, const Invariant& inv)
 {
     system.add_equality_conjunction(make_cover_equality_conjunction(pattern, atom, inv));
 }
 
-void ensure_inequality(ConstraintSystem& system, const TempAtom& lhs, const TempAtom& rhs)
+void ensure_inequality(ConstraintSystem& system, const MutableAtom<FluentTag>& lhs, const MutableAtom<FluentTag>& rhs)
 {
     if (lhs.predicate != rhs.predicate || lhs.terms.empty())
         return;
@@ -345,10 +345,10 @@ void ensure_inequality(ConstraintSystem& system, const TempAtom& lhs, const Temp
     system.add_inequality_disjunction(InequalityDisjunction(std::move(parts)));
 }
 
-void ensure_conjunction_sat(ConstraintSystem& system, const TempLiteralList& lits)
+void ensure_conjunction_sat(ConstraintSystem& system, const MutableLiteralList<FluentTag>& lits)
 {
-    std::map<PredicateView<FluentTag>, std::vector<TempLiteral>> pos;
-    std::map<PredicateView<FluentTag>, std::vector<TempLiteral>> neg;
+    std::map<PredicateView<FluentTag>, MutableLiteralList<FluentTag>> pos;
+    std::map<PredicateView<FluentTag>, MutableLiteralList<FluentTag>> neg;
 
     for (const auto& lit : lits)
     {

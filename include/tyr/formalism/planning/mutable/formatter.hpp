@@ -15,13 +15,17 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_FORMALISM_PLANNING_INVARIANTS_FORMATTER_HPP_
-#define TYR_FORMALISM_PLANNING_INVARIANTS_FORMATTER_HPP_
+#ifndef TYR_FORMALISM_PLANNING_MUTABLE_FORMATTER_HPP_
+#define TYR_FORMALISM_PLANNING_MUTABLE_FORMATTER_HPP_
 
 #include "tyr/common/formatter.hpp"
 #include "tyr/common/iostream.hpp"
 #include "tyr/formalism/formatter.hpp"
-#include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/mutable/action.hpp"
+#include "tyr/formalism/planning/mutable/atom.hpp"
+#include "tyr/formalism/planning/mutable/conditional_effect.hpp"
+#include "tyr/formalism/planning/mutable/conjunctive_condition.hpp"
+#include "tyr/formalism/planning/mutable/conjunctive_effect.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ostream.h>
@@ -34,9 +38,10 @@ namespace tyr
  * Forward declarations
  */
 
-namespace formalism::planning::invariant
+namespace formalism::planning
 {
-std::ostream& operator<<(std::ostream& os, const Invariant& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const MutableAtom<T>& el);
 
 }
 
@@ -44,11 +49,14 @@ std::ostream& operator<<(std::ostream& os, const Invariant& el);
  * Declarations
  */
 
-std::ostream& print(std::ostream& os, const formalism::planning::invariant::Invariant& el);
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::planning::MutableAtom<T>& el);
 
-namespace formalism::planning::invariant
+namespace formalism::planning
 {
-std::ostream& operator<<(std::ostream& os, const Invariant& el);
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const MutableAtom<T>& el);
 }
 }
+
 #endif

@@ -19,14 +19,14 @@
 #define TYR_FORMALISM_PLANNING_INVARIANTS_REFINEMENT_HPP_
 
 #include "proof.hpp"
-#include "tyr/formalism/planning/invariants/action.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/mutable/action.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 
 namespace tyr::formalism::planning::invariant
 {
 
-InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const TempActionList& ops, PredicateListView<FluentTag> predicates);
+InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const MutableActionList& ops, PredicateListView<FluentTag> predicates);
 
 InvariantList make_initial_candidates(PredicateListView<FluentTag> predicates);
 

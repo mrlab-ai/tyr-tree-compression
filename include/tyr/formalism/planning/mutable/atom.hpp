@@ -1,0 +1,94 @@
+/*
+ * Copyright (C) 2025-2026 Dominik Drexler
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#ifndef TYR_FORMALISM_PLANNING_MUTABLE_ATOM_HPP_
+#define TYR_FORMALISM_PLANNING_MUTABLE_ATOM_HPP_
+
+#include "tyr/common/comparators.hpp"
+#include "tyr/common/declarations.hpp"
+#include "tyr/common/equal_to.hpp"
+#include "tyr/common/hash.hpp"
+#include "tyr/formalism/planning/repository.hpp"
+#include "tyr/formalism/unification/structure_traits.hpp"
+#include "tyr/formalism/unification/structure_traits_impl.hpp"
+
+#include <algorithm>
+#include <map>
+#include <optional>
+#include <variant>
+#include <vector>
+
+namespace tyr::formalism::planning
+{
+template<FactKind T>
+struct MutableAtom
+{
+    PredicateView<T> predicate;
+    std::vector<Data<Term>> terms;
+
+    MutableAtom() = default;
+    MutableAtom(PredicateView<T> predicate, std::vector<Data<Term>> terms) : predicate(predicate), terms(std::move(terms)) {}
+    MutableAtom(AtomView<T> element) : predicate(element.get_predicate()), terms()
+    {
+        for (const auto& term : element.get_terms())
+            terms.push_back(term.get_data());
+    }
+    MutableAtom(GroundAtomView<T> element) : predicate(element.get_predicate()), terms()
+    {
+        for (const auto& object : element.get_row().get_objects())
+            terms.push_back(Data<Term>(object.get_index()));
+    }
+
+    auto identifying_members() const noexcept { return std::tie(predicate, terms); }
+
+    friend bool operator==(const MutableAtom& lhs, const MutableAtom& rhs) { return lhs.identifying_members() == rhs.identifying_members(); }
+    friend bool operator<(const MutableAtom& lhs, const MutableAtom& rhs) { return lhs.identifying_members() < rhs.identifying_members(); }
+};
+
+template<FactKind T>
+using MutableAtomList = std::vector<MutableAtom<T>>;
+}
+
+namespace tyr::formalism::unification
+{
+template<FactKind T>
+struct structure_traits<tyr::formalism::planning::MutableAtom<T>>
+{
+    using Type = tyr::formalism::planning::MutableAtom<T>;
+
+    template<typename F>
+    static bool zip_terms(const Type& lhs, const Type& rhs, F&& f)
+    {
+        if (lhs.predicate != rhs.predicate)
+            return false;
+
+        if (lhs.terms.size() != rhs.terms.size())
+            return false;
+
+        return tyr::formalism::unification::zip_terms(lhs.terms, rhs.terms, f);
+    }
+
+    template<typename F>
+    static Type transform_terms(const Type& value, F&& f)
+    {
+        return Type(value.predicate, tyr::formalism::unification::transform_terms(value.terms, f));
+    }
+};
+
+}
+
+#endif

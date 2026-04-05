@@ -40,7 +40,7 @@ bool uses_parameter(const Data<Term>& term, ParameterIndex parameter)
         term.value);
 }
 
-bool uses_parameter(const TempAtom& atom, ParameterIndex parameter)
+bool uses_parameter(const MutableAtom<FluentTag>& atom, ParameterIndex parameter)
 {
     return std::ranges::any_of(atom.terms, [&](const auto& term) { return uses_parameter(term, parameter); });
 }
@@ -52,7 +52,7 @@ bool uses_parameter(const Invariant& inv, ParameterIndex parameter)
 
 void remove_covered_atoms(Invariant& inv)
 {
-    TempAtomList kept;
+    MutableAtomList<FluentTag> kept;
     kept.reserve(inv.atoms.size());
 
     for (size_t i = 0; i < inv.atoms.size(); ++i)
@@ -64,7 +64,7 @@ void remove_covered_atoms(Invariant& inv)
             if (i == j)
                 continue;
 
-            const auto singleton = Invariant(inv.num_rigid_variables, inv.num_counted_variables, TempAtomList { inv.atoms[j] });
+            const auto singleton = Invariant(inv.num_rigid_variables, inv.num_counted_variables, MutableAtomList<FluentTag> { inv.atoms[j] });
 
             if (covers(singleton, inv.atoms[i]))
             {

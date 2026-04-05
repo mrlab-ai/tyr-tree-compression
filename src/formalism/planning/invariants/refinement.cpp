@@ -33,7 +33,8 @@ namespace
 
 using PositionMapping = std::vector<std::pair<size_t, std::optional<ParameterIndex>>>;
 
-std::map<ParameterIndex, Data<Term>> get_parameters_from_part(const TempAtom& part, const TempAtom& literal, size_t num_rigid_variables)
+std::map<ParameterIndex, Data<Term>>
+get_parameters_from_part(const MutableAtom<FluentTag>& part, const MutableAtom<FluentTag>& literal, size_t num_rigid_variables)
 {
     std::map<ParameterIndex, Data<Term>> result;
 
@@ -102,7 +103,10 @@ std::vector<PositionMapping> instantiate_factored_mapping(const std::vector<std:
     return result;
 }
 
-std::vector<PositionMapping> possible_mappings(const TempAtom& part, const TempAtom& own_literal, const TempAtom& other_literal, size_t num_rigid_variables)
+std::vector<PositionMapping> possible_mappings(const MutableAtom<FluentTag>& part,
+                                               const MutableAtom<FluentTag>& own_literal,
+                                               const MutableAtom<FluentTag>& other_literal,
+                                               size_t num_rigid_variables)
 {
     size_t allowed_omissions = other_literal.terms.size() - part_arity(part, num_rigid_variables);
     if (allowed_omissions > 1)
@@ -146,9 +150,12 @@ std::vector<PositionMapping> possible_mappings(const TempAtom& part, const TempA
     return instantiate_factored_mapping(factored_mapping);
 }
 
-std::vector<TempAtom> possible_matches(const TempAtom& part, const TempAtom& own_literal, const TempAtom& other_literal, size_t num_rigid_variables)
+MutableAtomList<FluentTag> possible_matches(const MutableAtom<FluentTag>& part,
+                                            const MutableAtom<FluentTag>& own_literal,
+                                            const MutableAtom<FluentTag>& other_literal,
+                                            size_t num_rigid_variables)
 {
-    std::vector<TempAtom> result;
+    MutableAtomList<FluentTag> result;
 
     for (const auto& mapping : possible_mappings(part, own_literal, other_literal, num_rigid_variables))
     {
@@ -157,32 +164,36 @@ std::vector<TempAtom> possible_matches(const TempAtom& part, const TempAtom& own
         for (const auto& [other_pos, inv_var] : mapping)
             args[other_pos] = Data<Term>(inv_var.value_or(ParameterIndex(num_rigid_variables)));
 
-        result.push_back(TempAtom {
-            .predicate = other_literal.predicate,
-            .terms = std::move(args),
-        });
+        result.push_back(MutableAtom<FluentTag>(other_literal.predicate, std::move(args)));
     }
 
     return result;
 }
 }  // namespace
 
-InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const TempActionList& ops, PredicateListView<FluentTag>)
+InvariantList refine_candidate(const Invariant& inv, const Threat& threat, const MutableActionList& ops, PredicateListView<FluentTag>)
 {
     InvariantList result;
 
     const auto& op = ops[threat.op_index];
     const auto& effect = op.effects[threat.effect_index];
-    const auto& add_atom = effect.add_effects[threat.add_index];
+    const auto& add_literal = effect.effect.literals[threat.add_index];
+    assert(add_literal.polarity);
+    const auto& add_atom = add_literal.atom;
 
-    const TempAtom* part = find_part(inv, add_atom.predicate);
+    const MutableAtom<FluentTag>* part = find_part(inv, add_atom.predicate);
     if (part == nullptr)
         return result;
 
-    for (const auto& del_eff : op.effects)
+    for (const auto& conj_effect : op.effects)
     {
-        for (const auto& del_atom : del_eff.del_effects)
+        for (const auto& literal : conj_effect.effect.literals)
         {
+            if (literal.polarity)
+                continue;
+
+            const auto& del_atom = literal.atom;
+
             if (inv.predicates.contains(del_atom.predicate))
                 continue;
 
@@ -217,10 +228,10 @@ InvariantList make_initial_candidates(PredicateListView<FluentTag> predicates)
     {
         const auto arity = static_cast<size_t>(predicate.get_arity());
 
-        result.emplace_back(arity, 0, TempAtomList { make_initial_atom(predicate, arity) });
+        result.emplace_back(arity, 0, MutableAtomList<FluentTag> { make_initial_atom(predicate, arity) });
 
         for (size_t counted_position = 0; counted_position < arity; ++counted_position)
-            result.emplace_back(arity - 1, 1, TempAtomList { make_initial_atom(predicate, counted_position) });
+            result.emplace_back(arity - 1, 1, MutableAtomList<FluentTag> { make_initial_atom(predicate, counted_position) });
     }
 
     return result;

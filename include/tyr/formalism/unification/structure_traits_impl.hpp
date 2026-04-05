@@ -52,6 +52,7 @@ std::vector<T> transform_vector_terms(const std::vector<T>& values, F&& f)
 
     return result;
 }
+
 }
 
 template<typename T>
@@ -69,6 +70,18 @@ struct structure_traits<std::vector<T>>
         return detail::transform_vector_terms<T>(values, std::forward<F>(f));
     }
 };
+
+template<typename T, typename F>
+bool zip_terms(const T& lhs, const T& rhs, F&& f)
+{
+    return structure_traits<T>::zip_terms(lhs, rhs, std::forward<F>(f));
+}
+
+template<typename T, typename F>
+T transform_terms(const T& value, F&& f)
+{
+    return structure_traits<T>::transform_terms(value, std::forward<F>(f));
+}
 
 }  // namespace tyr::formalism::unification
 

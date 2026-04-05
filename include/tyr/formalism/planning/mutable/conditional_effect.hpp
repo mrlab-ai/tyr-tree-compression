@@ -1,0 +1,104 @@
+/*
+ * Copyright (C) 2025-2026 Dominik Drexler
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#ifndef TYR_FORMALISM_PLANNING_MUTABLE_CONDITIONAL_EFFECT_HPP_
+#define TYR_FORMALISM_PLANNING_MUTABLE_CONDITIONAL_EFFECT_HPP_
+
+#include "tyr/common/comparators.hpp"
+#include "tyr/common/declarations.hpp"
+#include "tyr/common/equal_to.hpp"
+#include "tyr/common/hash.hpp"
+#include "tyr/formalism/planning/mutable/conjunctive_condition.hpp"
+#include "tyr/formalism/planning/mutable/conjunctive_effect.hpp"
+#include "tyr/formalism/planning/repository.hpp"
+#include "tyr/formalism/unification/structure_traits.hpp"
+#include "tyr/formalism/unification/structure_traits_impl.hpp"
+
+#include <vector>
+
+namespace tyr::formalism::planning
+{
+struct MutableConditionalEffect
+{
+    size_t num_parent_variables;
+    size_t num_variables;
+    MutableConjunctiveCondition condition;
+    MutableConjunctiveEffect effect;
+
+    MutableConditionalEffect() = default;
+    MutableConditionalEffect(size_t num_parent_variables, size_t num_variables, MutableConjunctiveCondition condition, MutableConjunctiveEffect effect) :
+        num_parent_variables(num_parent_variables),
+        num_variables(num_variables),
+        condition(std::move(condition)),
+        effect(std::move(effect))
+    {
+    }
+    MutableConditionalEffect(size_t num_parent_variables, ConditionalEffectView element) :
+        num_parent_variables(num_parent_variables),
+        num_variables(element.get_arity()),
+        condition(num_parent_variables, element.get_condition()),
+        effect(num_parent_variables, num_variables, element.get_effect())
+    {
+    }
+
+    auto identifying_members() const noexcept { return std::tie(num_parent_variables, num_variables, condition, effect); }
+
+    friend bool operator==(const MutableConditionalEffect& lhs, const MutableConditionalEffect& rhs)
+    {
+        return lhs.identifying_members() == rhs.identifying_members();
+    }
+
+    friend bool operator<(const MutableConditionalEffect& lhs, const MutableConditionalEffect& rhs)
+    {
+        return lhs.identifying_members() < rhs.identifying_members();
+    }
+};
+
+using MutableConditionalEffectList = std::vector<MutableConditionalEffect>;
+}
+
+namespace tyr::formalism::unification
+{
+template<>
+struct structure_traits<tyr::formalism::planning::MutableConditionalEffect>
+{
+    using Type = tyr::formalism::planning::MutableConditionalEffect;
+
+    template<typename F>
+    static bool zip_terms(const Type& lhs, const Type& rhs, F&& f)
+    {
+        if (lhs.num_parent_variables != rhs.num_parent_variables)
+            return false;
+
+        if (lhs.num_variables != rhs.num_variables)
+            return false;
+
+        return tyr::formalism::unification::zip_terms(lhs.condition, rhs.condition, f) && tyr::formalism::unification::zip_terms(lhs.effect, rhs.effect, f);
+    }
+
+    template<typename F>
+    static Type transform_terms(const Type& value, F&& f)
+    {
+        return Type { .num_parent_variables = value.num_parent_variables,
+                      .num_variables = value.num_variables,
+                      .condition = tyr::formalism::unification::transform_terms(value.condition, f),
+                      .effect = tyr::formalism::unification::transform_terms(value.effect, f) };
+    }
+};
+}
+
+#endif

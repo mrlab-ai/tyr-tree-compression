@@ -15,8 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "tyr/formalism/planning/invariants/formatter.hpp"
-
 #include "tyr/formalism/planning/mutable/formatter.hpp"
 
 #include <fmt/core.h>
@@ -27,26 +25,27 @@
 namespace tyr
 {
 
-std::ostream& print(std::ostream& os, const formalism::planning::invariant::Invariant& el)
+template<formalism::FactKind T>
+std::ostream& print(std::ostream& os, const formalism::planning::MutableAtom<T>& el)
 {
-    os << "Invariant(\n";
-
-    {
-        IndentScope indent { os };
-
-        os << print_indent << "num_rigid_variables = " << el.num_rigid_variables << ",\n";
-        os << print_indent << "num_counted_variables = " << el.num_counted_variables << ",\n";
-        os << print_indent << "atoms = " << el.atoms << ",\n";
-        os << print_indent << "predicates = " << el.predicates << ",\n";
-    }
-
-    os << ")";
-
+    fmt::print(os, "{}({})", to_string(el.predicate.get_name()), fmt::join(to_strings(el.terms), " "));
     return os;
 }
 
-namespace formalism::planning::invariant
+template std::ostream& print(std::ostream& os, const formalism::planning::MutableAtom<formalism::StaticTag>& el);
+template std::ostream& print(std::ostream& os, const formalism::planning::MutableAtom<formalism::FluentTag>& el);
+
+namespace formalism::planning
 {
-std::ostream& operator<<(std::ostream& os, const Invariant& el) { return tyr::print(os, el); }
+
+template<FactKind T>
+std::ostream& operator<<(std::ostream& os, const MutableAtom<T>& el)
+{
+    return tyr::print(os, el);
+}
+
+template std::ostream& operator<<(std::ostream& os, const MutableAtom<StaticTag>& el);
+template std::ostream& operator<<(std::ostream& os, const MutableAtom<FluentTag>& el);
+
 }
 }

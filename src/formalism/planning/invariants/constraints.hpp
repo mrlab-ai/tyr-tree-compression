@@ -18,9 +18,9 @@
 #ifndef TYR_FORMALISM_PLANNING_INVARIANTS_CONSTRAINTS_HPP_
 #define TYR_FORMALISM_PLANNING_INVARIANTS_CONSTRAINTS_HPP_
 
-#include "tyr/formalism/planning/invariants/atom.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
-#include "tyr/formalism/planning/invariants/literal.hpp"
+#include "tyr/formalism/planning/mutable/atom.hpp"
+#include "tyr/formalism/planning/mutable/literal.hpp"
 
 #include <map>
 #include <optional>
@@ -111,11 +111,11 @@ ConstraintTerm make_constraint_term(ParameterIndex parameter);
 ConstraintTerm make_constraint_term(Index<Object> object);
 ConstraintTerm make_constraint_term(const Data<Term>& term);
 ConstraintTerm make_invariant_parameter_term(size_t index);
-EqualityConjunction make_cover_equality_conjunction(const TempAtom& pattern, const TempAtom& atom, const Invariant& inv);
+EqualityConjunction make_cover_equality_conjunction(const MutableAtom<FluentTag>& pattern, const MutableAtom<FluentTag>& atom, const Invariant& inv);
 
-void ensure_cover(ConstraintSystem& system, const TempAtom& pattern, const TempAtom& atom, const Invariant& inv);
-void ensure_inequality(ConstraintSystem& system, const TempAtom& lhs, const TempAtom& rhs);
-void ensure_conjunction_sat(ConstraintSystem& system, const TempLiteralList& lits);
+void ensure_cover(ConstraintSystem& system, const MutableAtom<FluentTag>& pattern, const MutableAtom<FluentTag>& atom, const Invariant& inv);
+void ensure_inequality(ConstraintSystem& system, const MutableAtom<FluentTag>& lhs, const MutableAtom<FluentTag>& rhs);
+void ensure_conjunction_sat(ConstraintSystem& system, const MutableLiteralList<FluentTag>& lits);
 
 }
 

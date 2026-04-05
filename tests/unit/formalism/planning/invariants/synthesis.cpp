@@ -54,12 +54,12 @@ auto atom(fp::Repository& repo, std::string_view predicate_name, const std::vect
     for (const auto i : parameters)
         terms.push_back(Data<f::Term>(f::ParameterIndex(i)));
 
-    return fpi::TempAtom { .predicate = predicate, .terms = terms };
+    return fp::MutableAtom<f::FluentTag>(predicate, terms);
 }
 
-auto inv(size_t num_rigid_variables, size_t num_counted_variables, std::initializer_list<fpi::TempAtom> atoms)
+auto inv(size_t num_rigid_variables, size_t num_counted_variables, std::initializer_list<fp::MutableAtom<f::FluentTag>> atoms)
 {
-    return fpi::Invariant(num_rigid_variables, num_counted_variables, std::vector<fpi::TempAtom>(atoms));
+    return fpi::Invariant(num_rigid_variables, num_counted_variables, std::vector<fp::MutableAtom<f::FluentTag>>(atoms));
 }
 }
 

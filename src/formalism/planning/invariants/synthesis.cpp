@@ -25,9 +25,9 @@
 #include "tyr/common/hash.hpp"
 #include "tyr/formalism/planning/expression_arity.hpp"
 #include "tyr/formalism/planning/grounder.hpp"
-#include "tyr/formalism/planning/invariants/action.hpp"
 #include "tyr/formalism/planning/invariants/formatter.hpp"
 #include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/mutable/action.hpp"
 #include "tyr/formalism/planning/planning_task.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 
@@ -42,7 +42,10 @@ namespace tyr::formalism::planning::invariant
 {
 InvariantList synthesize_invariants(DomainView domain)
 {
-    auto ops = make_temp_actions(domain.get_actions());
+    auto ops = MutableActionList {};
+    for (const auto& action : domain.get_actions())
+        ops.emplace_back(action);
+
     auto queue = make_initial_candidates(domain.get_predicates<FluentTag>());
 
     auto accepted = InvariantList {};

@@ -18,6 +18,11 @@
 #include "proof.hpp"
 
 #include "constraints.hpp"
+#include "tyr/formalism/planning/mutable/action.hpp"
+#include "tyr/formalism/planning/mutable/conditional_effect.hpp"
+#include "tyr/formalism/planning/mutable/conjunctive_condition.hpp"
+#include "tyr/formalism/planning/mutable/conjunctive_effect.hpp"
+#include "tyr/formalism/planning/mutable/literal.hpp"
 #include "tyr/formalism/unification/apply_substitution.hpp"
 #include "tyr/formalism/unification/substitution.hpp"
 #include "utils.hpp"
@@ -32,64 +37,64 @@ namespace tyr::formalism::planning::invariant
 namespace
 {
 
-struct EffectAtomRef
-{
-    const TempEffect* effect;
-    const TempAtom* atom;
-};
-
 using Renaming = tyr::formalism::unification::SubstitutionFunction<Data<Term>>;
 
-Renaming make_effect_alpha_renaming(const TempEffect& effect, size_t fresh_base)
+Renaming make_effect_alpha_renaming(const MutableConditionalEffect& effect, size_t fresh_base)
 {
-    auto sigma = Renaming::from_range(ParameterIndex { uint_t(effect.num_action_variables) }, effect.num_effect_variables);
+    auto sigma = Renaming::from_range(ParameterIndex { uint_t(effect.num_parent_variables) }, effect.num_variables);
 
-    for (size_t i = 0; i < effect.num_effect_variables; ++i)
+    for (size_t i = 0; i < effect.num_variables; ++i)
     {
         [[maybe_unused]] const auto inserted =
-            sigma.assign(ParameterIndex { uint_t(effect.num_action_variables + i) }, Data<Term>(ParameterIndex { uint_t(fresh_base + i) }));
+            sigma.assign(ParameterIndex { uint_t(effect.num_parent_variables + i) }, Data<Term>(ParameterIndex { uint_t(fresh_base + i) }));
         assert(inserted);
     }
 
     return sigma;
 }
 
-template<typename Accessor>
-std::vector<EffectAtomRef> collect_relevant_effect_atoms(const TempAction& op, const Invariant& inv, Accessor accessor)
+struct EffectAtomRef
+{
+    const MutableConditionalEffect* effect;
+    const MutableAtom<FluentTag>* atom;
+};
+
+std::vector<EffectAtomRef> collect_relevant_effect_atoms(const MutableAction& op, const Invariant& inv, bool polarity)
 {
     std::vector<EffectAtomRef> result;
 
     for (const auto& eff : op.effects)
     {
-        const auto& atoms = accessor(eff);
-
-        for (const auto& atom : atoms)
+        for (const auto& lit : eff.effect.literals)
         {
-            if (inv.predicates.contains(atom.predicate))
-                result.push_back(EffectAtomRef { .effect = &eff, .atom = &atom });
+            if (lit.polarity != polarity)
+                continue;
+
+            if (inv.predicates.contains(lit.atom.predicate))
+                result.push_back(EffectAtomRef { .effect = &eff, .atom = &lit.atom });
         }
     }
 
     return result;
 }
 
-std::map<PredicateView<FluentTag>, std::vector<TempLiteral>>
-build_add_effect_produced_by_pred(const TempAction& op, const TempEffect& add_effect, const TempAtom& add_atom)
+std::map<PredicateView<FluentTag>, MutableLiteralList<FluentTag>>
+build_add_effect_produced_by_pred(const MutableAction& op, const MutableConditionalEffect& add_effect, const MutableAtom<FluentTag>& add_atom)
 {
-    std::map<PredicateView<FluentTag>, std::vector<TempLiteral>> produced_by_pred;
+    std::map<PredicateView<FluentTag>, MutableLiteralList<FluentTag>> produced_by_pred;
 
-    for (const auto& lit : op.precondition)
+    for (const auto& lit : op.condition.fluent_literals)
         produced_by_pred[lit.atom.predicate].push_back(lit);
 
-    for (const auto& lit : add_effect.condition)
+    for (const auto& lit : add_effect.effect.literals)
         produced_by_pred[lit.atom.predicate].push_back(lit);
 
-    produced_by_pred[add_atom.predicate].push_back(TempLiteral { .atom = add_atom, .polarity = false });
+    produced_by_pred[add_atom.predicate].push_back(MutableLiteral<FluentTag>(add_atom, false));
 
     return produced_by_pred;
 }
 
-ConstraintSystem make_param_system(const TempAction& op, const TempEffect& add_effect, const EqualityConjunction& add_cover)
+ConstraintSystem make_param_system(const MutableAction& op, const MutableConditionalEffect& add_effect, const EqualityConjunction& add_cover)
 {
     ConstraintSystem param_system;
     const auto& representative = add_cover.get_representative();
@@ -101,13 +106,13 @@ ConstraintSystem make_param_system(const TempAction& op, const TempEffect& add_e
     };
 
     std::vector<ParameterIndex> params;
-    params.reserve(op.num_variables + add_effect.num_effect_variables);
+    params.reserve(op.num_variables + add_effect.num_variables);
 
     for (size_t i = 0; i < op.num_variables; ++i)
         params.push_back(ParameterIndex(i));
 
-    for (size_t i = 0; i < add_effect.num_effect_variables; ++i)
-        params.push_back(ParameterIndex(add_effect.num_action_variables + i));
+    for (size_t i = 0; i < add_effect.num_variables; ++i)
+        params.push_back(ParameterIndex(add_effect.num_parent_variables + i));
 
     for (const auto param : params)
     {
@@ -138,16 +143,16 @@ ConstraintSystem make_param_system(const TempAction& op, const TempEffect& add_e
     return param_system;
 }
 
-std::optional<ConstraintSystem> make_balance_system(const TempEffect& add_effect,
-                                                    const TempAtom& add_atom,
-                                                    const TempEffect& del_effect,
-                                                    const TempAtom& del_atom,
-                                                    const std::map<PredicateView<FluentTag>, std::vector<TempLiteral>>& produced_by_pred)
+std::optional<ConstraintSystem> make_balance_system(const MutableConditionalEffect& add_effect,
+                                                    const MutableAtom<FluentTag>& add_atom,
+                                                    const MutableConditionalEffect& del_effect,
+                                                    const MutableAtom<FluentTag>& del_atom,
+                                                    const std::map<PredicateView<FluentTag>, MutableLiteralList<FluentTag>>& produced_by_pred)
 {
     ConstraintSystem system;
 
-    TempLiteralList del_required = del_effect.condition;
-    del_required.push_back(TempLiteral { .atom = del_atom, .polarity = true });
+    MutableLiteralList<FluentTag> del_required = del_effect.condition.fluent_literals;
+    del_required.push_back(MutableLiteral<FluentTag>(del_atom, true));
 
     for (const auto& lit : del_required)
     {
@@ -185,16 +190,16 @@ std::optional<ConstraintSystem> make_balance_system(const TempEffect& add_effect
 
 }  // namespace
 
-bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
+bool is_operator_too_heavy(const MutableAction& op, const Invariant& inv)
 {
-    const auto add_effects = collect_relevant_effect_atoms(op, inv, [](const TempEffect& eff) -> const TempAtomList& { return eff.add_effects; });
+    const auto add_effects = collect_relevant_effect_atoms(op, inv, true);
 
     if (add_effects.size() <= 1)
         return false;
 
     size_t max_num_effect_variables = 0;
     for (const auto& eff : op.effects)
-        max_num_effect_variables = std::max(max_num_effect_variables, eff.num_effect_variables);
+        max_num_effect_variables = std::max(max_num_effect_variables, eff.num_variables);
 
     const size_t fresh_base_lhs = op.num_variables;
     const size_t fresh_base_rhs = op.num_variables + max_num_effect_variables + 1;
@@ -226,11 +231,11 @@ bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
             ensure_cover(system, *lhs_pattern, lhs_atom, inv);
             ensure_cover(system, *rhs_pattern, rhs_atom, inv);
 
-            TempLiteralList conjunction = op.precondition;
-            conjunction.insert(conjunction.end(), lhs_cond.begin(), lhs_cond.end());
-            conjunction.insert(conjunction.end(), rhs_cond.begin(), rhs_cond.end());
-            conjunction.push_back(TempLiteral { .atom = lhs_atom, .polarity = false });
-            conjunction.push_back(TempLiteral { .atom = rhs_atom, .polarity = false });
+            MutableLiteralList<FluentTag> conjunction = op.condition.fluent_literals;
+            conjunction.insert(conjunction.end(), lhs_cond.fluent_literals.begin(), lhs_cond.fluent_literals.end());
+            conjunction.insert(conjunction.end(), rhs_cond.fluent_literals.begin(), rhs_cond.fluent_literals.end());
+            conjunction.push_back(MutableLiteral<FluentTag>(lhs_atom, false));
+            conjunction.push_back(MutableLiteral<FluentTag>(rhs_atom, false));
 
             ensure_conjunction_sat(system, conjunction);
 
@@ -242,7 +247,7 @@ bool is_operator_too_heavy(const TempAction& op, const Invariant& inv)
     return false;
 }
 
-bool is_add_effect_unbalanced(const TempAction& op, const TempEffect& add_effect, const TempAtom& add_atom, const Invariant& inv)
+bool is_add_effect_unbalanced(const MutableAction& op, const MutableConditionalEffect& add_effect, const MutableAtom<FluentTag>& add_atom, const Invariant& inv)
 {
     const auto* add_pattern = find_part(inv, add_atom.predicate);
     if (add_pattern == nullptr)
@@ -253,7 +258,7 @@ bool is_add_effect_unbalanced(const TempAction& op, const TempEffect& add_effect
     auto param_system = make_param_system(op, add_effect, add_cover);
     const auto produced_by_pred = build_add_effect_produced_by_pred(op, add_effect, add_atom);
 
-    const auto del_effects = collect_relevant_effect_atoms(op, inv, [](const TempEffect& eff) -> const TempAtomList& { return eff.del_effects; });
+    const auto del_effects = collect_relevant_effect_atoms(op, inv, false);
 
     for (const auto& del_ref : del_effects)
     {
@@ -278,7 +283,7 @@ bool is_add_effect_unbalanced(const TempAction& op, const TempEffect& add_effect
     return true;
 }
 
-ProofResult prove_invariant(const Invariant& inv, const TempActionList& ops)
+ProofResult prove_invariant(const Invariant& inv, const MutableActionList& ops)
 {
     for (size_t op_index = 0; op_index < ops.size(); ++op_index)
     {
@@ -291,15 +296,22 @@ ProofResult prove_invariant(const Invariant& inv, const TempActionList& ops)
         {
             const auto& eff = op.effects[effect_index];
 
-            for (size_t add_index = 0; add_index < eff.add_effects.size(); ++add_index)
+            for (size_t lit_index = 0; lit_index < eff.effect.literals.size(); ++lit_index)
             {
-                const auto& add_atom = eff.add_effects[add_index];
+                const auto& lit = eff.effect.literals[lit_index];
+
+                if (!lit.polarity)
+                    continue;
+
+                const auto& add_lit = eff.effect.literals[lit_index];
+                const auto add_lit_index = lit_index;
+                const auto& add_atom = add_lit.atom;
 
                 if (!inv.predicates.contains(add_atom.predicate))
                     continue;
 
                 if (is_add_effect_unbalanced(op, eff, add_atom, inv))
-                    return { ProofStatus::UnbalancedAddEffect, Threat { op_index, effect_index, add_index } };
+                    return { ProofStatus::UnbalancedAddEffect, Threat { op_index, effect_index, add_lit_index } };
             }
         }
     }
