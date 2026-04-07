@@ -76,7 +76,7 @@ auto create_witness_rule(fd::RuleView element, fd::Repository& context)
 
 ConstRuleWorkspace::ConstRuleWorkspace(fd::RuleView rule,
                                        fd::Repository& repository,
-                                       const analysis::DomainListList& parameter_domains,
+                                       const analysis::RuleDomain& parameter_domains,
                                        size_t num_objects,
                                        size_t num_fluent_predicates,
                                        const TaggedAssignmentSets<formalism::StaticTag>& static_assignment_sets) :

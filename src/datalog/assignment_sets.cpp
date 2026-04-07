@@ -41,13 +41,13 @@ namespace tyr::datalog
 {
 namespace
 {
-[[maybe_unused]] inline bool contains(const analysis::DomainListList& parameter_domains, const VertexAssignment& assignment)
+[[maybe_unused]] inline bool contains(const analysis::VariableDomainList& parameter_domains, const VertexAssignment& assignment)
 {
-    const auto& domain = parameter_domains[uint_t(assignment.index)];
-    return std::find(domain.begin(), domain.end(), assignment.object) != domain.end();
+    const auto& objects = parameter_domains[uint_t(assignment.index)].objects;
+    return std::find(objects.begin(), objects.end(), assignment.object) != objects.end();
 }
 
-[[maybe_unused]] inline bool contains(const analysis::DomainListList& parameter_domains, const EdgeAssignment& assignment)
+[[maybe_unused]] inline bool contains(const analysis::VariableDomainList& parameter_domains, const EdgeAssignment& assignment)
 {
     return contains(parameter_domains, VertexAssignment(assignment.first_index, assignment.first_object))
            && contains(parameter_domains, VertexAssignment(assignment.second_index, assignment.second_object));
@@ -58,7 +58,7 @@ namespace
  * PerfectAssignmentHash
  */
 
-PerfectAssignmentHash::PerfectAssignmentHash(const analysis::DomainListList& parameter_domains, size_t num_objects) :
+PerfectAssignmentHash::PerfectAssignmentHash(const analysis::VariableDomainList& parameter_domains, size_t num_objects) :
     m_num_assignments(0),
     m_remapping(),
     m_offsets(),
@@ -79,7 +79,7 @@ PerfectAssignmentHash::PerfectAssignmentHash(const analysis::DomainListList& par
 
         const auto& parameter_domain = parameter_domains[i];
         auto new_index = uint_t { 0 };
-        for (const auto object_index : parameter_domain)
+        for (const auto object_index : parameter_domain.objects)
         {
             m_remapping[i + 1][uint_t(object_index) + 1] = ++new_index;
             ++m_num_assignments;
@@ -137,11 +137,11 @@ size_t PerfectAssignmentHash::size() const noexcept { return m_num_assignments *
 
 template<formalism::FactKind T>
 PredicateAssignmentSet<T>::PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate,
-                                                  const analysis::DomainListList& parameter_domains,
+                                                  const analysis::PredicateDomain<T>& parameter_domains,
                                                   size_t num_objects) :
     m_predicate(predicate),
     m_predicate_index(predicate.get_index()),
-    m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
+    m_hash(PerfectAssignmentHash(parameter_domains.variable_domains, num_objects)),
     m_set(m_hash.size(), false)
 {
 }
@@ -236,7 +236,7 @@ PredicateAssignmentSets<T>::PredicateAssignmentSets()
 
 template<formalism::FactKind T>
 PredicateAssignmentSets<T>::PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
-                                                    const analysis::DomainListListList& predicate_domains,
+                                                    const analysis::PredicateDomainList<T>& predicate_domains,
                                                     size_t num_objects) :
     m_sets()
 {
@@ -304,11 +304,11 @@ template class PredicateAssignmentSets<f::FluentTag>;
 
 template<formalism::FactKind T>
 FunctionAssignmentSet<T>::FunctionAssignmentSet(formalism::datalog::FunctionView<T> function,
-                                                const analysis::DomainListList& parameter_domains,
+                                                const analysis::FunctionDomain<T>& parameter_domains,
                                                 size_t num_objects) :
     m_function(function),
     m_function_index(function.get_index()),
-    m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
+    m_hash(PerfectAssignmentHash(parameter_domains.variable_domains, num_objects)),
     m_set(m_hash.size(), ClosedInterval<float_t>())
 {
 }
@@ -429,7 +429,7 @@ FunctionAssignmentSets<T>::FunctionAssignmentSets()
 
 template<formalism::FactKind T>
 FunctionAssignmentSets<T>::FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions,
-                                                  const analysis::DomainListListList& function_domains,
+                                                  const analysis::FunctionDomainList<T>& function_domains,
                                                   size_t num_objects) :
     m_sets()
 {
@@ -510,8 +510,8 @@ TaggedAssignmentSets<T>::TaggedAssignmentSets()
 template<formalism::FactKind T>
 TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                                               formalism::datalog::FunctionListView<T> functions,
-                                              const analysis::DomainListListList& predicate_domains,
-                                              const analysis::DomainListListList& function_domains,
+                                              const analysis::PredicateDomainList<T>& predicate_domains,
+                                              const analysis::FunctionDomainList<T>& function_domains,
                                               size_t num_objects) :
     predicate(predicates, predicate_domains, num_objects),
     function(functions, function_domains, num_objects)
@@ -521,8 +521,8 @@ TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListV
 template<formalism::FactKind T>
 TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                                               formalism::datalog::FunctionListView<T> functions,
-                                              const analysis::DomainListListList& predicate_domains,
-                                              const analysis::DomainListListList& function_domains,
+                                              const analysis::PredicateDomainList<T>& predicate_domains,
+                                              const analysis::FunctionDomainList<T>& function_domains,
                                               size_t num_objects,
                                               const TaggedFactSets<T>& fact_sets) :
     TaggedAssignmentSets(predicates, functions, predicate_domains, function_domains, num_objects)

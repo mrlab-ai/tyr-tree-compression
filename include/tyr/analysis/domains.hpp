@@ -38,13 +38,78 @@ using DomainList = std::vector<Index<formalism::Object>>;
 using DomainListList = std::vector<DomainList>;
 using DomainListListList = std::vector<DomainListList>;
 
+struct VariableDomain
+{
+    std::vector<Index<formalism::Object>> objects;
+};
+
+using VariableDomainList = std::vector<VariableDomain>;
+
+template<formalism::FactKind T>
+struct PredicateDomain
+{
+    VariableDomainList variable_domains;
+};
+
+template<formalism::FactKind T>
+
+using PredicateDomainList = std::vector<PredicateDomain<T>>;
+
+template<formalism::FactKind T>
+struct FunctionDomain
+{
+    VariableDomainList variable_domains;
+};
+
+template<formalism::FactKind T>
+using FunctionDomainList = std::vector<FunctionDomain<T>>;
+
+struct RuleDomain
+{
+    VariableDomainList variable_domains;
+};
+
+using RuleDomainList = std::vector<RuleDomain>;
+
+struct ConjunctiveConditionDomain
+{
+    VariableDomainList variable_domains;
+};
+
+struct ConjunctiveEffectDomain
+{
+    VariableDomainList variable_domains;
+};
+
+struct ConditionalEffectDomain
+{
+    VariableDomainList variable_domains;
+};
+
+using ConditionalEffectDomainList = std::vector<ConditionalEffectDomain>;
+
+struct ActionDomain
+{
+    ConjunctiveConditionDomain precondition_domain;
+    ConditionalEffectDomainList effect_domains;
+};
+
+using ActionDomainList = std::vector<ActionDomain>;
+
+struct AxiomDomain
+{
+    ConjunctiveConditionDomain precondition_domain;
+};
+
+using AxiomDomainList = std::vector<AxiomDomain>;
+
 struct ProgramVariableDomains
 {
-    DomainListListList static_predicate_domains;
-    DomainListListList fluent_predicate_domains;
-    DomainListListList static_function_domains;
-    DomainListListList fluent_function_domains;
-    DomainListListList rule_domains;
+    PredicateDomainList<formalism::StaticTag> static_predicate_domains;
+    PredicateDomainList<formalism::FluentTag> fluent_predicate_domains;
+    FunctionDomainList<formalism::StaticTag> static_function_domains;
+    FunctionDomainList<formalism::FluentTag> fluent_function_domains;
+    RuleDomainList rule_domains;
 };
 
 struct TaskVariableDomains

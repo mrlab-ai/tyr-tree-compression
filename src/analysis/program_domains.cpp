@@ -41,23 +41,58 @@ namespace tyr::analysis
 {
 namespace
 {
-DomainListListList to_list(const DomainSetListList& set)
+
+VariableDomain to_variable_domain(const DomainSet& set)
 {
-    auto vec = DomainListListList();
-    vec.reserve(set.size());
-    for (const auto& parameter_domains : set)
-    {
-        auto predicate_domains_vec = DomainListList();
-        predicate_domains_vec.reserve(parameter_domains.size());
-        for (const auto& parameter_domain : parameter_domains)
-        {
-            auto domain = DomainList(parameter_domain.begin(), parameter_domain.end());
-            std::sort(domain.begin(), domain.end());
-            predicate_domains_vec.push_back(std::move(domain));
-        }
-        vec.push_back(predicate_domains_vec);
-    }
-    return vec;
+    auto objects = std::vector<Index<f::Object>>(set.begin(), set.end());
+    std::sort(objects.begin(), objects.end());
+    return VariableDomain { std::move(objects) };
+}
+
+VariableDomainList to_variable_domain_list(const DomainSetList& sets)
+{
+    auto result = VariableDomainList {};
+    result.reserve(sets.size());
+
+    for (const auto& set : sets)
+        result.push_back(to_variable_domain(set));
+
+    return result;
+}
+
+template<f::FactKind T>
+PredicateDomainList<T> to_predicate_domain_list(const DomainSetListList& sets)
+{
+    auto result = PredicateDomainList<T> {};
+    result.reserve(sets.size());
+
+    for (const auto& predicate_variable_domains : sets)
+        result.push_back(PredicateDomain<T> { to_variable_domain_list(predicate_variable_domains) });
+
+    return result;
+}
+
+template<f::FactKind T>
+FunctionDomainList<T> to_function_domain_list(const DomainSetListList& sets)
+{
+    auto result = FunctionDomainList<T> {};
+    result.reserve(sets.size());
+
+    for (const auto& function_variable_domains : sets)
+        result.push_back(FunctionDomain<T> { to_variable_domain_list(function_variable_domains) });
+
+    return result;
+}
+
+RuleDomainList to_rule_domain_list(const DomainSetListList& sets)
+{
+    auto result = RuleDomainList {};
+    result.reserve(sets.size());
+
+    for (const auto& rule_variable_domains : sets)
+        result.push_back(RuleDomain { to_variable_domain_list(rule_variable_domains) });
+
+    return result;
 }
 
 template<f::FactKind T>
@@ -538,7 +573,8 @@ bool lift_parameter_domain(fd::LiftedBooleanOperatorView element, const DomainSe
 {
     return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
 }
-}
+
+}  // namespace
 
 ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
 {
@@ -620,31 +656,13 @@ ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
         }
     } while (changed);
 
-    ///--- Step 5: Compress sets to vectors.
+    ///--- Step 5: Convert internal sets to public domain wrapper types.
 
-    auto static_predicate_domains = to_list(static_predicate_domain_sets);
-    auto fluent_predicate_domains = to_list(fluent_predicate_domain_sets);
-    auto static_function_domains = to_list(static_function_domain_sets);
-    auto fluent_function_domains = to_list(fluent_function_domain_sets);
-    auto rule_domains = to_list(rule_domain_sets);
-
-    // std::cout << std::endl;
-    // std::cout << "Result domains: " << std::endl;
-    // std::cout << "static_predicate_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_predicates<f::StaticTag>().size(); ++i)
-    //     std::cout << program.get_predicates<f::StaticTag>()[i] << ": " << static_predicate_domains[i] << std::endl;
-    // std::cout << "fluent_predicate_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_predicates<f::FluentTag>().size(); ++i)
-    //     std::cout << program.get_predicates<f::FluentTag>()[i] << ": " << fluent_predicate_domains[i] << std::endl;
-    // std::cout << "static_function_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_functions<f::StaticTag>().size(); ++i)
-    //     std::cout << program.get_functions<f::StaticTag>()[i] << ": " << static_function_domains[i] << std::endl;
-    // std::cout << "fluent_function_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_functions<f::FluentTag>().size(); ++i)
-    //     std::cout << program.get_functions<f::FluentTag>()[i] << ": " << fluent_function_domains[i] << std::endl;
-    // for (uint_t i = 0; i < program.get_rules().size(); ++i)
-    //     std::cout << program.get_rules()[i] << ": " << rule_domains[i] << std::endl;
-    // std::cout << std::endl;
+    auto static_predicate_domains = to_predicate_domain_list<f::StaticTag>(static_predicate_domain_sets);
+    auto fluent_predicate_domains = to_predicate_domain_list<f::FluentTag>(fluent_predicate_domain_sets);
+    auto static_function_domains = to_function_domain_list<f::StaticTag>(static_function_domain_sets);
+    auto fluent_function_domains = to_function_domain_list<f::FluentTag>(fluent_function_domain_sets);
+    auto rule_domains = to_rule_domain_list(rule_domain_sets);
 
     return ProgramVariableDomains { std::move(static_predicate_domains),
                                     std::move(fluent_predicate_domains),
@@ -653,4 +671,4 @@ ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
                                     std::move(rule_domains) };
 }
 
-}
+}  // namespace tyr::analysis

@@ -43,9 +43,9 @@ struct PerfectAssignmentHash
     size_t m_num_assignments;                      ///< The number of type legal [i/o] including a sentinel for each i
     std::vector<std::vector<uint_t>> m_remapping;  ///< The remapping of o in O to index for each type legal [i/o]
     std::vector<uint_t> m_offsets;                 ///< The offsets of i
-    analysis::DomainListList m_parameter_domains;
+    analysis::VariableDomainList m_parameter_domains;
 
-    PerfectAssignmentHash(const analysis::DomainListList& parameter_domains, size_t num_objects);
+    PerfectAssignmentHash(const analysis::VariableDomainList& parameter_domains, size_t num_objects);
 
     /// @brief
     /// @tparam Checked = true enables an assertion that checks whether an assignment is part of the hash function.
@@ -76,7 +76,7 @@ private:
     boost::dynamic_bitset<> m_set;
 
 public:
-    PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate, const analysis::DomainListList& parameter_domains, size_t num_objects);
+    PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate, const analysis::PredicateDomain<T>& parameter_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -100,7 +100,7 @@ private:
 
 public:
     PredicateAssignmentSets();
-    PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates, const analysis::DomainListListList& predicate_domains, size_t num_objects);
+    PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates, const analysis::PredicateDomainList<T>& predicate_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -126,7 +126,7 @@ private:
     std::vector<ClosedInterval<float_t>> m_set;
 
 public:
-    FunctionAssignmentSet(formalism::datalog::FunctionView<T> function, const analysis::DomainListList& parameter_domains, size_t num_objects);
+    FunctionAssignmentSet(formalism::datalog::FunctionView<T> function, const analysis::FunctionDomain<T>& parameter_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -153,7 +153,7 @@ private:
 
 public:
     FunctionAssignmentSets();
-    FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions, const analysis::DomainListListList& function_domains, size_t num_objects);
+    FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions, const analysis::FunctionDomainList<T>& function_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -177,13 +177,13 @@ struct TaggedAssignmentSets
     TaggedAssignmentSets();
     TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                          formalism::datalog::FunctionListView<T> functions,
-                         const analysis::DomainListListList& predicate_domains,
-                         const analysis::DomainListListList& function_domains,
+                         const analysis::PredicateDomainList<T>& predicate_domains,
+                         const analysis::FunctionDomainList<T>& function_domains,
                          size_t num_objects);
     TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                          formalism::datalog::FunctionListView<T> functions,
-                         const analysis::DomainListListList& predicate_domains,
-                         const analysis::DomainListListList& function_domains,
+                         const analysis::PredicateDomainList<T>& predicate_domains,
+                         const analysis::FunctionDomainList<T>& function_domains,
                          size_t num_objects,
                          const TaggedFactSets<T>& fact_sets);
 
