@@ -134,7 +134,7 @@ exp.add_resource("planner_exe", PLANNER_DIR)
 
 for h in HEURISTICS:
     for prefix, SUITE in SUITES:
-        for task in suites.build_suite(BENCHMARKS_DIR, SUITE):
+        for task in suites.build_suite(BENCHMARKS_DIR / prefix, SUITE):
             ################ Grounded ################
             run = exp.add_run()
             run.add_resource("domain", task.domain_file, symlink=True)
