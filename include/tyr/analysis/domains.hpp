@@ -114,13 +114,13 @@ struct ProgramVariableDomains
 
 struct TaskVariableDomains
 {
-    DomainListListList static_predicate_domains;
-    DomainListListList fluent_predicate_domains;
-    DomainListListList derived_predicate_domains;
-    DomainListListList static_function_domains;
-    DomainListListList fluent_function_domains;
-    std::vector<std::pair<DomainListList, DomainListListList>> action_domains;
-    DomainListListList axiom_domains;
+    PredicateDomainList<formalism::StaticTag> static_predicate_domains;
+    PredicateDomainList<formalism::FluentTag> fluent_predicate_domains;
+    PredicateDomainList<formalism::DerivedTag> derived_predicate_domains;
+    FunctionDomainList<formalism::StaticTag> static_function_domains;
+    FunctionDomainList<formalism::FluentTag> fluent_function_domains;
+    ActionDomainList action_domains;
+    AxiomDomainList axiom_domains;
 };
 
 extern ProgramVariableDomains compute_variable_domains(formalism::datalog::ProgramView program);
