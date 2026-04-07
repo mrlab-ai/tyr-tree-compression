@@ -74,13 +74,16 @@ REMOTE = re.match(r"tetralith\d+.nsc.liu.se|n\d+", NODE)
 NUM_THREADS = 1
 RANDOM_SEED = 0
 
+MEMORY_LIMIT = 2840
+
 if REMOTE:
     ENV = TetralithEnvironment(
         setup=TetralithEnvironment.DEFAULT_SETUP,
-        memory_per_cpu="2840M",
-        cpus_per_task=6,  # 6*2840 >= 16000
+        memory_per_cpu=f"{MEMORY_LIMIT}M",
         extra_options="#SBATCH --account=naiss2025-5-382",
     )
+
+    ENV.MAX_TASKS = 500
 else:
     ENV = LocalEnvironment(processes=6)
 
@@ -115,7 +118,7 @@ ATTRIBUTES = [
 ATTRIBUTES += SearchParser.get_attributes()
 ATTRIBUTES += DatalogParser.get_attributes()
 
-MEMORY_LIMIT = 3000
+
 
 HEURISTICS = ["ff", "goalcount"]
 
@@ -165,6 +168,7 @@ for h in HEURISTICS:
             # 'time_limit', 'memory_limit'.
             run.set_property("wall_time_limit", WALL_TIME_LIMIT)
             run.set_property("memory_limit", MEMORY_LIMIT)
+            run.set_property("prefix", prefix)
             # Every run has to have a unique id in the form of a list.
             # The algorithm name is only really needed when there are
             # multiple algorithms.
