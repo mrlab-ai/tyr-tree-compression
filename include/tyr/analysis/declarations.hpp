@@ -32,13 +32,6 @@
 
 namespace tyr::analysis
 {
-/**
- * Domains
- */
-
-using DomainSet = UnorderedSet<Index<formalism::Object>>;
-using DomainSetList = std::vector<DomainSet>;
-using DomainSetListList = std::vector<DomainSetList>;
 
 /**
  * Index based internal representation of variable domains.

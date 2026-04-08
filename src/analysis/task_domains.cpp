@@ -44,83 +44,145 @@ namespace tyr::analysis
 namespace
 {
 
-using ActionDomainSet = std::pair<DomainSetList, DomainSetListList>;
-using ActionDomainSetList = std::vector<ActionDomainSet>;
+/**
+ * Temporary internal representation during computation.
+ */
 
-VariableDomain to_variable_domain(const DomainSet& set)
+template<typename Element, typename Payload>
+struct TmpScoped
 {
-    auto objects = std::vector<Index<f::Object>>(set.begin(), set.end());
+    Index<Element> element;
+    Payload payload;
+};
+
+struct TmpVariableDomain
+{
+    UnorderedSet<Index<formalism::Object>> objects;
+};
+
+using TmpVariableDomainList = std::vector<TmpVariableDomain>;
+
+template<typename Element>
+using TmpSimpleScopedDomain = TmpScoped<Element, TmpVariableDomainList>;
+
+template<typename Element>
+using TmpSimpleScopedDomainMap = UnorderedMap<Index<Element>, TmpVariableDomainList>;
+
+template<formalism::FactKind T>
+using TmpPredicateDomainMap = TmpSimpleScopedDomainMap<formalism::Predicate<T>>;
+
+template<formalism::FactKind T>
+using TmpFunctionDomainMap = TmpSimpleScopedDomainMap<formalism::Function<T>>;
+
+using TmpAxiomDomainMap = TmpSimpleScopedDomainMap<formalism::planning::Axiom>;
+
+using TmpConjunctiveConditionDomain = TmpSimpleScopedDomain<formalism::planning::ConjunctiveCondition>;
+using TmpConjunctiveEffectDomain = TmpSimpleScopedDomain<formalism::planning::ConjunctiveEffect>;
+
+struct TmpConditionalEffectDomain
+{
+    TmpConjunctiveConditionDomain condition_domain;
+    TmpConjunctiveEffectDomain effect_domain;
+};
+
+using TmpConditionalEffectDomainMap = UnorderedMap<Index<formalism::planning::ConditionalEffect>, TmpConditionalEffectDomain>;
+
+struct TmpActionDomain
+{
+    TmpConjunctiveConditionDomain precondition_domain;
+    TmpConditionalEffectDomainMap effect_domains;
+};
+
+using TmpActionDomainMap = UnorderedMap<Index<formalism::planning::Action>, TmpActionDomain>;
+
+/**
+ * Conversion helpers to public representation.
+ */
+
+VariableDomain to_variable_domain(const TmpVariableDomain& domain)
+{
+    auto objects = std::vector<Index<f::Object>>(domain.objects.begin(), domain.objects.end());
     std::sort(objects.begin(), objects.end());
     return VariableDomain { std::move(objects) };
 }
 
-VariableDomainList to_variable_domain_list(const DomainSetList& sets)
+VariableDomainList to_variable_domain_list(const TmpVariableDomainList& domains)
 {
     auto result = VariableDomainList {};
-    result.reserve(sets.size());
+    result.reserve(domains.size());
 
-    for (const auto& set : sets)
-        result.push_back(to_variable_domain(set));
+    for (const auto& domain : domains)
+        result.push_back(to_variable_domain(domain));
 
     return result;
 }
 
 template<f::FactKind T>
-PredicateDomainMap<T> to_predicate_domain_map(fp::PredicateListView<T> predicates, const DomainSetListList& sets)
+PredicateDomainMap<T> to_predicate_domain_map(const TmpPredicateDomainMap<T>& domains)
 {
     auto result = PredicateDomainMap<T> {};
-    result.reserve(predicates.size());
+    result.reserve(domains.size());
 
-    for (const auto predicate : predicates)
-        result.emplace(predicate.get_index(), to_variable_domain_list(sets[predicate.get_index().value]));
+    for (const auto& [predicate, variable_domains] : domains)
+        result.emplace(predicate, to_variable_domain_list(variable_domains));
 
     return result;
 }
 
 template<f::FactKind T>
-FunctionDomainMap<T> to_function_domain_map(fp::FunctionListView<T> functions, const DomainSetListList& sets)
+FunctionDomainMap<T> to_function_domain_map(const TmpFunctionDomainMap<T>& domains)
 {
     auto result = FunctionDomainMap<T> {};
-    result.reserve(functions.size());
+    result.reserve(domains.size());
 
-    for (const auto function : functions)
-        result.emplace(function.get_index(), to_variable_domain_list(sets[function.get_index().value]));
+    for (const auto& [function, variable_domains] : domains)
+        result.emplace(function, to_variable_domain_list(variable_domains));
 
     return result;
 }
 
-ActionDomainMap to_action_domain_map(fp::ActionListView actions, const ActionDomainSetList& sets)
+AxiomDomainMap to_axiom_domain_map(const TmpAxiomDomainMap& domains)
+{
+    auto result = AxiomDomainMap {};
+    result.reserve(domains.size());
+
+    for (const auto& [axiom, variable_domains] : domains)
+        result.emplace(axiom, to_variable_domain_list(variable_domains));
+
+    return result;
+}
+
+ActionDomainMap to_action_domain_map(const TmpActionDomainMap& domains)
 {
     auto result = ActionDomainMap {};
-    result.reserve(actions.size());
+    result.reserve(domains.size());
 
-    for (const auto action : actions)
+    for (const auto& [action, action_domain] : domains)
     {
-        const auto& [precondition_domains, effect_domain_sets] = sets[action.get_index().value];
-
-        auto precondition_domain = ConjunctiveConditionDomain {
-            action.get_condition().get_index(),
-            to_variable_domain_list(precondition_domains),
-        };
-
         auto effect_domains = ConditionalEffectDomainMap {};
-        effect_domains.reserve(action.get_effects().size());
+        effect_domains.reserve(action_domain.effect_domains.size());
 
-        for (uint_t i = 0; i < action.get_effects().size(); ++i)
+        for (const auto& [c_effect, c_effect_domain] : action_domain.effect_domains)
         {
-            const auto c_effect = action.get_effects()[i];
-            const auto variable_domains = to_variable_domain_list(effect_domain_sets[i]);
-
-            effect_domains.emplace(c_effect.get_index(),
+            effect_domains.emplace(c_effect,
                                    ConditionalEffectDomain {
-                                       ConjunctiveConditionDomain { c_effect.get_condition().get_index(), variable_domains },
-                                       ConjunctiveEffectDomain { c_effect.get_effect().get_index(), variable_domains },
+                                       ConjunctiveConditionDomain {
+                                           c_effect_domain.condition_domain.element,
+                                           to_variable_domain_list(c_effect_domain.condition_domain.payload),
+                                       },
+                                       ConjunctiveEffectDomain {
+                                           c_effect_domain.effect_domain.element,
+                                           to_variable_domain_list(c_effect_domain.effect_domain.payload),
+                                       },
                                    });
         }
 
-        result.emplace(action.get_index(),
+        result.emplace(action,
                        ActionDomain {
-                           std::move(precondition_domain),
+                           ConjunctiveConditionDomain {
+                               action_domain.precondition_domain.element,
+                               to_variable_domain_list(action_domain.precondition_domain.payload),
+                           },
                            std::move(effect_domains),
                        });
     }
@@ -128,61 +190,60 @@ ActionDomainMap to_action_domain_map(fp::ActionListView actions, const ActionDom
     return result;
 }
 
-AxiomDomainMap to_axiom_domain_map(fp::AxiomListView axioms, const DomainSetListList& sets)
-{
-    auto result = AxiomDomainMap {};
-    result.reserve(axioms.size());
-
-    for (const auto axiom : axioms)
-        result.emplace(axiom.get_index(), to_variable_domain_list(sets[axiom.get_index().value]));
-
-    return result;
-}
+/**
+ * Initialization of temporary maps.
+ */
 
 template<f::FactKind T>
-DomainSetListList initialize_predicate_domain_sets(fp::PredicateListView<T> predicates)
+TmpPredicateDomainMap<T> initialize_predicate_domain_sets(fp::PredicateListView<T> predicates)
 {
-    auto predicate_domain_sets = DomainSetListList(predicates.size());
+    auto predicate_domain_sets = TmpPredicateDomainMap<T> {};
+    predicate_domain_sets.reserve(predicates.size());
 
     for (const auto predicate : predicates)
-        predicate_domain_sets[predicate.get_index().value].resize(predicate.get_arity());
+        predicate_domain_sets.emplace(predicate.get_index(), TmpVariableDomainList(predicate.get_arity()));
 
     return predicate_domain_sets;
 }
 
 template<f::FactKind T>
-void insert_into_predicate_domain_sets(fp::GroundAtomListView<T> atoms, DomainSetListList& predicate_domain_sets)
+void insert_into_predicate_domain_sets(fp::GroundAtomListView<T> atoms, TmpPredicateDomainMap<T>& predicate_domain_sets)
 {
     for (const auto atom : atoms)
     {
         const auto predicate = atom.get_predicate();
+        auto& variable_domains = predicate_domain_sets.at(predicate.get_index());
+
         auto pos = size_t { 0 };
         for (const auto object : atom.get_row().get_objects())
-            predicate_domain_sets[predicate.get_index().value][pos++].insert(object.get_index());
+            variable_domains[pos++].objects.insert(object.get_index());
     }
 }
 
 template<f::FactKind T>
-DomainSetListList initialize_function_domain_sets(fp::FunctionListView<T> functions)
+TmpFunctionDomainMap<T> initialize_function_domain_sets(fp::FunctionListView<T> functions)
 {
-    auto function_domain_sets = DomainSetListList(functions.size());
+    auto function_domain_sets = TmpFunctionDomainMap<T> {};
+    function_domain_sets.reserve(functions.size());
 
     for (const auto function : functions)
-        function_domain_sets[function.get_index().value].resize(function.get_arity());
+        function_domain_sets.emplace(function.get_index(), TmpVariableDomainList(function.get_arity()));
 
     return function_domain_sets;
 }
 
 template<f::FactKind T>
-void insert_into_function_domain_sets(fp::GroundFunctionTermValueListView<T> fterm_values, DomainSetListList& function_domain_sets)
+void insert_into_function_domain_sets(fp::GroundFunctionTermValueListView<T> fterm_values, TmpFunctionDomainMap<T>& function_domain_sets)
 {
     for (const auto term_value : fterm_values)
     {
         const auto fterm = term_value.get_fterm();
         const auto function = fterm.get_function();
+        auto& variable_domains = function_domain_sets.at(function.get_index());
+
         auto pos = size_t { 0 };
         for (const auto object : fterm.get_row().get_objects())
-            function_domain_sets[function.get_index().value][pos++].insert(object.get_index());
+            variable_domains[pos++].objects.insert(object.get_index());
     }
 }
 
@@ -203,11 +264,11 @@ void for_each_term_with_position(Fn&& fn, fp::TermListView terms)
 
 struct InsertConstantPolicy
 {
-    DomainSetListList& static_predicate_domain_sets;
-    DomainSetListList& fluent_predicate_domain_sets;
-    DomainSetListList& derived_predicate_domain_sets;
-    DomainSetListList& static_function_domain_sets;
-    DomainSetListList& fluent_function_domain_sets;
+    TmpPredicateDomainMap<f::StaticTag>& static_predicate_domain_sets;
+    TmpPredicateDomainMap<f::FluentTag>& fluent_predicate_domain_sets;
+    TmpPredicateDomainMap<f::DerivedTag>& derived_predicate_domain_sets;
+    TmpFunctionDomainMap<f::StaticTag>& static_function_domain_sets;
+    TmpFunctionDomainMap<f::FluentTag>& fluent_function_domain_sets;
 
     template<typename Element>
     bool should_skip(Element) const
@@ -226,8 +287,8 @@ struct InsertConstantPolicy
     template<typename Symbol>
     void on_object(size_t pos, fp::ObjectView object, Symbol symbol)
     {
-        auto& domain = get_domains(symbol)[symbol.get_index().value][pos];
-        domain.insert(object.get_index());
+        auto& domain = get_domains(symbol).at(symbol.get_index())[pos];
+        domain.objects.insert(object.get_index());
     }
 
     template<typename Symbol>
@@ -238,12 +299,12 @@ struct InsertConstantPolicy
 
 struct RestrictPolicy
 {
-    const DomainSetListList& static_predicate_domain_sets;
-    const DomainSetListList& fluent_predicate_domain_sets;
-    const DomainSetListList& derived_predicate_domain_sets;
-    const DomainSetListList& static_function_domain_sets;
-    const DomainSetListList& fluent_function_domain_sets;
-    DomainSetList& parameter_domains;
+    const TmpPredicateDomainMap<f::StaticTag>& static_predicate_domain_sets;
+    const TmpPredicateDomainMap<f::FluentTag>& fluent_predicate_domain_sets;
+    const TmpPredicateDomainMap<f::DerivedTag>& derived_predicate_domain_sets;
+    const TmpFunctionDomainMap<f::StaticTag>& static_function_domain_sets;
+    const TmpFunctionDomainMap<f::FluentTag>& fluent_function_domain_sets;
+    TmpVariableDomainList& parameter_domains;
 
     template<typename Element>
     bool should_skip(Element) const
@@ -274,19 +335,19 @@ struct RestrictPolicy
     void on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
     {
         auto& parameter_domain = parameter_domains[uint_t(param)];
-        const auto& symbol_domain = get_domains(symbol)[symbol.get_index().value][pos];
-        intersect_inplace(parameter_domain, symbol_domain);
+        const auto& symbol_domain = get_domains(symbol).at(symbol.get_index())[pos];
+        intersect_inplace(parameter_domain.objects, symbol_domain.objects);
     }
 };
 
 struct LiftPolicy
 {
-    DomainSetListList& static_predicate_domain_sets;
-    DomainSetListList& fluent_predicate_domain_sets;
-    DomainSetListList& derived_predicate_domain_sets;
-    DomainSetListList& static_function_domain_sets;
-    DomainSetListList& fluent_function_domain_sets;
-    const DomainSetList& parameter_domains;
+    TmpPredicateDomainMap<f::StaticTag>& static_predicate_domain_sets;
+    TmpPredicateDomainMap<f::FluentTag>& fluent_predicate_domain_sets;
+    TmpPredicateDomainMap<f::DerivedTag>& derived_predicate_domain_sets;
+    TmpFunctionDomainMap<f::StaticTag>& static_function_domain_sets;
+    TmpFunctionDomainMap<f::FluentTag>& fluent_function_domain_sets;
+    const TmpVariableDomainList& parameter_domains;
 
     template<typename Element>
     bool should_skip(Element) const
@@ -305,15 +366,15 @@ struct LiftPolicy
     template<typename Symbol>
     void on_object(size_t pos, fp::ObjectView object, Symbol symbol)
     {
-        auto& domain = get_domains(symbol)[symbol.get_index().value][pos];
-        domain.insert(object.get_index());
+        auto& domain = get_domains(symbol).at(symbol.get_index())[pos];
+        domain.objects.insert(object.get_index());
     }
 
     template<typename Symbol>
     void on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
     {
-        auto& domain = get_domains(symbol)[symbol.get_index().value][pos];
-        union_inplace(domain, parameter_domains[uint_t(param)]);
+        auto& domain = get_domains(symbol).at(symbol.get_index())[pos];
+        union_inplace(domain.objects, parameter_domains[uint_t(param)].objects);
     }
 };
 
@@ -451,12 +512,11 @@ void apply_policy(fp::NumericEffectOperatorView<T> element, Policy& policy)
 
 TaskVariableDomains compute_variable_domains(fp::TaskView task)
 {
-    auto objects = std::vector<Index<f::Object>> {};
+    auto universe = UnorderedSet<Index<f::Object>> {};
     for (const auto object : task.get_domain().get_constants())
-        objects.push_back(object.get_index());
+        universe.insert(object.get_index());
     for (const auto object : task.get_objects())
-        objects.push_back(object.get_index());
-    auto universe = DomainSet(objects.begin(), objects.end());
+        universe.insert(object.get_index());
 
     ///--- Step 1: Initialize static, fluent, and derived predicate parameter domains
 
@@ -532,13 +592,14 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
 
     ///--- Step 3: Compute action and axiom parameter domains from static information.
 
-    auto action_domain_sets = ActionDomainSetList {};
+    auto action_domain_sets = TmpActionDomainMap {};
     action_domain_sets.reserve(task.get_domain().get_actions().size());
 
     for (const auto action : task.get_domain().get_actions())
     {
-        auto variables = action.get_variables();
-        auto parameter_domains = DomainSetList(variables.size(), universe);
+        auto parameter_domains = TmpVariableDomainList(action.get_variables().size());
+        for (auto& domain : parameter_domains)
+            domain.objects = universe;
 
         auto restrict_policy = RestrictPolicy {
             static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -551,15 +612,16 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
         for (const auto op : action.get_condition().get_numeric_constraints())
             apply_policy(op, restrict_policy);
 
-        auto parameter_domains_per_cond_effect = DomainSetListList {};
-        parameter_domains_per_cond_effect.reserve(action.get_effects().size());
+        auto effect_domains = TmpConditionalEffectDomainMap {};
+        effect_domains.reserve(action.get_effects().size());
 
         for (const auto c_effect : action.get_effects())
         {
-            const auto c_variables = c_effect.get_variables();
-
             auto c_parameter_domains = parameter_domains;
-            c_parameter_domains.resize(variables.size() + c_variables.size(), universe);
+            c_parameter_domains.resize(action.get_variables().size() + c_effect.get_variables().size());
+
+            for (size_t i = parameter_domains.size(); i < c_parameter_domains.size(); ++i)
+                c_parameter_domains[i].objects = universe;
 
             auto c_restrict_policy = RestrictPolicy {
                 static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -572,20 +634,28 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
             for (const auto op : c_effect.get_condition().get_numeric_constraints())
                 apply_policy(op, c_restrict_policy);
 
-            parameter_domains_per_cond_effect.push_back(std::move(c_parameter_domains));
+            effect_domains.emplace(c_effect.get_index(),
+                                   TmpConditionalEffectDomain {
+                                       TmpConjunctiveConditionDomain { c_effect.get_condition().get_index(), c_parameter_domains },
+                                       TmpConjunctiveEffectDomain { c_effect.get_effect().get_index(), c_parameter_domains },
+                                   });
         }
 
-        assert(action.get_index().value == action_domain_sets.size());
-        action_domain_sets.emplace_back(std::move(parameter_domains), std::move(parameter_domains_per_cond_effect));
+        action_domain_sets.emplace(action.get_index(),
+                                   TmpActionDomain {
+                                       TmpConjunctiveConditionDomain { action.get_condition().get_index(), parameter_domains },
+                                       std::move(effect_domains),
+                                   });
     }
 
-    auto axiom_domain_sets = DomainSetListList {};
+    auto axiom_domain_sets = TmpAxiomDomainMap {};
     axiom_domain_sets.reserve(task.get_domain().get_axioms().size() + task.get_axioms().size());
 
     for (const auto axiom : task.get_domain().get_axioms())
     {
-        auto variables = axiom.get_body().get_variables();
-        auto parameter_domains = DomainSetList(variables.size(), universe);
+        auto parameter_domains = TmpVariableDomainList(axiom.get_body().get_variables().size());
+        for (auto& domain : parameter_domains)
+            domain.objects = universe;
 
         auto restrict_policy = RestrictPolicy {
             static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -598,14 +668,14 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
         for (const auto op : axiom.get_body().get_numeric_constraints())
             apply_policy(op, restrict_policy);
 
-        assert(axiom.get_index().value == axiom_domain_sets.size());
-        axiom_domain_sets.push_back(std::move(parameter_domains));
+        axiom_domain_sets.emplace(axiom.get_index(), std::move(parameter_domains));
     }
 
     for (const auto axiom : task.get_axioms())
     {
-        auto variables = axiom.get_body().get_variables();
-        auto parameter_domains = DomainSetList(variables.size(), universe);
+        auto parameter_domains = TmpVariableDomainList(axiom.get_body().get_variables().size());
+        for (auto& domain : parameter_domains)
+            domain.objects = universe;
 
         auto restrict_policy = RestrictPolicy {
             static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -618,15 +688,15 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
         for (const auto op : axiom.get_body().get_numeric_constraints())
             apply_policy(op, restrict_policy);
 
-        assert(axiom.get_index().value == axiom_domain_sets.size());
-        axiom_domain_sets.push_back(std::move(parameter_domains));
+        axiom_domain_sets.emplace(axiom.get_index(), std::move(parameter_domains));
     }
 
     ///--- Step 4: Lift predicate/function domains given the variable relationships in actions and axioms.
 
     for (const auto action : task.get_domain().get_actions())
     {
-        auto& [parameter_domains, parameter_domains_per_cond_effect] = action_domain_sets[action.get_index().value];
+        auto& action_domain = action_domain_sets.at(action.get_index());
+        auto& parameter_domains = action_domain.precondition_domain.payload;
 
         auto lift_policy = LiftPolicy {
             static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -645,10 +715,10 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
         for (const auto op : action.get_condition().get_numeric_constraints())
             apply_policy(op, lift_policy);
 
-        for (uint_t i = 0; i < action.get_effects().size(); ++i)
+        for (const auto c_effect : action.get_effects())
         {
-            const auto c_effect = action.get_effects()[i];
-            auto& c_parameter_domains = parameter_domains_per_cond_effect[i];
+            auto& c_effect_domain = action_domain.effect_domains.at(c_effect.get_index());
+            auto& c_parameter_domains = c_effect_domain.condition_domain.payload;
 
             auto c_lift_policy = LiftPolicy {
                 static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -669,12 +739,15 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
 
             for (const auto op : c_effect.get_effect().get_numeric_effects())
                 apply_policy(op, c_lift_policy);
+
+            // Keep effect payload aligned with condition payload, as in the original approximation.
+            c_effect_domain.effect_domain.payload = c_effect_domain.condition_domain.payload;
         }
     }
 
     for (const auto axiom : task.get_domain().get_axioms())
     {
-        auto& parameter_domains = axiom_domain_sets[axiom.get_index().value];
+        auto& parameter_domains = axiom_domain_sets.at(axiom.get_index());
 
         auto lift_policy = LiftPolicy {
             static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -698,7 +771,7 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
 
     for (const auto axiom : task.get_axioms())
     {
-        auto& parameter_domains = axiom_domain_sets[axiom.get_index().value];
+        auto& parameter_domains = axiom_domain_sets.at(axiom.get_index());
 
         auto lift_policy = LiftPolicy {
             static_predicate_domain_sets, fluent_predicate_domain_sets, derived_predicate_domain_sets,
@@ -722,23 +795,13 @@ TaskVariableDomains compute_variable_domains(fp::TaskView task)
 
     ///--- Step 5: Convert internal sets to public domain wrapper types.
 
-    auto static_predicate_domains = to_predicate_domain_map(task.get_domain().get_predicates<f::StaticTag>(), static_predicate_domain_sets);
-    auto fluent_predicate_domains = to_predicate_domain_map(task.get_domain().get_predicates<f::FluentTag>(), fluent_predicate_domain_sets);
-    auto derived_predicate_domains = to_predicate_domain_map(derived_predicates, derived_predicate_domain_sets);
-    auto static_function_domains = to_function_domain_map(task.get_domain().get_functions<f::StaticTag>(), static_function_domain_sets);
-    auto fluent_function_domains = to_function_domain_map(task.get_domain().get_functions<f::FluentTag>(), fluent_function_domain_sets);
-    auto action_domains = to_action_domain_map(task.get_domain().get_actions(), action_domain_sets);
-
-    auto axiom_domains = AxiomDomainMap {};
-    axiom_domains.reserve(task.get_domain().get_axioms().size() + task.get_axioms().size());
-
-    {
-        const auto domain_axiom_domains = to_axiom_domain_map(task.get_domain().get_axioms(), axiom_domain_sets);
-        axiom_domains.insert(domain_axiom_domains.begin(), domain_axiom_domains.end());
-
-        const auto task_axiom_domains = to_axiom_domain_map(task.get_axioms(), axiom_domain_sets);
-        axiom_domains.insert(task_axiom_domains.begin(), task_axiom_domains.end());
-    }
+    auto static_predicate_domains = to_predicate_domain_map(static_predicate_domain_sets);
+    auto fluent_predicate_domains = to_predicate_domain_map(fluent_predicate_domain_sets);
+    auto derived_predicate_domains = to_predicate_domain_map(derived_predicate_domain_sets);
+    auto static_function_domains = to_function_domain_map(static_function_domain_sets);
+    auto fluent_function_domains = to_function_domain_map(fluent_function_domain_sets);
+    auto action_domains = to_action_domain_map(action_domain_sets);
+    auto axiom_domains = to_axiom_domain_map(axiom_domain_sets);
 
     return TaskVariableDomains {
         std::move(static_predicate_domains),
