@@ -681,7 +681,7 @@ inline bool consistent_numeric_constraints(const Edge& edge,
 
 std::tuple<details::Vertices, std::vector<std::vector<uint_t>>, std::vector<std::vector<uint_t>>>
 StaticConsistencyGraph::compute_vertices(const details::TaggedRuleToLiteralInfos<f::StaticTag>& indexed_literals,
-                                         const analysis::RuleDomain& parameter_domains,
+                                         const analysis::VariableDomainList& parameter_domains,
                                          size_t num_objects,
                                          uint_t begin_parameter_index,
                                          uint_t end_parameter_index,
@@ -694,7 +694,7 @@ StaticConsistencyGraph::compute_vertices(const details::TaggedRuleToLiteralInfos
 
     for (uint_t parameter_index = begin_parameter_index; parameter_index < end_parameter_index; ++parameter_index)
     {
-        auto& parameter_domain = parameter_domains.variable_domains[parameter_index];
+        auto& parameter_domain = parameter_domains[parameter_index];
 
         auto vertex_partition = std::vector<uint_t> {};
         auto object_to_vertex_partition = std::vector<uint_t>(num_objects, std::numeric_limits<uint_t>::max());
@@ -1034,7 +1034,7 @@ StaticConsistencyGraph::StaticConsistencyGraph(fd::RuleView rule,
                                                fd::ConjunctiveConditionView unary_overapproximation_condition,
                                                fd::ConjunctiveConditionView binary_overapproximation_condition,
                                                fd::ConjunctiveConditionView static_binary_overapproximation_condition,
-                                               const analysis::RuleDomain& parameter_domains,
+                                               const analysis::VariableDomainList& parameter_domains,
                                                size_t num_objects,
                                                size_t num_fluent_predicates,
                                                uint_t begin_parameter_index,

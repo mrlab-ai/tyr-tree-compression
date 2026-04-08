@@ -38,6 +38,7 @@ public:
     const auto& get_fdr_context() const noexcept { return m_fdr_context; }
     const auto& get_domain() const noexcept { return m_domain; }
     const auto& get_variable_domains() const noexcept { return m_variable_domains; }
+    const auto& get_variable_domains_view() const noexcept { return m_variable_domains_view; }
 
 private:
     std::shared_ptr<Repository> m_repository;
@@ -45,6 +46,7 @@ private:
     FDRContextPtr m_fdr_context;
     PlanningDomain m_domain;
     analysis::TaskVariableDomains m_variable_domains;
+    analysis::TaskVariableDomainsView m_variable_domains_view;
 };
 
 }

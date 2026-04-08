@@ -26,8 +26,8 @@ namespace tyr::datalog
 
 FactsWorkspace::FactsWorkspace(fd::PredicateListView<f::FluentTag> predicates,
                                fd::FunctionListView<f::FluentTag> functions,
-                               const analysis::PredicateDomainList<formalism::FluentTag>& predicate_domains,
-                               const analysis::FunctionDomainList<formalism::FluentTag>& function_domains,
+                               const analysis::PredicateDomainMap<formalism::FluentTag>& predicate_domains,
+                               const analysis::FunctionDomainMap<formalism::FluentTag>& function_domains,
                                size_t num_objects,
                                fd::GroundAtomListView<formalism::FluentTag> atoms,
                                fd::GroundFunctionTermValueListView<formalism::FluentTag> fterm_values,
@@ -48,8 +48,8 @@ void FactsWorkspace::reset()
 
 ConstFactsWorkspace::ConstFactsWorkspace(fd::PredicateListView<f::StaticTag> predicates,
                                          fd::FunctionListView<f::StaticTag> functions,
-                                         const analysis::PredicateDomainList<formalism::StaticTag>& predicate_domains,
-                                         const analysis::FunctionDomainList<formalism::StaticTag>& function_domains,
+                                         const analysis::PredicateDomainMap<formalism::StaticTag>& predicate_domains,
+                                         const analysis::FunctionDomainMap<formalism::StaticTag>& function_domains,
                                          size_t num_objects,
                                          fd::GroundAtomListView<f::StaticTag> atoms,
                                          fd::GroundFunctionTermValueListView<f::StaticTag> fterm_values,

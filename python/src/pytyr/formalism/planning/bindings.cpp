@@ -19,6 +19,7 @@
 
 #include "../../common/bindings.hpp"
 #include "datas.hpp"
+#include "domains.hpp"
 #include "indices.hpp"
 #include "invariants.hpp"
 #include "mutable.hpp"
@@ -93,6 +94,12 @@ void bind_module_definitions(nb::module_& m)
      */
 
     bind_mutable(m);
+
+    /**
+     * Domains
+     */
+
+    bind_variable_domains(m);
 
     /**
      * Index
@@ -319,7 +326,8 @@ void bind_module_definitions(nb::module_& m)
             .def("get_task", &PlanningTask::get_task)
             .def("get_repository", &PlanningTask::get_repository)
             .def("get_fdr_context", &PlanningTask::get_fdr_context, nb::rv_policy::reference_internal)
-            .def("get_domain", &PlanningTask::get_domain);
+            .def("get_domain", &PlanningTask::get_domain)
+            .def("get_variable_domains", &PlanningTask::get_variable_domains_view);
     }
 
     {

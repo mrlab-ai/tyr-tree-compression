@@ -146,7 +146,7 @@ private:
         m_positions.clear();
         for (size_t i = 0; i < m_parameters.size(); ++i)
         {
-            const auto [it, inserted] = m_positions.emplace(m_parameters[i], i);
+            [[maybe_unused]] const auto [it, inserted] = m_positions.emplace(m_parameters[i], i);
             assert(inserted && "Duplicate parameter in SubstitutionFunction domain");
         }
     }

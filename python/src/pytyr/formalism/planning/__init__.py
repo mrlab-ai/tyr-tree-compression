@@ -12,9 +12,20 @@ from pytyr.pytyr.formalism.planning import (
     MutableConditionalEffect,
     MutableAction,
 )
+
 from pytyr.pytyr.formalism.planning import (
     Invariant,
     synthesize_invariants,
+)
+
+from pytyr.pytyr.formalism.planning import (
+    VariableDomain,
+    AxiomDomain,
+    ConjunctiveConditionDomain,
+    ConjunctiveEffectDomain,
+    ConditionalEffectDomain,
+    ActionDomain,
+    TaskVariableDomains,
 )
 
 from pytyr.pytyr.formalism.planning import (

@@ -331,7 +331,7 @@ std::optional<fp::GroundActionView> ground_pruned(fp::ActionView element,
     for (uint_t cond_effect_index = 0; cond_effect_index < element.get_effects().size(); ++cond_effect_index)
     {
         const auto cond_effect = element.get_effects()[cond_effect_index];
-        const auto& parameter_domains = action_domains.effect_domains[cond_effect_index].variable_domains;
+        const auto& parameter_domains = action_domains.effect_domains.at(cond_effect.get_index()).effect_domain.payload;
 
         assert(std::distance(parameter_domains.begin(), parameter_domains.end()) == static_cast<int>(element.get_arity() + cond_effect.get_arity()));
 
@@ -576,7 +576,7 @@ GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,  
                     ground_pruned(action,
                                   fluent_atoms_set,
                                   derived_atoms_set,
-                                  lifted_task.get_formalism_task().get_variable_domains().action_domains[uint_t(action.get_index())],
+                                  lifted_task.get_formalism_task().get_variable_domains().action_domains.at(action.get_index()),
                                   iter_workspace,
                                   grounder_context,
                                   *fdr_context);

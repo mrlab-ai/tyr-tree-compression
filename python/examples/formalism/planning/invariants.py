@@ -40,5 +40,13 @@ def main():
 
     print(invariants)
 
+    task = parser.parse_task(task_filepath, parser_options)
+
+    task_variable_domains = task.get_variable_domains()
+
+    print(task_variable_domains)
+
+
+
 if __name__ == "__main__":
     main()

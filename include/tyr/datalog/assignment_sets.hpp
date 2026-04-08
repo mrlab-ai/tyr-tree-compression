@@ -76,7 +76,7 @@ private:
     boost::dynamic_bitset<> m_set;
 
 public:
-    PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate, const analysis::PredicateDomain<T>& parameter_domains, size_t num_objects);
+    PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate, const analysis::VariableDomainList& parameter_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -100,7 +100,7 @@ private:
 
 public:
     PredicateAssignmentSets();
-    PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates, const analysis::PredicateDomainList<T>& predicate_domains, size_t num_objects);
+    PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates, const analysis::PredicateDomainMap<T>& predicate_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -126,7 +126,7 @@ private:
     std::vector<ClosedInterval<float_t>> m_set;
 
 public:
-    FunctionAssignmentSet(formalism::datalog::FunctionView<T> function, const analysis::FunctionDomain<T>& parameter_domains, size_t num_objects);
+    FunctionAssignmentSet(formalism::datalog::FunctionView<T> function, const analysis::VariableDomainList& parameter_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -153,7 +153,7 @@ private:
 
 public:
     FunctionAssignmentSets();
-    FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions, const analysis::FunctionDomainList<T>& function_domains, size_t num_objects);
+    FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions, const analysis::FunctionDomainMap<T>& function_domains, size_t num_objects);
 
     void reset() noexcept;
 
@@ -177,13 +177,13 @@ struct TaggedAssignmentSets
     TaggedAssignmentSets();
     TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                          formalism::datalog::FunctionListView<T> functions,
-                         const analysis::PredicateDomainList<T>& predicate_domains,
-                         const analysis::FunctionDomainList<T>& function_domains,
+                         const analysis::PredicateDomainMap<T>& predicate_domains,
+                         const analysis::FunctionDomainMap<T>& function_domains,
                          size_t num_objects);
     TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                          formalism::datalog::FunctionListView<T> functions,
-                         const analysis::PredicateDomainList<T>& predicate_domains,
-                         const analysis::FunctionDomainList<T>& function_domains,
+                         const analysis::PredicateDomainMap<T>& predicate_domains,
+                         const analysis::FunctionDomainMap<T>& function_domains,
                          size_t num_objects,
                          const TaggedFactSets<T>& fact_sets);
 

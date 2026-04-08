@@ -38,8 +38,8 @@ struct FactsWorkspace
 
     explicit FactsWorkspace(formalism::datalog::PredicateListView<formalism::FluentTag> predicates,
                             formalism::datalog::FunctionListView<formalism::FluentTag> functions,
-                            const analysis::PredicateDomainList<formalism::FluentTag>& predicate_domains,
-                            const analysis::FunctionDomainList<formalism::FluentTag>& function_domains,
+                            const analysis::PredicateDomainMap<formalism::FluentTag>& predicate_domains,
+                            const analysis::FunctionDomainMap<formalism::FluentTag>& function_domains,
                             size_t num_objects,
                             formalism::datalog::GroundAtomListView<formalism::FluentTag> atoms,
                             formalism::datalog::GroundFunctionTermValueListView<formalism::FluentTag> fterm_values,
@@ -55,8 +55,8 @@ struct ConstFactsWorkspace
 
     explicit ConstFactsWorkspace(formalism::datalog::PredicateListView<formalism::StaticTag> predicates,
                                  formalism::datalog::FunctionListView<formalism::StaticTag> functions,
-                                 const analysis::PredicateDomainList<formalism::StaticTag>& predicate_domains,
-                                 const analysis::FunctionDomainList<formalism::StaticTag>& function_domains,
+                                 const analysis::PredicateDomainMap<formalism::StaticTag>& predicate_domains,
+                                 const analysis::FunctionDomainMap<formalism::StaticTag>& function_domains,
                                  size_t num_objects,
                                  formalism::datalog::GroundAtomListView<formalism::StaticTag> atoms,
                                  formalism::datalog::GroundFunctionTermValueListView<formalism::StaticTag> fterm_values,

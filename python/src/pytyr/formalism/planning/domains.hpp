@@ -15,13 +15,17 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TYR_ANALYSIS_ANALYSIS_HPP_
-#define TYR_ANALYSIS_ANALYSIS_HPP_
+#ifndef TYR_PYTHON_FORMALISM_PLANNING_DOMAINS_HPP
+#define TYR_PYTHON_FORMALISM_PLANNING_DOMAINS_HPP
 
-#include "tyr/analysis/declarations.hpp"
-#include "tyr/analysis/domains.hpp"
-#include "tyr/analysis/formatter.hpp"
-#include "tyr/analysis/listeners.hpp"
-#include "tyr/analysis/stratification.hpp"
+#include "../../common/bindings.hpp"
+#include "../../init_declarations.hpp"
+
+namespace tyr::formalism::planning
+{
+
+void bind_variable_domains(nb::module_& m);
+
+}
 
 #endif

@@ -61,36 +61,36 @@ VariableDomainList to_variable_domain_list(const DomainSetList& sets)
 }
 
 template<f::FactKind T>
-PredicateDomainList<T> to_predicate_domain_list(const DomainSetListList& sets)
+PredicateDomainMap<T> to_predicate_domain_map(fd::PredicateListView<T> predicates, const DomainSetListList& sets)
 {
-    auto result = PredicateDomainList<T> {};
-    result.reserve(sets.size());
+    auto result = PredicateDomainMap<T> {};
+    result.reserve(predicates.size());
 
-    for (const auto& predicate_variable_domains : sets)
-        result.push_back(PredicateDomain<T> { to_variable_domain_list(predicate_variable_domains) });
+    for (const auto predicate : predicates)
+        result.emplace(predicate.get_index(), to_variable_domain_list(sets[predicate.get_index().value]));
 
     return result;
 }
 
 template<f::FactKind T>
-FunctionDomainList<T> to_function_domain_list(const DomainSetListList& sets)
+FunctionDomainMap<T> to_function_domain_map(fd::FunctionListView<T> functions, const DomainSetListList& sets)
 {
-    auto result = FunctionDomainList<T> {};
-    result.reserve(sets.size());
+    auto result = FunctionDomainMap<T> {};
+    result.reserve(functions.size());
 
-    for (const auto& function_variable_domains : sets)
-        result.push_back(FunctionDomain<T> { to_variable_domain_list(function_variable_domains) });
+    for (const auto function : functions)
+        result.emplace(function.get_index(), to_variable_domain_list(sets[function.get_index().value]));
 
     return result;
 }
 
-RuleDomainList to_rule_domain_list(const DomainSetListList& sets)
+RuleDomainMap to_rule_domain_map(fd::RuleListView rules, const DomainSetListList& sets)
 {
-    auto result = RuleDomainList {};
-    result.reserve(sets.size());
+    auto result = RuleDomainMap {};
+    result.reserve(rules.size());
 
-    for (const auto& rule_variable_domains : sets)
-        result.push_back(RuleDomain { to_variable_domain_list(rule_variable_domains) });
+    for (const auto rule : rules)
+        result.emplace(rule.get_index(), to_variable_domain_list(sets[rule.get_index().value]));
 
     return result;
 }
@@ -440,23 +440,23 @@ ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
     ///--- Step 3: Compute rule parameter domains as tightest bound from the previously computed domains of the static predicates.
 
     auto rule_domain_sets = DomainSetListList();
+    rule_domain_sets.reserve(program.get_rules().size());
+
+    for (const auto rule : program.get_rules())
     {
-        for (const auto rule : program.get_rules())
-        {
-            auto variables = rule.get_body().get_variables();
-            auto parameter_domains = DomainSetList(variables.size(), universe);
+        auto variables = rule.get_body().get_variables();
+        auto parameter_domains = DomainSetList(variables.size(), universe);
 
-            auto restrict_policy = RestrictPolicy { static_predicate_domain_sets, static_function_domain_sets, parameter_domains };
+        auto restrict_policy = RestrictPolicy { static_predicate_domain_sets, static_function_domain_sets, parameter_domains };
 
-            for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
-                apply_policy(literal, restrict_policy);
+        for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
+            apply_policy(literal, restrict_policy);
 
-            for (const auto op : rule.get_body().get_numeric_constraints())
-                apply_policy(op, restrict_policy);
+        for (const auto op : rule.get_body().get_numeric_constraints())
+            apply_policy(op, restrict_policy);
 
-            assert(rule.get_index().value == rule_domain_sets.size());
-            rule_domain_sets.push_back(std::move(parameter_domains));
-        }
+        assert(rule.get_index().value == rule_domain_sets.size());
+        rule_domain_sets.push_back(std::move(parameter_domains));
     }
 
     ///--- Step 4: Lift the fluent predicate domains given the variable relationships in the rules.
@@ -482,17 +482,19 @@ ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
 
     ///--- Step 5: Convert internal sets to public domain wrapper types.
 
-    auto static_predicate_domains = to_predicate_domain_list<f::StaticTag>(static_predicate_domain_sets);
-    auto fluent_predicate_domains = to_predicate_domain_list<f::FluentTag>(fluent_predicate_domain_sets);
-    auto static_function_domains = to_function_domain_list<f::StaticTag>(static_function_domain_sets);
-    auto fluent_function_domains = to_function_domain_list<f::FluentTag>(fluent_function_domain_sets);
-    auto rule_domains = to_rule_domain_list(rule_domain_sets);
+    auto static_predicate_domains = to_predicate_domain_map(program.get_predicates<f::StaticTag>(), static_predicate_domain_sets);
+    auto fluent_predicate_domains = to_predicate_domain_map(program.get_predicates<f::FluentTag>(), fluent_predicate_domain_sets);
+    auto static_function_domains = to_function_domain_map(program.get_functions<f::StaticTag>(), static_function_domain_sets);
+    auto fluent_function_domains = to_function_domain_map(program.get_functions<f::FluentTag>(), fluent_function_domain_sets);
+    auto rule_domains = to_rule_domain_map(program.get_rules(), rule_domain_sets);
 
-    return ProgramVariableDomains { std::move(static_predicate_domains),
-                                    std::move(fluent_predicate_domains),
-                                    std::move(static_function_domains),
-                                    std::move(fluent_function_domains),
-                                    std::move(rule_domains) };
+    return ProgramVariableDomains {
+        std::move(static_predicate_domains),
+        std::move(fluent_predicate_domains),
+        std::move(static_function_domains),
+        std::move(fluent_function_domains),
+        std::move(rule_domains),
+    };
 }
 
 }  // namespace tyr::analysis

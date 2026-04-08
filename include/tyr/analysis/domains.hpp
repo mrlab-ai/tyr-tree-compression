@@ -35,6 +35,10 @@ namespace tyr::analysis
 ProgramVariableDomains compute_variable_domains(formalism::datalog::ProgramView program);
 
 TaskVariableDomains compute_variable_domains(formalism::planning::TaskView task);
+
+ProgramVariableDomainsView compute_variable_domain_views(const ProgramVariableDomains& domains, const formalism::datalog::Repository& repository);
+
+TaskVariableDomainsView compute_variable_domain_views(const TaskVariableDomains& domains, const formalism::planning::Repository& repository);
 }
 
 #endif

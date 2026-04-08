@@ -31,9 +31,11 @@ PlanningTask::PlanningTask(TaskView task, FDRContextPtr fdr_context, std::shared
     m_task(task),
     m_fdr_context(std::move(fdr_context)),
     m_domain(std::move(domain)),
-    m_variable_domains(analysis::compute_variable_domains(m_task))
+    m_variable_domains(analysis::compute_variable_domains(m_task)),
+    m_variable_domains_view(analysis::compute_variable_domain_views(m_variable_domains, *m_repository))
 {
     if (&m_task.get_context() != m_repository.get())
         throw std::invalid_argument("Task context does not match the given Repository.");
 }
+
 }

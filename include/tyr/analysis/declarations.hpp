@@ -21,8 +21,12 @@
 #include "tyr/common/declarations.hpp"
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
+#include "tyr/formalism/datalog/indices.hpp"
+#include "tyr/formalism/datalog/repository.hpp"
 #include "tyr/formalism/declarations.hpp"
 #include "tyr/formalism/object_index.hpp"
+#include "tyr/formalism/planning/indices.hpp"
+#include "tyr/formalism/planning/repository.hpp"
 
 #include <vector>
 
@@ -36,9 +40,16 @@ using DomainSet = UnorderedSet<Index<formalism::Object>>;
 using DomainSetList = std::vector<DomainSet>;
 using DomainSetListList = std::vector<DomainSetList>;
 
-using DomainList = std::vector<Index<formalism::Object>>;
-using DomainListList = std::vector<DomainList>;
-using DomainListListList = std::vector<DomainListList>;
+/**
+ * Index based internal representation of variable domains.
+ */
+
+template<typename Element, typename Payload>
+struct Scoped
+{
+    Index<Element> element;
+    Payload payload;
+};
 
 struct VariableDomain
 {
@@ -58,82 +69,165 @@ struct VariableDomain
 
 using VariableDomainList = std::vector<VariableDomain>;
 
-template<formalism::FactKind T>
-struct PredicateDomain
-{
-    VariableDomainList variable_domains;
-};
+template<typename Element>
+using SimpleScopedDomain = Scoped<Element, VariableDomainList>;
+
+template<typename Element>
+using SimpleScopedDomainMap = UnorderedMap<Index<Element>, VariableDomainList>;
 
 template<formalism::FactKind T>
-
-using PredicateDomainList = std::vector<PredicateDomain<T>>;
-
-template<formalism::FactKind T>
-struct FunctionDomain
-{
-    VariableDomainList variable_domains;
-};
+using PredicateDomainMap = SimpleScopedDomainMap<formalism::Predicate<T>>;
 
 template<formalism::FactKind T>
-using FunctionDomainList = std::vector<FunctionDomain<T>>;
+using FunctionDomainMap = SimpleScopedDomainMap<formalism::Function<T>>;
 
-struct RuleDomain
-{
-    VariableDomainList variable_domains;
-};
+using RuleDomainMap = SimpleScopedDomainMap<formalism::datalog::Rule>;
 
-using RuleDomainList = std::vector<RuleDomain>;
+using AxiomDomainMap = SimpleScopedDomainMap<formalism::planning::Axiom>;
 
-struct ConjunctiveConditionDomain
-{
-    VariableDomainList variable_domains;
-};
+using ConjunctiveConditionDomain = SimpleScopedDomain<formalism::planning::ConjunctiveCondition>;
 
-struct ConjunctiveEffectDomain
-{
-    VariableDomainList variable_domains;
-};
+using ConjunctiveEffectDomain = SimpleScopedDomain<formalism::planning::ConjunctiveEffect>;
 
 struct ConditionalEffectDomain
 {
-    VariableDomainList variable_domains;
+    ConjunctiveConditionDomain condition_domain;
+    ConjunctiveEffectDomain effect_domain;
 };
 
-using ConditionalEffectDomainList = std::vector<ConditionalEffectDomain>;
+using ConditionalEffectDomainMap = UnorderedMap<Index<formalism::planning::ConditionalEffect>, ConditionalEffectDomain>;
 
 struct ActionDomain
 {
     ConjunctiveConditionDomain precondition_domain;
-    ConditionalEffectDomainList effect_domains;
+    ConditionalEffectDomainMap effect_domains;
 };
 
-using ActionDomainList = std::vector<ActionDomain>;
-
-struct AxiomDomain
-{
-    ConjunctiveConditionDomain precondition_domain;
-};
-
-using AxiomDomainList = std::vector<AxiomDomain>;
+using ActionDomainMap = UnorderedMap<Index<formalism::planning::Action>, ActionDomain>;
 
 struct ProgramVariableDomains
 {
-    PredicateDomainList<formalism::StaticTag> static_predicate_domains;
-    PredicateDomainList<formalism::FluentTag> fluent_predicate_domains;
-    FunctionDomainList<formalism::StaticTag> static_function_domains;
-    FunctionDomainList<formalism::FluentTag> fluent_function_domains;
-    RuleDomainList rule_domains;
+    PredicateDomainMap<formalism::StaticTag> static_predicate_domains;
+    PredicateDomainMap<formalism::FluentTag> fluent_predicate_domains;
+    FunctionDomainMap<formalism::StaticTag> static_function_domains;
+    FunctionDomainMap<formalism::FluentTag> fluent_function_domains;
+    RuleDomainMap rule_domains;
 };
 
 struct TaskVariableDomains
 {
-    PredicateDomainList<formalism::StaticTag> static_predicate_domains;
-    PredicateDomainList<formalism::FluentTag> fluent_predicate_domains;
-    PredicateDomainList<formalism::DerivedTag> derived_predicate_domains;
-    FunctionDomainList<formalism::StaticTag> static_function_domains;
-    FunctionDomainList<formalism::FluentTag> fluent_function_domains;
-    ActionDomainList action_domains;
-    AxiomDomainList axiom_domains;
+    PredicateDomainMap<formalism::StaticTag> static_predicate_domains;
+    PredicateDomainMap<formalism::FluentTag> fluent_predicate_domains;
+    PredicateDomainMap<formalism::DerivedTag> derived_predicate_domains;
+    FunctionDomainMap<formalism::StaticTag> static_function_domains;
+    FunctionDomainMap<formalism::FluentTag> fluent_function_domains;
+    ActionDomainMap action_domains;
+    AxiomDomainMap axiom_domains;
+};
+
+/**
+ * View based external representation of variable domains.
+ */
+
+template<typename Element, typename Payload, typename C>
+struct ScopedView
+{
+    View<Index<Element>, C> element;
+    Payload payload;
+};
+
+template<typename C>
+struct VariableDomainView
+{
+    std::vector<View<Index<formalism::Object>, C>> objects;
+
+    auto begin() noexcept { return objects.begin(); }
+    auto end() noexcept { return objects.end(); }
+    auto begin() const noexcept { return objects.begin(); }
+    auto end() const noexcept { return objects.end(); }
+
+    auto size() const noexcept { return objects.size(); }
+    bool empty() const noexcept { return objects.empty(); }
+
+    auto& operator[](std::size_t i) noexcept { return objects[i]; }
+    const auto& operator[](std::size_t i) const noexcept { return objects[i]; }
+};
+
+template<typename C>
+using VariableDomainViewList = std::vector<VariableDomainView<C>>;
+
+template<typename Element, typename C>
+using SimpleScopedDomainView = ScopedView<Element, VariableDomainViewList<C>, C>;
+
+template<typename Element, typename C>
+using SimpleScopedDomainViewMap = UnorderedMap<View<Index<Element>, C>, VariableDomainViewList<C>>;
+
+template<formalism::FactKind T, typename C>
+using PredicateDomainViewMap = SimpleScopedDomainViewMap<formalism::Predicate<T>, C>;
+
+template<formalism::FactKind T, typename C>
+using FunctionDomainViewMap = SimpleScopedDomainViewMap<formalism::Function<T>, C>;
+
+template<typename C>
+using RuleDomainView = SimpleScopedDomainView<formalism::datalog::Rule, C>;
+
+template<typename C>
+using RuleDomainViewMap = SimpleScopedDomainViewMap<formalism::datalog::Rule, C>;
+
+template<typename C>
+using AxiomDomainView = SimpleScopedDomainView<formalism::planning::Axiom, C>;
+
+template<typename C>
+using AxiomDomainViewMap = SimpleScopedDomainViewMap<formalism::planning::Axiom, C>;
+
+template<typename C>
+using ConjunctiveConditionDomainView = SimpleScopedDomainView<formalism::planning::ConjunctiveCondition, C>;
+
+template<typename C>
+using ConjunctiveEffectDomainView = SimpleScopedDomainView<formalism::planning::ConjunctiveEffect, C>;
+
+template<typename C>
+struct ConditionalEffectDomainView
+{
+    ConjunctiveConditionDomainView<C> condition_domain;
+    ConjunctiveEffectDomainView<C> effect_domain;
+};
+
+template<typename C>
+using ConditionalEffectDomainViewMap = UnorderedMap<View<Index<formalism::planning::ConditionalEffect>, C>, ConditionalEffectDomainView<C>>;
+
+template<typename C>
+struct ActionDomainView
+{
+    ConjunctiveConditionDomainView<C> precondition_domain;
+    ConditionalEffectDomainViewMap<C> effect_domains;
+};
+
+template<typename C>
+using ActionDomainViewMap = UnorderedMap<View<Index<formalism::planning::Action>, C>, ActionDomainView<C>>;
+
+struct ProgramVariableDomainsView
+{
+    using C = formalism::datalog::Repository;
+
+    PredicateDomainViewMap<formalism::StaticTag, C> static_predicate_domains;
+    PredicateDomainViewMap<formalism::FluentTag, C> fluent_predicate_domains;
+    FunctionDomainViewMap<formalism::StaticTag, C> static_function_domains;
+    FunctionDomainViewMap<formalism::FluentTag, C> fluent_function_domains;
+    RuleDomainViewMap<C> rule_domains;
+};
+
+struct TaskVariableDomainsView
+{
+    using C = formalism::planning::Repository;
+
+    PredicateDomainViewMap<formalism::StaticTag, C> static_predicate_domains;
+    PredicateDomainViewMap<formalism::FluentTag, C> fluent_predicate_domains;
+    PredicateDomainViewMap<formalism::DerivedTag, C> derived_predicate_domains;
+    FunctionDomainViewMap<formalism::StaticTag, C> static_function_domains;
+    FunctionDomainViewMap<formalism::FluentTag, C> fluent_function_domains;
+    ActionDomainViewMap<C> action_domains;
+    AxiomDomainViewMap<C> axiom_domains;
 };
 
 /**

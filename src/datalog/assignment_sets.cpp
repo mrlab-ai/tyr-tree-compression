@@ -137,11 +137,11 @@ size_t PerfectAssignmentHash::size() const noexcept { return m_num_assignments *
 
 template<formalism::FactKind T>
 PredicateAssignmentSet<T>::PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate,
-                                                  const analysis::PredicateDomain<T>& parameter_domains,
+                                                  const analysis::VariableDomainList& parameter_domains,
                                                   size_t num_objects) :
     m_predicate(predicate),
     m_predicate_index(predicate.get_index()),
-    m_hash(PerfectAssignmentHash(parameter_domains.variable_domains, num_objects)),
+    m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
     m_set(m_hash.size(), false)
 {
 }
@@ -236,7 +236,7 @@ PredicateAssignmentSets<T>::PredicateAssignmentSets()
 
 template<formalism::FactKind T>
 PredicateAssignmentSets<T>::PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
-                                                    const analysis::PredicateDomainList<T>& predicate_domains,
+                                                    const analysis::PredicateDomainMap<T>& predicate_domains,
                                                     size_t num_objects) :
     m_sets()
 {
@@ -248,7 +248,7 @@ PredicateAssignmentSets<T>::PredicateAssignmentSets(formalism::datalog::Predicat
 
     /* Initialize sets. */
     for (const auto predicate : predicates)
-        m_sets.emplace_back(PredicateAssignmentSet<T>(predicate, predicate_domains[uint_t(predicate.get_index())], num_objects));
+        m_sets.emplace_back(PredicateAssignmentSet<T>(predicate, predicate_domains.at(predicate.get_index()), num_objects));
 }
 
 template<formalism::FactKind T>
@@ -304,11 +304,11 @@ template class PredicateAssignmentSets<f::FluentTag>;
 
 template<formalism::FactKind T>
 FunctionAssignmentSet<T>::FunctionAssignmentSet(formalism::datalog::FunctionView<T> function,
-                                                const analysis::FunctionDomain<T>& parameter_domains,
+                                                const analysis::VariableDomainList& parameter_domains,
                                                 size_t num_objects) :
     m_function(function),
     m_function_index(function.get_index()),
-    m_hash(PerfectAssignmentHash(parameter_domains.variable_domains, num_objects)),
+    m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
     m_set(m_hash.size(), ClosedInterval<float_t>())
 {
 }
@@ -429,7 +429,7 @@ FunctionAssignmentSets<T>::FunctionAssignmentSets()
 
 template<formalism::FactKind T>
 FunctionAssignmentSets<T>::FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions,
-                                                  const analysis::FunctionDomainList<T>& function_domains,
+                                                  const analysis::FunctionDomainMap<T>& function_domains,
                                                   size_t num_objects) :
     m_sets()
 {
@@ -439,7 +439,7 @@ FunctionAssignmentSets<T>::FunctionAssignmentSets(formalism::datalog::FunctionLi
 
     /* Initialize sets. */
     for (const auto function : functions)
-        m_sets.emplace_back(FunctionAssignmentSet<T>(function, function_domains[function.get_index().get_value()], num_objects));
+        m_sets.emplace_back(FunctionAssignmentSet<T>(function, function_domains.at(function.get_index()), num_objects));
 }
 
 template<formalism::FactKind T>
@@ -510,8 +510,8 @@ TaggedAssignmentSets<T>::TaggedAssignmentSets()
 template<formalism::FactKind T>
 TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                                               formalism::datalog::FunctionListView<T> functions,
-                                              const analysis::PredicateDomainList<T>& predicate_domains,
-                                              const analysis::FunctionDomainList<T>& function_domains,
+                                              const analysis::PredicateDomainMap<T>& predicate_domains,
+                                              const analysis::FunctionDomainMap<T>& function_domains,
                                               size_t num_objects) :
     predicate(predicates, predicate_domains, num_objects),
     function(functions, function_domains, num_objects)
@@ -521,8 +521,8 @@ TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListV
 template<formalism::FactKind T>
 TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                                               formalism::datalog::FunctionListView<T> functions,
-                                              const analysis::PredicateDomainList<T>& predicate_domains,
-                                              const analysis::FunctionDomainList<T>& function_domains,
+                                              const analysis::PredicateDomainMap<T>& predicate_domains,
+                                              const analysis::FunctionDomainMap<T>& function_domains,
                                               size_t num_objects,
                                               const TaggedFactSets<T>& fact_sets) :
     TaggedAssignmentSets(predicates, functions, predicate_domains, function_domains, num_objects)
