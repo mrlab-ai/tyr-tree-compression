@@ -183,18 +183,15 @@ struct InsertConstantPolicy
     }
 
     template<typename Symbol>
-    bool on_object(size_t pos, fd::ObjectView object, Symbol symbol)
+    void on_object(size_t pos, fd::ObjectView object, Symbol symbol)
     {
         auto& domain = get_domains(symbol)[symbol.get_index().value][pos];
-        const auto before = domain.size();
         domain.insert(object.get_index());
-        return domain.size() != before;
     }
 
     template<typename Symbol>
-    bool on_parameter(size_t, f::ParameterIndex, Symbol)
+    void on_parameter(size_t, f::ParameterIndex, Symbol)
     {
-        return false;
     }
 };
 
@@ -231,19 +228,16 @@ struct RestrictPolicy
     }
 
     template<typename Symbol>
-    bool on_object(size_t, fd::ObjectView, Symbol)
+    void on_object(size_t, fd::ObjectView, Symbol)
     {
-        return false;
     }
 
     template<typename Symbol>
-    bool on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
+    void on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
     {
         auto& parameter_domain = parameter_domains[uint_t(param)];
         const auto& symbol_domain = get_domains(symbol)[symbol.get_index().value][pos];
-        const auto before = parameter_domain.size();
         intersect_inplace(parameter_domain, symbol_domain);
-        return parameter_domain.size() != before;
     }
 };
 
@@ -274,21 +268,17 @@ struct LiftPolicy
     }
 
     template<typename Symbol>
-    bool on_object(size_t pos, fd::ObjectView object, Symbol symbol)
+    void on_object(size_t pos, fd::ObjectView object, Symbol symbol)
     {
         auto& domain = get_domains(symbol)[symbol.get_index().value][pos];
-        const auto before = domain.size();
         domain.insert(object.get_index());
-        return domain.size() != before;
     }
 
     template<typename Symbol>
-    bool on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
+    void on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
     {
         auto& domain = get_domains(symbol)[symbol.get_index().value][pos];
-        const auto before = domain.size();
         union_inplace(domain, parameter_domains[uint_t(param)]);
-        return domain.size() != before;
     }
 };
 
@@ -297,46 +287,40 @@ struct LiftPolicy
  */
 
 template<typename Policy>
-bool apply_policy(fd::FunctionExpressionView element, Policy& policy);
+void apply_policy(fd::FunctionExpressionView element, Policy& policy);
 
 template<typename Policy>
-bool apply_policy(float_t, Policy&)
+void apply_policy(float_t, Policy&)
 {
-    return false;
 }
 
 template<f::OpKind O, typename Policy>
-bool apply_policy(fd::LiftedUnaryOperatorView<O> element, Policy& policy)
+void apply_policy(fd::LiftedUnaryOperatorView<O> element, Policy& policy)
 {
-    return apply_policy(element.get_arg(), policy);
+    apply_policy(element.get_arg(), policy);
 }
 
 template<f::OpKind O, typename Policy>
-bool apply_policy(fd::LiftedBinaryOperatorView<O> element, Policy& policy)
+void apply_policy(fd::LiftedBinaryOperatorView<O> element, Policy& policy)
 {
-    bool changed = false;
-    changed |= apply_policy(element.get_lhs(), policy);
-    changed |= apply_policy(element.get_rhs(), policy);
-    return changed;
+    apply_policy(element.get_lhs(), policy);
+    apply_policy(element.get_rhs(), policy);
 }
 
 template<f::OpKind O, typename Policy>
-bool apply_policy(fd::LiftedMultiOperatorView<O> element, Policy& policy)
+void apply_policy(fd::LiftedMultiOperatorView<O> element, Policy& policy)
 {
-    bool changed = false;
     for (const auto arg : element.get_args())
-        changed |= apply_policy(arg, policy);
-    return changed;
+        apply_policy(arg, policy);
 }
 
 template<f::FactKind T, typename Policy>
-bool apply_policy(fd::AtomView<T> element, Policy& policy)
+void apply_policy(fd::AtomView<T> element, Policy& policy)
 {
-    bool changed = false;
     const auto predicate = element.get_predicate();
 
     if (policy.should_skip(predicate))
-        return false;
+        return;
 
     for_each_term_with_position(
         [&](size_t pos, auto&& arg)
@@ -345,11 +329,11 @@ bool apply_policy(fd::AtomView<T> element, Policy& policy)
 
             if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
             {
-                changed |= policy.on_object(pos, arg, predicate);
+                policy.on_object(pos, arg, predicate);
             }
             else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
             {
-                changed |= policy.on_parameter(pos, arg, predicate);
+                policy.on_parameter(pos, arg, predicate);
             }
             else
             {
@@ -357,27 +341,24 @@ bool apply_policy(fd::AtomView<T> element, Policy& policy)
             }
         },
         element.get_terms());
-
-    return changed;
 }
 
 template<f::FactKind T, typename Policy>
-bool apply_policy(fd::LiteralView<T> element, Policy& policy)
+void apply_policy(fd::LiteralView<T> element, Policy& policy)
 {
     if (policy.should_skip(element))
-        return false;
+        return;
 
-    return apply_policy(element.get_atom(), policy);
+    apply_policy(element.get_atom(), policy);
 }
 
 template<f::FactKind T, typename Policy>
-bool apply_policy(fd::FunctionTermView<T> element, Policy& policy)
+void apply_policy(fd::FunctionTermView<T> element, Policy& policy)
 {
-    bool changed = false;
     const auto function = element.get_function();
 
     if (policy.should_skip(function))
-        return false;
+        return;
 
     for_each_term_with_position(
         [&](size_t pos, auto&& arg)
@@ -386,11 +367,11 @@ bool apply_policy(fd::FunctionTermView<T> element, Policy& policy)
 
             if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
             {
-                changed |= policy.on_object(pos, arg, function);
+                policy.on_object(pos, arg, function);
             }
             else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
             {
-                changed |= policy.on_parameter(pos, arg, function);
+                policy.on_parameter(pos, arg, function);
             }
             else
             {
@@ -398,26 +379,24 @@ bool apply_policy(fd::FunctionTermView<T> element, Policy& policy)
             }
         },
         element.get_terms());
-
-    return changed;
 }
 
 template<typename Policy>
-bool apply_policy(fd::LiftedArithmeticOperatorView element, Policy& policy)
+void apply_policy(fd::LiftedArithmeticOperatorView element, Policy& policy)
 {
-    return visit([&](auto&& arg) { return apply_policy(arg, policy); }, element.get_variant());
+    visit([&](auto&& arg) { apply_policy(arg, policy); }, element.get_variant());
 }
 
 template<typename Policy>
-bool apply_policy(fd::FunctionExpressionView element, Policy& policy)
+void apply_policy(fd::FunctionExpressionView element, Policy& policy)
 {
-    return visit([&](auto&& arg) { return apply_policy(arg, policy); }, element.get_variant());
+    visit([&](auto&& arg) { apply_policy(arg, policy); }, element.get_variant());
 }
 
 template<typename Policy>
-bool apply_policy(fd::LiftedBooleanOperatorView element, Policy& policy)
+void apply_policy(fd::LiftedBooleanOperatorView element, Policy& policy)
 {
-    return visit([&](auto&& arg) { return apply_policy(arg, policy); }, element.get_variant());
+    visit([&](auto&& arg) { apply_policy(arg, policy); }, element.get_variant());
 }
 
 }  // namespace
@@ -482,31 +461,24 @@ ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
 
     ///--- Step 4: Lift the fluent predicate domains given the variable relationships in the rules.
 
-    bool changed = false;
-
-    do
+    for (const auto rule : program.get_rules())
     {
-        changed = false;
+        auto& parameter_domains = rule_domain_sets[rule.get_index().value];
 
-        for (const auto rule : program.get_rules())
-        {
-            auto& parameter_domains = rule_domain_sets[rule.get_index().value];
+        auto static_lift_policy = LiftPolicy { static_predicate_domain_sets, static_function_domain_sets, parameter_domains };
+        auto fluent_lift_policy = LiftPolicy { fluent_predicate_domain_sets, fluent_function_domain_sets, parameter_domains };
 
-            auto static_lift_policy = LiftPolicy { static_predicate_domain_sets, static_function_domain_sets, parameter_domains };
-            auto fluent_lift_policy = LiftPolicy { fluent_predicate_domain_sets, fluent_function_domain_sets, parameter_domains };
+        for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
+            apply_policy(literal, static_lift_policy);
 
-            for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
-                changed |= apply_policy(literal, static_lift_policy);
+        for (const auto literal : rule.get_body().get_literals<f::FluentTag>())
+            apply_policy(literal, fluent_lift_policy);
 
-            for (const auto literal : rule.get_body().get_literals<f::FluentTag>())
-                changed |= apply_policy(literal, fluent_lift_policy);
+        for (const auto op : rule.get_body().get_numeric_constraints())
+            apply_policy(op, fluent_lift_policy);
 
-            for (const auto op : rule.get_body().get_numeric_constraints())
-                changed |= apply_policy(op, fluent_lift_policy);
-
-            changed |= apply_policy(rule.get_head(), fluent_lift_policy);
-        }
-    } while (changed);
+        apply_policy(rule.get_head(), fluent_lift_policy);
+    }
 
     ///--- Step 5: Convert internal sets to public domain wrapper types.
 
