@@ -410,3 +410,5 @@ SUITE_MINEPDDL_TEST = [
     "Place_Wood:Place_Wood_Easy.pddl",
     "Scaled_Move_to_Location:Scaled_Move_to_Location_49.pddl",
 ]
+
+SUITE_MINEPDDL_NUMERIC_TEST = SUITE_MINEPDDL_TEST

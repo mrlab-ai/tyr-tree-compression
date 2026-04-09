@@ -388,3 +388,6 @@ SUITE_MINEPDDL = [
     "Scaled_Move_to_Location",
 ]
 
+
+SUITE_MINEPDDL_NUMERIC = SUITE_MINEPDDL
+
