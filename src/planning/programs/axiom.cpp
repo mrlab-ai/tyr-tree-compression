@@ -34,9 +34,9 @@ namespace fd = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
-namespace axiom
+namespace
 {
-static void process_axiom_body(fp::ConjunctiveConditionView axiom_body, fp::MergeDatalogContext& context, Data<fd::ConjunctiveCondition>& conj_cond)
+void process_axiom_body(fp::ConjunctiveConditionView axiom_body, fp::MergeDatalogContext& context, Data<fd::ConjunctiveCondition>& conj_cond)
 {
     for (const auto literal : axiom_body.get_literals<f::StaticTag>())
         conj_cond.static_literals.push_back(fp::merge_p2d(literal, context).first.get_index());
@@ -51,7 +51,7 @@ static void process_axiom_body(fp::ConjunctiveConditionView axiom_body, fp::Merg
         conj_cond.numeric_constraints.push_back(fp::merge_p2d(numeric_constraint, context));
 }
 
-static auto create_axiom_rule(fp::AxiomView axiom, fp::MergeDatalogContext& context)
+auto create_axiom_rule(fp::AxiomView axiom, fp::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<fd::Rule>();
     auto& rule = *rule_ptr;
@@ -79,7 +79,7 @@ static auto create_axiom_rule(fp::AxiomView axiom, fp::MergeDatalogContext& cont
     return context.destination.get_or_create(rule);
 }
 
-static auto create_program(fp::TaskView task, AxiomEvaluatorProgram::PredicateToPredicateMapping& predicate_to_predicate, fd::Repository& repository)
+auto create_program(fp::TaskView task, TranslationContext& translation_context, fd::Repository& repository)
 {
     auto builder = fd::Builder();
     auto context = fp::MergeDatalogContext(builder, repository);
@@ -91,25 +91,26 @@ static auto create_program(fp::TaskView task, AxiomEvaluatorProgram::PredicateTo
         program.static_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
 
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d(predicate, context).first;
+        translation_context.d2p.fluent_to_fluent_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.fluent_to_fluent_predicate.emplace(predicate, new_predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
 
     for (const auto predicate : task.get_domain().get_predicates<f::DerivedTag>())
     {
         const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
-
-        [[maybe_unused]] const auto [it, inserted] = predicate_to_predicate.emplace(new_predicate, predicate);
-        assert(inserted);
-
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
 
     for (const auto predicate : task.get_derived_predicates())
     {
         const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
-
-        [[maybe_unused]] const auto [it, inserted] = predicate_to_predicate.emplace(new_predicate, predicate);
-        assert(inserted);
-
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
 
@@ -142,11 +143,11 @@ static auto create_program(fp::TaskView task, AxiomEvaluatorProgram::PredicateTo
     return repository.get_or_create(program).first;
 }
 
-static auto create_program_context(fp::TaskView task, AxiomEvaluatorProgram::PredicateToPredicateMapping& mapping)
+auto create_program_context(fp::TaskView task, TranslationContext& translation_context)
 {
     auto factory = std::make_shared<fd::RepositoryFactory>();
     auto repository = factory->create_shared();
-    auto program = create_program(task, mapping, *repository);
+    auto program = create_program(task, translation_context, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
@@ -156,17 +157,14 @@ static auto create_program_context(fp::TaskView task, AxiomEvaluatorProgram::Pre
 }
 
 AxiomEvaluatorProgram::AxiomEvaluatorProgram(fp::TaskView task) :
-    m_predicate_to_predicate(),
-    m_program_context(axiom::create_program_context(task, m_predicate_to_predicate)),
+    m_translation_context(),
+    m_program_context(create_program_context(task, m_translation_context)),
     m_program_workspace(m_program_context)
 {
     // std::cout << m_program_context.get_program() << std::endl;
 }
 
-const AxiomEvaluatorProgram::PredicateToPredicateMapping& AxiomEvaluatorProgram::get_predicate_to_predicate_mapping() const noexcept
-{
-    return m_predicate_to_predicate;
-}
+const TranslationContext& AxiomEvaluatorProgram::get_translation_context() const noexcept { return m_translation_context; }
 
 datalog::ProgramContext& AxiomEvaluatorProgram::get_program_context() noexcept { return m_program_context; }
 

@@ -33,7 +33,7 @@ namespace fd = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
-namespace ground
+namespace
 {
 /**
  * Assume each pre and eff is a set of literals
@@ -44,7 +44,7 @@ namespace ground
  * e :- App_ci_pre                     forall i=1,...,n forall e in ci_eff
  */
 
-static auto create_applicability_predicate(fp::ActionView action, fp::MergeDatalogContext& context)
+auto create_applicability_predicate(fp::ActionView action, fp::MergeDatalogContext& context)
 {
     auto predicate_ptr = context.builder.get_builder<f::Predicate<f::FluentTag>>();
     auto& predicate = *predicate_ptr;
@@ -57,7 +57,7 @@ static auto create_applicability_predicate(fp::ActionView action, fp::MergeDatal
     return context.destination.get_or_create(predicate);
 }
 
-static auto create_applicability_atom(fp::ActionView action, fp::MergeDatalogContext& context)
+auto create_applicability_atom(fp::ActionView action, fp::MergeDatalogContext& context)
 {
     auto atom_ptr = context.builder.get_builder<fd::Atom<f::FluentTag>>();
     auto& atom = *atom_ptr;
@@ -73,7 +73,7 @@ static auto create_applicability_atom(fp::ActionView action, fp::MergeDatalogCon
     return context.destination.get_or_create(atom);
 }
 
-static auto create_applicability_predicate(fp::AxiomView axiom, fp::MergeDatalogContext& context)
+auto create_applicability_predicate(fp::AxiomView axiom, fp::MergeDatalogContext& context)
 {
     auto predicate_ptr = context.builder.get_builder<f::Predicate<f::FluentTag>>();
     auto& predicate = *predicate_ptr;
@@ -86,7 +86,7 @@ static auto create_applicability_predicate(fp::AxiomView axiom, fp::MergeDatalog
     return context.destination.get_or_create(predicate);
 }
 
-static auto create_applicability_atom(fp::AxiomView axiom, fp::MergeDatalogContext& context)
+auto create_applicability_atom(fp::AxiomView axiom, fp::MergeDatalogContext& context)
 {
     auto atom_ptr = context.builder.get_builder<fd::Atom<f::FluentTag>>();
     auto& atom = *atom_ptr;
@@ -102,7 +102,7 @@ static auto create_applicability_atom(fp::AxiomView axiom, fp::MergeDatalogConte
     return context.destination.get_or_create(atom);
 }
 
-static void append_from_condition(fp::ConjunctiveConditionView cond, fp::MergeDatalogContext& context, Data<fd::ConjunctiveCondition>& conj_cond)
+void append_from_condition(fp::ConjunctiveConditionView cond, fp::MergeDatalogContext& context, Data<fd::ConjunctiveCondition>& conj_cond)
 {
     // Keep negated static atoms because they are monotonic
     for (const auto literal : cond.template get_literals<f::StaticTag>())
@@ -117,7 +117,7 @@ static void append_from_condition(fp::ConjunctiveConditionView cond, fp::MergeDa
             conj_cond.fluent_literals.push_back(merge_p2d<f::DerivedTag, f::FluentTag>(literal, context).first.get_index());
 };
 
-static auto create_applicability_literal(fp::ActionView action, fp::MergeDatalogContext& context)
+auto create_applicability_literal(fp::ActionView action, fp::MergeDatalogContext& context)
 {
     auto literal_ptr = context.builder.get_builder<fd::Literal<f::FluentTag>>();
     auto& literal = *literal_ptr;
@@ -130,7 +130,7 @@ static auto create_applicability_literal(fp::ActionView action, fp::MergeDatalog
     return context.destination.get_or_create(literal);
 }
 
-static auto create_applicability_rule(fp::ActionView action, fp::MergeDatalogContext& context)
+auto create_applicability_rule(fp::ActionView action, fp::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<fd::Rule>();
     auto& rule = *rule_ptr;
@@ -155,7 +155,7 @@ static auto create_applicability_rule(fp::ActionView action, fp::MergeDatalogCon
     return context.destination.get_or_create(rule);
 }
 
-static auto create_applicability_literal(fp::AxiomView axiom, fp::MergeDatalogContext& context)
+auto create_applicability_literal(fp::AxiomView axiom, fp::MergeDatalogContext& context)
 {
     auto literal_ptr = context.builder.get_builder<fd::Literal<f::FluentTag>>();
     auto& literal = *literal_ptr;
@@ -168,7 +168,7 @@ static auto create_applicability_literal(fp::AxiomView axiom, fp::MergeDatalogCo
     return context.destination.get_or_create(literal);
 }
 
-static auto create_applicability_rule(fp::AxiomView axiom, fp::MergeDatalogContext& context)
+auto create_applicability_rule(fp::AxiomView axiom, fp::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<fd::Rule>();
     auto& rule = *rule_ptr;
@@ -193,8 +193,7 @@ static auto create_applicability_rule(fp::AxiomView axiom, fp::MergeDatalogConte
     return context.destination.get_or_create(rule);
 }
 
-static auto
-create_cond_effect_rule(fp::ActionView action, fp::ConditionalEffectView cond_eff, fd::AtomView<f::FluentTag> effect, fp::MergeDatalogContext& context)
+auto create_cond_effect_rule(fp::ActionView action, fp::ConditionalEffectView cond_eff, fd::AtomView<f::FluentTag> effect, fp::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<fd::Rule>();
     auto& rule = *rule_ptr;
@@ -225,7 +224,7 @@ create_cond_effect_rule(fp::ActionView action, fp::ConditionalEffectView cond_ef
     return context.destination.get_or_create(rule);
 }
 
-static auto create_effect_rule(fp::AxiomView axiom, fd::AtomView<f::FluentTag> effect, fp::MergeDatalogContext& context)
+auto create_effect_rule(fp::AxiomView axiom, fd::AtomView<f::FluentTag> effect, fp::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<fd::Rule>();
     auto& rule = *rule_ptr;
@@ -252,10 +251,10 @@ static auto create_effect_rule(fp::AxiomView axiom, fd::AtomView<f::FluentTag> e
     return context.destination.get_or_create(rule);
 }
 
-static void translate_action_to_delete_free_rules(fp::ActionView action,
-                                                  Data<fd::Program>& program,
-                                                  fp::MergeDatalogContext& context,
-                                                  GroundTaskProgram::AppPredicateToActionsMapping& predicate_to_actions)
+void translate_action_to_delete_free_rules(fp::ActionView action,
+                                           Data<fd::Program>& program,
+                                           fp::MergeDatalogContext& context,
+                                           GroundTaskProgram::AppPredicateToActionMapping& predicate_to_actions)
 {
     const auto applicability_predicate = create_applicability_predicate(action, context).first;
 
@@ -280,10 +279,10 @@ static void translate_action_to_delete_free_rules(fp::ActionView action,
     }
 }
 
-static void translate_axiom_to_delete_free_axiom_rules(fp::AxiomView axiom,
-                                                       Data<fd::Program>& program,
-                                                       fp::MergeDatalogContext& context,
-                                                       GroundTaskProgram::AppPredicateToAxiomsMapping& predicate_to_axioms)
+void translate_axiom_to_delete_free_axiom_rules(fp::AxiomView axiom,
+                                                Data<fd::Program>& program,
+                                                fp::MergeDatalogContext& context,
+                                                GroundTaskProgram::AppPredicateToAxiomMapping& predicate_to_axioms)
 {
     const auto applicability_predicate = create_applicability_predicate(axiom, context).first;
 
@@ -299,12 +298,11 @@ static void translate_axiom_to_delete_free_axiom_rules(fp::AxiomView axiom,
     program.rules.push_back(create_effect_rule(axiom, fp::merge_p2d<f::DerivedTag, f::FluentTag>(axiom.get_head(), context).first, context).first.get_index());
 }
 
-static auto create_program(fp::TaskView task,
-                           GroundTaskProgram::PredicateToFluentMapping& predicate_to_fluent,
-                           GroundTaskProgram::PredicateToDerivedMapping& predicate_to_derived,
-                           GroundTaskProgram::AppPredicateToActionsMapping& predicate_to_actions,
-                           GroundTaskProgram::AppPredicateToAxiomsMapping& predicate_to_axioms,
-                           fd::Repository& destination)
+auto create_program(fp::TaskView task,
+                    TranslationContext& translation_context,
+                    GroundTaskProgram::AppPredicateToActionMapping& predicate_to_actions,
+                    GroundTaskProgram::AppPredicateToAxiomMapping& predicate_to_axioms,
+                    fd::Repository& destination)
 {
     auto builder = fd::Builder();
     auto context = fp::MergeDatalogContext(builder, destination);
@@ -317,19 +315,22 @@ static auto create_program(fp::TaskView task,
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
     {
         const auto new_predicate = fp::merge_p2d(predicate, context).first;
-        predicate_to_fluent.emplace(new_predicate, predicate);
+        translation_context.d2p.fluent_to_fluent_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.fluent_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
     for (const auto predicate : task.get_domain().get_predicates<f::DerivedTag>())
     {
         const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
-        predicate_to_derived.emplace(new_predicate, predicate);
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
     for (const auto predicate : task.get_derived_predicates())
     {
         const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
-        predicate_to_derived.emplace(new_predicate, predicate);
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
 
@@ -367,14 +368,13 @@ static auto create_program(fp::TaskView task,
 }
 
 static auto create_program_context(fp::TaskView task,
-                                   GroundTaskProgram::PredicateToFluentMapping& predicate_to_fluent,
-                                   GroundTaskProgram::PredicateToDerivedMapping& predicate_to_derived,
-                                   GroundTaskProgram::AppPredicateToActionsMapping& predicate_to_actions,
-                                   GroundTaskProgram::AppPredicateToAxiomsMapping& predicate_to_axioms)
+                                   TranslationContext& translation_context,
+                                   GroundTaskProgram::AppPredicateToActionMapping& predicate_to_actions,
+                                   GroundTaskProgram::AppPredicateToAxiomMapping& predicate_to_axioms)
 {
     auto factory = std::make_shared<fd::RepositoryFactory>();
     auto repository = factory->create_shared();
-    auto program = create_program(task, predicate_to_fluent, predicate_to_derived, predicate_to_actions, predicate_to_axioms, *repository);
+    auto program = create_program(task, translation_context, predicate_to_actions, predicate_to_axioms, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
@@ -385,21 +385,20 @@ static auto create_program_context(fp::TaskView task,
 }
 
 GroundTaskProgram::GroundTaskProgram(fp::TaskView task) :
+    m_translation_context(),
     m_predicate_to_actions(),
     m_predicate_to_axioms(),
-    m_program_context(ground::create_program_context(task, m_predicate_to_fluent, m_predicate_to_derived, m_predicate_to_actions, m_predicate_to_axioms)),
+    m_program_context(create_program_context(task, m_translation_context, m_predicate_to_actions, m_predicate_to_axioms)),
     m_program_workspace(m_program_context)
 {
     // std::cout << m_program_context.get_program() << std::endl;
 }
 
-const GroundTaskProgram::PredicateToFluentMapping& GroundTaskProgram::get_predicate_to_fluent_mapping() const noexcept { return m_predicate_to_fluent; }
+const TranslationContext& GroundTaskProgram::get_translation_context() const noexcept { return m_translation_context; }
 
-const GroundTaskProgram::PredicateToDerivedMapping& GroundTaskProgram::get_predicate_to_derived_mapping() const noexcept { return m_predicate_to_derived; }
+const GroundTaskProgram::AppPredicateToActionMapping& GroundTaskProgram::get_predicate_to_action_mapping() const noexcept { return m_predicate_to_actions; }
 
-const GroundTaskProgram::AppPredicateToActionsMapping& GroundTaskProgram::get_predicate_to_actions_mapping() const noexcept { return m_predicate_to_actions; }
-
-const GroundTaskProgram::AppPredicateToAxiomsMapping& GroundTaskProgram::get_predicate_to_axioms_mapping() const noexcept { return m_predicate_to_axioms; }
+const GroundTaskProgram::AppPredicateToAxiomMapping& GroundTaskProgram::get_predicate_to_axiom_mapping() const noexcept { return m_predicate_to_axioms; }
 
 datalog::ProgramContext& GroundTaskProgram::get_program_context() noexcept { return m_program_context; }
 

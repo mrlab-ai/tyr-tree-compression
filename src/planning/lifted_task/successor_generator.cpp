@@ -107,7 +107,7 @@ void SuccessorGenerator<LiftedTag>::get_labeled_successor_nodes(const Node<Lifte
     {
         for (const auto& binding : set.get_bindings())
         {
-            const auto& mapping = m_task->get_action_program().get_predicate_to_actions_mapping();
+            const auto& mapping = m_task->get_action_program().get_predicate_to_action_mapping();
 
             if (const auto it = mapping.find(binding.get_relation()); it != mapping.end())
             {

@@ -57,7 +57,7 @@ void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram& axiom_
     {
         for (const auto& binding : set.get_bindings())
         {
-            if (axiom_program.get_predicate_to_predicate_mapping().contains(binding.get_relation()))
+            if (axiom_program.get_translation_context().d2p.fluent_to_derived_predicate.contains(binding.get_relation()))
             {
                 const auto ground_atom = fp::merge_atom_d2p<f::FluentTag, f::DerivedTag>(binding, merge_context).first.get_index();
 

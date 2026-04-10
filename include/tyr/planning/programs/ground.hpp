@@ -18,6 +18,7 @@
 #ifndef TYR_PLANNING_PROGRAMS_GROUND_TASK_HPP_
 #define TYR_PLANNING_PROGRAMS_GROUND_TASK_HPP_
 
+#include "tyr/common/declarations.hpp"
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
 #include "tyr/datalog/program_context.hpp"
@@ -27,6 +28,7 @@
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/programs/translation_context.hpp"
 
 namespace tyr::planning
 {
@@ -34,30 +36,22 @@ namespace tyr::planning
 class GroundTaskProgram
 {
 public:
-    using PredicateToFluentMapping =
-        UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::PredicateView<formalism::FluentTag>>;
-    using PredicateToDerivedMapping =
-        UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::PredicateView<formalism::DerivedTag>>;
-
-    using AppPredicateToActionsMapping = UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::ActionView>;
-
-    using AppPredicateToAxiomsMapping = UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::AxiomView>;
+    using AppPredicateToActionMapping = UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::ActionView>;
+    using AppPredicateToAxiomMapping = UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::AxiomView>;
 
     explicit GroundTaskProgram(formalism::planning::TaskView task);
 
-    const PredicateToFluentMapping& get_predicate_to_fluent_mapping() const noexcept;
-    const PredicateToDerivedMapping& get_predicate_to_derived_mapping() const noexcept;
-    const AppPredicateToActionsMapping& get_predicate_to_actions_mapping() const noexcept;
-    const AppPredicateToAxiomsMapping& get_predicate_to_axioms_mapping() const noexcept;
+    const TranslationContext& get_translation_context() const noexcept;
+    const AppPredicateToActionMapping& get_predicate_to_action_mapping() const noexcept;
+    const AppPredicateToAxiomMapping& get_predicate_to_axiom_mapping() const noexcept;
     datalog::ProgramContext& get_program_context() noexcept;
     const datalog::ProgramContext& get_program_context() const noexcept;
     const datalog::ConstProgramWorkspace& get_const_program_workspace() const noexcept;
 
 private:
-    PredicateToFluentMapping m_predicate_to_fluent;
-    PredicateToDerivedMapping m_predicate_to_derived;
-    AppPredicateToActionsMapping m_predicate_to_actions;
-    AppPredicateToAxiomsMapping m_predicate_to_axioms;
+    TranslationContext m_translation_context;
+    AppPredicateToActionMapping m_predicate_to_actions;
+    AppPredicateToAxiomMapping m_predicate_to_axioms;
 
     datalog::ProgramContext m_program_context;
 

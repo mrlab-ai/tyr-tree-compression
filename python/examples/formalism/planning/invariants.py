@@ -33,16 +33,15 @@ from pytyr.formalism.planning import (
 def rigid_parameter_domains_from_task_variable_domains(
     inv: Invariant,
     task_variable_domains: TaskVariableDomains,
-    all_object_indices: set[ObjectIndex],
+    all_object_indices: set[ObjectIndex]
 ) -> list[list[ObjectIndex]]:
+    
     domains = [set(all_object_indices) for _ in range(inv.num_rigid_variables)]
 
     fluent_predicate_domains = task_variable_domains.fluent_predicate_domains
 
     for atom in inv.atoms:
         predicate_domains = fluent_predicate_domains.get(atom.predicate)
-        if predicate_domains is None:
-            continue
 
         for position, term in enumerate(atom.terms):
             value = term.value
@@ -177,7 +176,7 @@ def main():
     for i, data in enumerate(invariant_match_data):
         print(
             f"[{i}] invariant={data.invariant}, "
-            f"num_rigid_bindings={len(data.rigid_variable_bindings)}"
+            f"rigid variable substitutions={data.rigid_variable_bindings}"
         )
 
     # 4. Create an InvariantMatcher.

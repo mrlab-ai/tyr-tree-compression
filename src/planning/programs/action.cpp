@@ -34,10 +34,10 @@ namespace fd = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
-namespace action
+namespace
 {
 
-static auto create_applicability_predicate(fp::ActionView action, fp::MergeDatalogContext& context)
+auto create_applicability_predicate(fp::ActionView action, fp::MergeDatalogContext& context)
 {
     auto predicate_ptr = context.builder.get_builder<f::Predicate<f::FluentTag>>();
     auto& predicate = *predicate_ptr;
@@ -50,7 +50,7 @@ static auto create_applicability_predicate(fp::ActionView action, fp::MergeDatal
     return context.destination.get_or_create(predicate);
 }
 
-static auto create_applicability_atom(fp::ActionView action, fp::MergeDatalogContext& context)
+auto create_applicability_atom(fp::ActionView action, fp::MergeDatalogContext& context)
 {
     auto atom_ptr = context.builder.get_builder<f::datalog::Atom<f::FluentTag>>();
     auto& atom = *atom_ptr;
@@ -66,7 +66,10 @@ static auto create_applicability_atom(fp::ActionView action, fp::MergeDatalogCon
     return context.destination.get_or_create(atom);
 }
 
-static auto create_program(fp::TaskView task, ApplicableActionProgram::AppPredicateToActionsMapping& predicate_to_actions, fd::Repository& repository)
+auto create_program(fp::TaskView task,
+                    TranslationContext& translation_context,
+                    ApplicableActionProgram::AppPredicateToActionMapping& predicate_to_actions,
+                    fd::Repository& repository)
 {
     auto builder = fd::Builder();
     auto context = fp::MergeDatalogContext(builder, repository);
@@ -77,11 +80,26 @@ static auto create_program(fp::TaskView task, ApplicableActionProgram::AppPredic
     for (const auto predicate : task.get_domain().get_predicates<f::StaticTag>())
         program.static_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d(predicate, context).first;
+        translation_context.d2p.fluent_to_fluent_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.fluent_to_fluent_predicate.emplace(predicate, new_predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
     for (const auto predicate : task.get_domain().get_predicates<f::DerivedTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
     for (const auto predicate : task.get_derived_predicates())
-        program.fluent_predicates.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
 
     for (const auto function : task.get_domain().get_functions<f::StaticTag>())
         program.static_functions.push_back(fp::merge_p2d(function, context).first.get_index());
@@ -157,11 +175,11 @@ static auto create_program(fp::TaskView task, ApplicableActionProgram::AppPredic
     return repository.get_or_create(program).first;
 }
 
-static auto create_program_context(fp::TaskView task, ApplicableActionProgram::AppPredicateToActionsMapping& mapping)
+auto create_program_context(fp::TaskView task, TranslationContext& translation_context, ApplicableActionProgram::AppPredicateToActionMapping& mapping)
 {
     auto factory = std::make_shared<fd::RepositoryFactory>();
     auto repository = factory->create_shared();
-    auto program = create_program(task, mapping, *repository);
+    auto program = create_program(task, translation_context, mapping, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
@@ -171,14 +189,17 @@ static auto create_program_context(fp::TaskView task, ApplicableActionProgram::A
 }
 
 ApplicableActionProgram::ApplicableActionProgram(fp::TaskView task) :
+    m_translation_context(),
     m_predicate_to_actions(),
-    m_program_context(action::create_program_context(task, m_predicate_to_actions)),
+    m_program_context(create_program_context(task, m_translation_context, m_predicate_to_actions)),
     m_program_workspace(m_program_context)
 {
     // std::cout << m_program_context.get_program() << std::endl;
 }
 
-const ApplicableActionProgram::AppPredicateToActionsMapping& ApplicableActionProgram::get_predicate_to_actions_mapping() const noexcept
+const TranslationContext& ApplicableActionProgram::get_translation_context() const noexcept { return m_translation_context; }
+
+const ApplicableActionProgram::AppPredicateToActionMapping& ApplicableActionProgram::get_predicate_to_action_mapping() const noexcept
 {
     return m_predicate_to_actions;
 }

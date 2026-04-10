@@ -35,13 +35,13 @@ namespace fd = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
-namespace rpg
+namespace
 {
 
-static auto create_cond_effect_rule(fp::ActionView action,
-                                    fp::ConditionalEffectView cond_eff,
-                                    fp::AtomView<formalism::FluentTag> effect,
-                                    formalism::planning::MergeDatalogContext& context)
+auto create_cond_effect_rule(fp::ActionView action,
+                             fp::ConditionalEffectView cond_eff,
+                             fp::AtomView<formalism::FluentTag> effect,
+                             formalism::planning::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<formalism::datalog::Rule>();
     auto& rule = *rule_ptr;
@@ -80,10 +80,10 @@ static auto create_cond_effect_rule(fp::ActionView action,
     return context.destination.get_or_create(rule);
 }
 
-static void translate_action_to_delete_free_rules(fp::ActionView action,
-                                                  Data<fd::Program>& program,
-                                                  fp::MergeDatalogContext& context,
-                                                  RPGProgram::RuleToActionMapping& rule_to_action)
+void translate_action_to_delete_free_rules(fp::ActionView action,
+                                           Data<fd::Program>& program,
+                                           fp::MergeDatalogContext& context,
+                                           RPGProgram::RuleToActionMapping& rule_to_action)
 {
     for (const auto cond_eff : action.get_effects())
     {
@@ -100,7 +100,7 @@ static void translate_action_to_delete_free_rules(fp::ActionView action,
     }
 }
 
-static auto create_program(fp::TaskView task, fd::Repository& destination, RPGProgram::RuleToActionMapping& rule_to_action)
+auto create_program(fp::TaskView task, TranslationContext& translation_context, RPGProgram::RuleToActionMapping& rule_to_action, fd::Repository& destination)
 {
     auto builder = fd::Builder();
     auto context = fp::MergeDatalogContext(builder, destination);
@@ -111,7 +111,12 @@ static auto create_program(fp::TaskView task, fd::Repository& destination, RPGPr
     for (const auto predicate : task.get_domain().get_predicates<f::StaticTag>())
         program.static_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
+    {
+        const auto new_predicate = fp::merge_p2d(predicate, context).first;
+        translation_context.d2p.fluent_to_fluent_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.fluent_to_fluent_predicate.emplace(predicate, new_predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
 
     for (const auto function : task.get_domain().get_functions<f::StaticTag>())
         program.static_functions.push_back(fp::merge_p2d(function, context).first.get_index());
@@ -140,11 +145,11 @@ static auto create_program(fp::TaskView task, fd::Repository& destination, RPGPr
     return destination.get_or_create(program).first;
 }
 
-static auto create_program_context(fp::TaskView task, RPGProgram::RuleToActionMapping& rule_to_action)
+auto create_program_context(fp::TaskView task, TranslationContext& translation_context, RPGProgram::RuleToActionMapping& rule_to_action)
 {
     auto factory = std::make_shared<fd::RepositoryFactory>();
     auto repository = factory->create_shared();
-    auto program = create_program(task, *repository, rule_to_action);
+    auto program = create_program(task, translation_context, rule_to_action, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
@@ -155,12 +160,15 @@ static auto create_program_context(fp::TaskView task, RPGProgram::RuleToActionMa
 }
 
 RPGProgram::RPGProgram(fp::TaskView task) :
+    m_translation_context(),
     m_rule_to_action(),
-    m_program_context(rpg::create_program_context(task, m_rule_to_action)),
+    m_program_context(create_program_context(task, m_translation_context, m_rule_to_action)),
     m_program_workspace(m_program_context)
 {
     // std::cout << m_program_context.get_program() << std::endl;
 }
+
+const TranslationContext& RPGProgram::get_translation_context() const noexcept { return m_translation_context; }
 
 const RPGProgram::RuleToActionMapping& RPGProgram::get_rule_to_action_mapping() const noexcept { return m_rule_to_action; }
 

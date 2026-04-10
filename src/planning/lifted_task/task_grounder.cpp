@@ -459,7 +459,7 @@ GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,  
         auto& derived_atom = *derived_atom_ptr;
         for (const auto& set : workspace.facts.fact_sets.predicate.get_sets())
         {
-            if (ground_program.get_predicate_to_fluent_mapping().contains(set.get_predicate()))
+            if (ground_program.get_translation_context().d2p.fluent_to_fluent_predicate.contains(set.get_predicate()))
             {
                 for (const auto& binding : set.get_bindings())
                 {
@@ -469,7 +469,7 @@ GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,  
                     fluent_atoms.push_back(repository->get_or_create(fluent_atom).first);
                 }
             }
-            else if (ground_program.get_predicate_to_derived_mapping().contains(set.get_predicate()))
+            else if (ground_program.get_translation_context().d2p.fluent_to_derived_predicate.contains(set.get_predicate()))
             {
                 for (const auto& binding : set.get_bindings())
                 {
@@ -560,7 +560,7 @@ GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,  
     {
         for (const auto& binding : set.get_bindings())
         {
-            const auto& mapping = ground_program.get_predicate_to_actions_mapping();
+            const auto& mapping = ground_program.get_predicate_to_action_mapping();
 
             if (const auto it = mapping.find(binding.get_relation()); it != mapping.end())
             {
@@ -604,7 +604,7 @@ GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,  
     {
         for (const auto& binding : set.get_bindings())
         {
-            const auto& mapping = ground_program.get_predicate_to_axioms_mapping();
+            const auto& mapping = ground_program.get_predicate_to_axiom_mapping();
 
             if (const auto it = mapping.find(binding.get_relation()); it != mapping.end())
             {
