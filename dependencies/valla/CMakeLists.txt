@@ -9,8 +9,6 @@ message(STATUS "Dependency \"valla\"...")
 find_package(valla QUIET PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH)
 
 if (NOT valla_FOUND)
-
-
     list(APPEND CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
@@ -26,9 +24,9 @@ if (NOT valla_FOUND)
     ExternalProject_Add(
         valla
         GIT_REPOSITORY https://github.com/drexlerd/tree-compression.git
-        GIT_TAG f487d3fcba00b88bba1e88d9e111747f53679da1
+        GIT_TAG 6a5ae8e2ce59edf9ce1fe015099e3cb24f249bdd
         PREFIX ${CMAKE_BINARY_DIR}/valla
-        DEPENDS abseil fmt oneTBB
+        DEPENDS fmt
         CMAKE_ARGS ${CMAKE_ARGS}
     )
 else()

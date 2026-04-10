@@ -43,8 +43,8 @@ struct StateStorageContext<LiftedTag, TreeCompression>
     size_t memory_usage() const noexcept
     {
         size_t bytes = 0;
-        bytes += uint_nodes.mem_usage();
-        bytes += float_nodes.mem_usage();
+        bytes += uint_nodes.memory_usage();
+        bytes += float_nodes.memory_usage();
         return bytes;
     }
 };

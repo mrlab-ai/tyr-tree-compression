@@ -45,6 +45,7 @@
 #include "tyr/planning/state_index.hpp"
 
 #include <algorithm>
+#include <random>
 
 namespace tyr::planning::astar_eager
 {

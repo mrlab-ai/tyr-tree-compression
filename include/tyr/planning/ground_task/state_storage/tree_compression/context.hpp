@@ -69,8 +69,8 @@ struct StateStorageContext<GroundTag, TreeCompression>
         size_t bytes = 0;
         bytes += fluent_array_set.memory_usage();
         bytes += derived_array_set.memory_usage();
-        bytes += uint_nodes.mem_usage();
-        bytes += float_nodes.mem_usage();
+        bytes += uint_nodes.memory_usage();
+        bytes += float_nodes.memory_usage();
         return bytes;
     }
 
