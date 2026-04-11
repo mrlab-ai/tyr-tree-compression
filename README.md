@@ -12,7 +12,7 @@ Tyr is designed to address several challenges in modern planning systems:
   
 # Getting Started
 
-The library consists of a **formalism** and a **planning** component. The formalism component is responsible for representing PDDL entities. The planning component provides functionality for implementing search algorithms, as well as off-the-shelf implementations of eager A*, lazy GBFS, and heuristics such as blind, max, add, and FF. Below is a basic overview of the Python and C++ APIs for implementing custom search algorithms.
+The library consists of a **formalism** and a **planning** component. The formalism component is responsible for representing PDDL entities. The planning component provides functionality for implementing search algorithms, as well as off-the-shelf implementations of eager A*, lazy GBFS, and heuristics such as blind, max, add, and FF. Below is a minimal overview of the Python and C++ APIs for implementing custom search algorithms.
 
 ## Python Interface
 
@@ -22,48 +22,27 @@ Detailed examples are available in the `python/examples` directory:
 
 - [`structures.py`](python/examples/formalism/planning/structures.py) – Parse and traverse all planning formalism structures.
 - [`builder.py`](python/examples/formalism/planning/builder.py) – Create new planning formalism structures.
+- [`invariants.py](python/examples/formalism/planning/invariants.py) – Synthesize invariants, access candidate variables bindings, and match atoms through unification.
 - [`astar_eager.py`](python/examples/planning/astar_eager.py) – Use and customize off-the-shelf search algorithms.
 - [`gbfs_lazy.py`](python/examples/planning/gbfs_lazy.py) – Implement a custom search algorithm from scratch.
 
 The Python interface for implementing search algorithms is:
 
-### Lifted Planning
-
 ```py
 # Recommended namespace aliases
 import pytyr.formalism.planning as tfp
-import pytyr.planning.lifted as tpl
+import pytyr.planning.lifted as tpl  # pytyr.planning.ground also exists
 
 # Parse and translate a task over a domain.
 parser = tfp.Parser("domain.pddl")
 # Instantiate a lifted task.
 task = tpl.Task(parser.parse_task("problem.pddl"))
 
+# Instantiate an single-threaded execution environment.
+execution_context = tpl.ExecutionContext(1)
+
 # Instantiate a lifted successor generator.
-successor_generator = tpl.SuccessorGenerator(task)
-
-# Get the initial node (state + metric value)
-initial_node = successor_generator.get_initial_node()
-
-# Get the labeled successor nodes (sequence of ground action + node)
-labeled_successor_nodes = successor_generator.get_labeled_successor_nodes(initial_node)
-```
-
-### Grounded Planning
-
-```py
-# Recommended namespace aliases
-import pytyr.formalism.planning as tfp
-import pytyr.planning.lifted as tpl
-import pytyr.planning.ground as tpg
-
-# Parse and translate a task over a domain.
-parser = tfp.Parser("domain.pddl")
-# Instantiate a ground task.
-task = tpl.Task(parser.parse_task("problem.pddl")).instantiate_ground_task()
-
-# Instantiate a ground successor generator.
-successor_generator = tpg.SuccessorGenerator(ground_task)
+successor_generator = tpl.SuccessorGenerator(task, execution_context)
 
 # Get the initial node (state + metric value)
 initial_node = successor_generator.get_initial_node()
@@ -78,8 +57,6 @@ Instructions on how to build the library and executables are available [here](do
 
 The C++ interface for implementing search algorithms is:
 
-### Lifted Planning
-
 ```cpp
 #include <tyr/tyr.hpp>
 
@@ -92,8 +69,11 @@ auto parser = tfp::Parser("domain.pddl");
 // Instantiate a lifted task.
 auto task = tp::LiftedTask::create(parser.parse_task("problem.pddl"));
 
+// Instantiate an single-threaded execution environment
+auto execution_context = tp::ExecutionContext::create(1);
+
 // Instantiate a lifted successor generator.
-auto successor_generator = tp::SuccessorGenerator<tp::LiftedTask>(task);
+auto successor_generator = tp::SuccessorGenerator<tp::LiftedTask>(task, execution_context);
 
 // Get the initial node (state + metric value).
 auto initial_node = successor_generator.get_initial_node();
@@ -103,27 +83,3 @@ auto labeled_successor_nodes = successor_generator.get_labeled_successor_nodes(i
 
 ```
 
-### Grounded Planning
-
-```cpp
-#include <tyr/tyr.hpp>
-
-// Recommended namespace aliases.
-namespace tfp = tyr::formalism;
-namespace tp = tyr::planning;
-
-// Parse and translate a task over a domain.
-auto parser = tfp::Parser("domain.pddl");
-// Instantiate a ground task.
-auto task = tp::LiftedTask::create(parser.parse_task("problem.pddl")).instantiate_ground_task();
-
-// Instantiate a ground successor generator.
-auto successor_generator = tp::SuccessorGenerator<tp::GroundTask>(ground_task);
-
-// Get the initial node (state + metric value).
-auto initial_node = successor_generator.get_initial_node();
-
-// Get the labeled successor nodes (sequence of ground action + node).
-auto labeled_successor_nodes = successor_generator.get_labeled_successor_nodes(initial_node);
-
-```
