@@ -83,3 +83,14 @@ auto labeled_successor_nodes = successor_generator.get_labeled_successor_nodes(i
 
 ```
 
+## Technical Overview
+
+- **PDDL frontend**: Tyr uses [Loki](https://github.com/drexlerd/Loki) to parse, normalize, and translate PDDL input. The parser is implemented with [Boost](https://www.boost.org/) and provides informative error messages for syntactically invalid input. The normalization pipeline largely follows the approach described in Section 4 of [*Concise finite-domain representations for PDDL planning tasks*](https://ai.dmi.unibas.ch/papers/helmert-aij2009.pdf).
+
+- **Datalog engine**: Tyr implements a parallel semi-naive Datalog engine for lifted successor generation, axiom evaluation, relaxed planning graph heuristics, and task grounding. Its execution model is synchronous and supports both rule-level and grounding-level parallelism.
+
+- **Ground planning**: For grounded tasks, Tyr uses data structures inspired by [*The Fast Downward Planning System*](https://jair.org/index.php/jair/article/view/10457) to efficiently identify applicable actions in a given state. Grounding often yields substantial performance improvements, although it is not always feasible for large tasks.
+
+- **State representation**: Tyr statically analyzes domain and problem files and partitions predicates, functions, and related structures into strongly typed categories such as static, fluent, and derived atoms. This design prevents accidental mixing of conceptually different entities. To represent sequences compactly, Tyr uses tree databases of perfectly balanced binary trees, allowing common subsequences to be shared through shared subtrees. As a special case, Tyr synthesizes finite-domain variables for fluent atoms in grounded planning, largely following the method described in Section 5 of [*Concise finite-domain representations for PDDL planning tasks*](https://ai.dmi.unibas.ch/papers/helmert-aij2009.pdf), enabling more compact storage when grounding is feasible.
+
+- **Memory model**: Tyr stores generated data in hierarchically structured, geometrically growing buffers. For variable-sized objects, it uses [Cista](https://github.com/felixguendling/cista) for serialization and zero-copy deserialization. This design allows derived buffers to inherit data from parent buffers without duplication. For example, multiple tasks can share a domain, and multiple workers can share task data.
