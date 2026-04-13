@@ -355,7 +355,8 @@ SUITE_IPC2023_NUMERIC = [
     "sailing",
     "settlersnumeric",
     "sugar",
-    "tpp"
+    "tpp",
+    "zenotravel"
 ]
 
 SUITE_PUSHWORLD = [
@@ -369,7 +370,7 @@ SUITE_BELUGA2025_SCALABILITY_DETERMINISTIC = [
     "scalability-deterministic"
 ]
 
-SUITE_MINEPDDL = [
+SUITE_MINEPDDL_NUMERIC = [
     "Bridge",
     "Build_Cabin",
     "Build_Cross",
@@ -382,12 +383,15 @@ SUITE_MINEPDDL = [
     "Gather_Multiple_Wood",
     "Gather_Wood",
     "Move_to_Location",
-    "Pickup_and_Place",
     "Pickup_Diamond",
+    "Pickup_and_Place",
     "Place_Wood",
     "Scaled_Move_to_Location",
 ]
 
 
-SUITE_MINEPDDL_NUMERIC = SUITE_MINEPDDL
+SUITE_MINEPDDL =  [
+    *SUITE_MINEPDDL_NUMERIC,
+    "Scaled_Move_to_Location_extended",
+]
 
