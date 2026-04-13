@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,42 +41,6 @@ namespace df = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
-namespace
-{
-void insert_derived_atoms_to_fact_set(const UnpackedState<LiftedTag>& state,
-                                      const formalism::planning::Repository& repository,
-                                      fp::MergeDatalogContext& merge_context,
-                                      datalog::TaggedFactSets<f::FluentTag>& fact_sets)
-{
-    for (const auto atom : state.get_derived_atoms_view(repository))
-        fact_sets.predicate.insert(fp::merge_p2d<f::DerivedTag, f::FluentTag>(atom, merge_context).first);
-}
-
-void insert_numeric_variables_to_fact_set(const UnpackedState<LiftedTag>& state,
-                                          const formalism::planning::Repository& repository,
-                                          fp::MergeDatalogContext& merge_context,
-                                          datalog::TaggedFactSets<f::FluentTag>& fact_sets)
-{
-    for (const auto& [fterm, value] : state.get_fluent_fterm_values_view(repository))
-        fact_sets.function.insert(fp::merge_p2d(fterm, merge_context).first, value);
-}
-
-void insert_extended_state(const UnpackedState<LiftedTag>& unpacked_state,
-                           const fp::Repository& atoms_context,
-                           fp::MergeDatalogContext& merge_context,
-                           datalog::TaggedFactSets<f::FluentTag>& fact_sets,
-                           datalog::TaggedAssignmentSets<f::FluentTag>& assignment_sets)
-{
-    fact_sets.reset();
-    assignment_sets.reset();
-
-    insert_fluent_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
-    insert_derived_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
-    insert_numeric_variables_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
-
-    assignment_sets.insert(fact_sets);
-}
-}
 
 SuccessorGenerator<LiftedTag>::SuccessorGenerator(std::shared_ptr<Task<LiftedTag>> task, ExecutionContextPtr execution_context) :
     m_task(std::move(task)),
@@ -124,10 +88,16 @@ void SuccessorGenerator<LiftedTag>::get_labeled_successor_nodes(const Node<Lifte
     const auto state = node.get_state();
 
     auto merge_context = fp::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
+    const auto& program = m_task->get_action_program();
 
-    insert_extended_state(state.get_unpacked_state(), *m_task->get_repository(), merge_context, m_workspace.facts.fact_sets, m_workspace.facts.assignment_sets);
+    insert_extended_state(state.get_unpacked_state(),
+                          *m_task->get_repository(),
+                          program.get_translation_context().p2d,
+                          merge_context,
+                          m_workspace.facts.fact_sets,
+                          m_workspace.facts.assignment_sets);
 
-    auto ctx = d::ProgramExecutionContext(m_workspace, m_task->get_action_program().get_const_program_workspace());
+    auto ctx = d::ProgramExecutionContext(m_workspace, program.get_const_program_workspace());
     ctx.clear();
 
     m_execution_context->arena().execute([&] { d::solve_bottom_up(ctx); });
@@ -143,7 +113,7 @@ void SuccessorGenerator<LiftedTag>::get_labeled_successor_nodes(const Node<Lifte
     {
         for (const auto& binding : set.get_bindings())
         {
-            const auto& mapping = m_task->get_action_program().get_predicate_to_actions_mapping();
+            const auto& mapping = program.get_predicate_to_action_mapping();
 
             if (const auto it = mapping.find(binding.get_relation()); it != mapping.end())
             {
@@ -157,8 +127,8 @@ void SuccessorGenerator<LiftedTag>::get_labeled_successor_nodes(const Node<Lifte
 
                 const auto ground_action = fp::ground(action,
                                                       grounder_context,
-                                                      m_task->get_parameter_domains_per_cond_effect_per_action()[uint_t(action.get_index())],
-                                                      fluent_assign,
+                                                      m_task->get_grounder_cache(),
+                                                      m_task->get_formalism_task().get_variable_domains().action_domains.at(action.get_index()),
                                                       iter_workspace,
                                                       *m_task->get_fdr_context())
                                                .first;
@@ -185,6 +155,24 @@ Node<LiftedTag> SuccessorGenerator<LiftedTag>::get_node(Index<State<LiftedTag>> 
     const auto state_metric = evaluate_metric(m_task->get_task().get_metric(), m_task->get_task().get_auxiliary_fterm_value(), state_context);
 
     return Node<LiftedTag>(std::move(state), state_metric);
+}
+
+void SuccessorGenerator<LiftedTag>::print_summary(size_t verbosity) const
+{
+    if (verbosity < 1)
+        return;
+
+    std::cout << "[Successor generator] Summary" << std::endl;
+    std::cout << m_workspace.statistics << std::endl;
+    auto successor_generator_rule_statistics = std::vector<datalog::RuleStatistics> {};
+    for (const auto& ws_rule : m_workspace.rules)
+        successor_generator_rule_statistics.push_back(ws_rule->common.statistics);
+    std::cout << datalog::compute_aggregated_rule_statistics(successor_generator_rule_statistics) << std::endl;
+    auto successor_generator_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+    for (const auto& ws_rule : m_workspace.rules)
+        for (const auto& worker : ws_rule->worker)
+            successor_generator_rule_worker_statistics.push_back(worker.solve.statistics);
+    std::cout << datalog::compute_aggregated_rule_worker_statistics(successor_generator_rule_worker_statistics) << std::endl;
 }
 
 static_assert(SuccessorGeneratorConcept<SuccessorGenerator<LiftedTag>, LiftedTag>);

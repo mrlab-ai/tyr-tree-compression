@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,19 +25,21 @@ namespace fp = tyr::formalism::planning;
 
 namespace tyr::tests
 {
-
-static p::GroundTaskPtr compute_ground_task(const fs::path& domain_filepath, const fs::path& problem_filepath)
+namespace
+{
+p::GroundTaskPtr compute_ground_task(const fs::path& domain_filepath, const fs::path& problem_filepath)
 {
     auto execution_context = ExecutionContext(1);
-    return p::LiftedTask(fp::Parser(domain_filepath).parse_task(problem_filepath)).instantiate_ground_task(execution_context);
+    return p::LiftedTask(fp::Parser(domain_filepath).parse_task(problem_filepath)).instantiate_ground_task(execution_context).task;
 }
 
-static p::SuccessorGenerator<p::GroundTag> create_successor_generator(std::shared_ptr<p::Task<p::GroundTag>> task)
+p::SuccessorGenerator<p::GroundTag> create_successor_generator(std::shared_ptr<p::Task<p::GroundTag>> task)
 {
     return p::SuccessorGenerator<p::GroundTag>(task, ExecutionContext::create(1));
 }
 
-static fs::path absolute(const std::string& subdir) { return fs::path(std::string(DATA_DIR)) / subdir; }
+fs::path absolute(const std::string& subdir) { return fs::path(std::string(DATA_DIR)) / subdir; }
+}
 
 TEST(TyrTests, TyrPlanningGroundTaskAgricola)
 {
@@ -57,8 +59,8 @@ TEST(TyrTests, TyrPlanningGroundTaskAirport)
 {
     auto ground_task = compute_ground_task(absolute("airport/domain.pddl"), absolute("airport/test_problem.pddl"));
 
-    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 59);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 379);
+    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 58);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 355);
     EXPECT_EQ(ground_task->get_num_actions(), 43);
     EXPECT_EQ(ground_task->get_num_axioms(), 420);
 
@@ -72,7 +74,7 @@ TEST(TyrTests, TyrPlanningGroundTaskAssembly)
     auto ground_task = compute_ground_task(absolute("assembly/domain.pddl"), absolute("assembly/test_problem.pddl"));
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 7);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 8);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 2);
     EXPECT_EQ(ground_task->get_num_actions(), 6);
     EXPECT_EQ(ground_task->get_num_axioms(), 2);
 
@@ -87,7 +89,7 @@ TEST(TyrTests, TyrPlanningGroundTaskBarman)
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 26);
     EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 0);
-    EXPECT_EQ(ground_task->get_num_actions(), 84);
+    EXPECT_EQ(ground_task->get_num_actions(), 66);
     EXPECT_EQ(ground_task->get_num_axioms(), 0);
 
     auto successor_generator = create_successor_generator(ground_task);
@@ -199,7 +201,7 @@ TEST(TyrTests, TyrPlanningGroundTaskGrid)
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 21);
     EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 0);
-    EXPECT_EQ(ground_task->get_num_actions(), 35);
+    EXPECT_EQ(ground_task->get_num_actions(), 29);
     EXPECT_EQ(ground_task->get_num_axioms(), 0);
 
     auto successor_generator = create_successor_generator(ground_task);
@@ -268,7 +270,7 @@ TEST(TyrTests, TyrPlanningGroundTaskMiconicFulladl)
     auto ground_task = compute_ground_task(absolute("miconic-fulladl/domain.pddl"), absolute("miconic-fulladl/test_problem.pddl"));
 
     EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 9);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 22);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 7);
     EXPECT_EQ(ground_task->get_num_actions(), 10);
     EXPECT_EQ(ground_task->get_num_axioms(), 15);
 
@@ -337,8 +339,8 @@ TEST(TyrTests, TyrPlanningGroundTaskPsrMiddle)
 {
     auto ground_task = compute_ground_task(absolute("psr-middle/domain.pddl"), absolute("psr-middle/test_problem.pddl"));
 
-    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 14);
-    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 363);
+    EXPECT_EQ(ground_task->get_num_atoms<f::FluentTag>(), 13);
+    EXPECT_EQ(ground_task->get_num_atoms<f::DerivedTag>(), 351);
     EXPECT_EQ(ground_task->get_num_actions(), 28);
     EXPECT_EQ(ground_task->get_num_axioms(), 467);
 

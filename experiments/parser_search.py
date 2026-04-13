@@ -154,7 +154,6 @@ class SearchParser(Parser):
     @staticmethod
     def get_attributes():
         return [
-            "num_objects",
             Attribute("coverage", min_wins=False),
             "cost",
             "length",

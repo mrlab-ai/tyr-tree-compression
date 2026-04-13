@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ auto create_witness_rule(fd::RuleView element, fd::Repository& context)
 
 ConstRuleWorkspace::ConstRuleWorkspace(fd::RuleView rule,
                                        fd::Repository& repository,
-                                       const analysis::DomainListList& parameter_domains,
+                                       const analysis::VariableDomainList& parameter_domains,
                                        size_t num_objects,
                                        size_t num_fluent_predicates,
                                        const TaggedAssignmentSets<formalism::StaticTag>& static_assignment_sets) :

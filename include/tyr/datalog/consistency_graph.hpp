@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #ifndef TYR_DATALOG_CONSISTENCY_GRAPH_HPP_
 #define TYR_DATALOG_CONSISTENCY_GRAPH_HPP_
 
-#include "tyr/analysis/domains.hpp"
+#include "tyr/analysis/declarations.hpp"
 #include "tyr/common/vector.hpp"
 #include "tyr/datalog/assignment_sets.hpp"
 #include "tyr/datalog/declarations.hpp"
@@ -232,7 +232,7 @@ private:
     /// @brief Helper to initialize vertices.
     std::tuple<details::Vertices, std::vector<std::vector<uint_t>>, std::vector<std::vector<uint_t>>>
     compute_vertices(const details::TaggedRuleToLiteralInfos<formalism::StaticTag>& indexed_literals,
-                     const analysis::DomainListList& parameter_domains,
+                     const analysis::VariableDomainList& parameter_domains,
                      size_t num_objects,
                      uint_t begin_parameter_index,
                      uint_t end_parameter_index,
@@ -250,7 +250,7 @@ public:
                            formalism::datalog::ConjunctiveConditionView unary_overapproximation_condition,
                            formalism::datalog::ConjunctiveConditionView binary_overapproximation_condition,
                            formalism::datalog::ConjunctiveConditionView static_binary_overapproximation_condition,
-                           const analysis::DomainListList& parameter_domains,
+                           const analysis::VariableDomainList& parameter_domains,
                            size_t num_objects,
                            size_t num_fluent_predicates,
                            uint_t begin_parameter_index,

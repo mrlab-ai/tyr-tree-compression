@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #ifndef TYR_FORMALISM_PLANNING_GROUNDER_HPP_
 #define TYR_FORMALISM_PLANNING_GROUNDER_HPP_
 
-#include "tyr/analysis/domains.hpp"
+#include "tyr/analysis/declarations.hpp"
 #include "tyr/common/itertools.hpp"
 #include "tyr/common/tuple.hpp"
 #include "tyr/formalism/planning/builder.hpp"
@@ -76,24 +76,22 @@ std::pair<GroundNumericEffectView<Op, T>, bool> ground(NumericEffectView<Op, T> 
 template<FactKind T>
 Data<GroundNumericEffectOperator<T>> ground(NumericEffectOperatorView<T> element, GrounderContext& context);
 
-std::pair<GroundConjunctiveEffectView, bool>
-ground(ConjunctiveEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr);
+std::pair<GroundConjunctiveEffectView, bool> ground(ConjunctiveEffectView element, GrounderContext& context, FDRContext& fdr);
 
-std::pair<GroundConditionalEffectView, bool>
-ground(ConditionalEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr);
+std::pair<GroundConditionalEffectView, bool> ground(ConditionalEffectView element, GrounderContext& context, FDRContext& fdr);
 
 std::pair<ActionBindingView, bool> ground(ActionView action, GrounderContext& context);
 
 std::pair<GroundActionView, bool> ground(ActionView element,
                                          GrounderContext& context,
-                                         const analysis::DomainListListList& cond_effect_domains,
-                                         UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign,
+                                         GrounderCache& cache,
+                                         const analysis::ActionDomain& action_domains,
                                          itertools::cartesian_set::Workspace<Index<formalism::Object>>& iter_workspace,
                                          FDRContext& fdr);
 
 std::pair<AxiomBindingView, bool> ground(AxiomView axiom, GrounderContext& context);
 
-std::pair<GroundAxiomView, bool> ground(AxiomView element, GrounderContext& context, FDRContext& fdr);
+std::pair<GroundAxiomView, bool> ground(AxiomView element, GrounderContext& context, GrounderCache& cache, FDRContext& fdr);
 
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,18 @@
 #ifndef TYR_FORMALISM_FORMALISM_HPP_
 #define TYR_FORMALISM_FORMALISM_HPP_
 
+#include "tyr/formalism/arithmetic_operator_utils.hpp"
+#include "tyr/formalism/boolean_operator_utils.hpp"
 #include "tyr/formalism/canonicalization.hpp"
 #include "tyr/formalism/datalog/datalog.hpp"
 #include "tyr/formalism/datas.hpp"
 #include "tyr/formalism/declarations.hpp"
 #include "tyr/formalism/formatter.hpp"
 #include "tyr/formalism/indices.hpp"
+#include "tyr/formalism/planning/invariants/invariants.hpp"
+#include "tyr/formalism/planning/mutable/mutable.hpp"
 #include "tyr/formalism/planning/planning.hpp"
+#include "tyr/formalism/unification/unification.hpp"
 #include "tyr/formalism/views.hpp"
 
 #endif

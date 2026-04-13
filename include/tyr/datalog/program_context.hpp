@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #ifndef TYR_DATALOG_PROGRAM_CONTEXT_HPP_
 #define TYR_DATALOG_PROGRAM_CONTEXT_HPP_
 
-#include "tyr/analysis/domains.hpp"
+#include "tyr/analysis/declarations.hpp"
 #include "tyr/analysis/listeners.hpp"
 #include "tyr/analysis/stratification.hpp"
 #include "tyr/formalism/datalog/program_index.hpp"

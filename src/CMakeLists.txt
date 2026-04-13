@@ -24,6 +24,7 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     analysis/program_domains.cpp
     analysis/stratification.cpp
     analysis/task_domains.cpp
+    analysis/domains_translation.cpp
 
     formalism/datalog/builder.cpp
     formalism/datalog/formatter.cpp
@@ -33,6 +34,17 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     formalism/datalog/views.cpp
     formalism/datalog/variable_dependency_graph.cpp
 
+    formalism/planning/mutable/formatter.cpp
+
+    formalism/planning/invariants/constraints.cpp
+    formalism/planning/invariants/formatter.cpp
+    formalism/planning/invariants/matching.cpp
+    formalism/planning/invariants/matcher.cpp
+    formalism/planning/invariants/mutexes.cpp
+    formalism/planning/invariants/normalization.cpp
+    formalism/planning/invariants/proof.cpp
+    formalism/planning/invariants/refinement.cpp
+    formalism/planning/invariants/synthesis.cpp
     formalism/planning/builder.cpp
     formalism/planning/fdr_context.cpp
     formalism/planning/formatter.cpp
@@ -44,6 +56,7 @@ add_library(core STATIC ${TYR_PRIVATE_HEADER_FILES} ${TYR_PUBLIC_HEADER_FILES}
     formalism/planning/views.cpp
     formalism/planning/loki_to_tyr.cpp
     formalism/planning/parser.cpp
+    formalism/planning/planning_task.cpp
 
     datalog/policies/annotation.cpp
     datalog/policies/termination.cpp

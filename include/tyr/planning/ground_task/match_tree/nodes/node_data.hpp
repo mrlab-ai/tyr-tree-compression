@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "tyr/planning/ground_task/match_tree/nodes/atom_index.hpp"
 #include "tyr/planning/ground_task/match_tree/nodes/constraint_index.hpp"
 #include "tyr/planning/ground_task/match_tree/nodes/generator_index.hpp"
+#include "tyr/planning/ground_task/match_tree/nodes/negative_fact_index.hpp"
 #include "tyr/planning/ground_task/match_tree/nodes/variable_index.hpp"
 
 namespace tyr
@@ -35,6 +36,7 @@ struct Data<planning::match_tree::Node<Tag>>
     using Variant = ::cista::offset::variant<Index<planning::match_tree::AtomSelectorNode<Tag>>,
                                              Index<planning::match_tree::NumericConstraintSelectorNode<Tag>>,
                                              Index<planning::match_tree::VariableSelectorNode<Tag>>,
+                                             Index<planning::match_tree::NegativeFactSelectorNode<Tag>>,
                                              Index<planning::match_tree::ElementGeneratorNode<Tag>>>;
 
     Variant value;

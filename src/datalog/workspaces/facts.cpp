@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ namespace tyr::datalog
 
 FactsWorkspace::FactsWorkspace(fd::PredicateListView<f::FluentTag> predicates,
                                fd::FunctionListView<f::FluentTag> functions,
-                               const a::DomainListListList& predicate_domains,
-                               const a::DomainListListList& function_domains,
+                               const analysis::PredicateDomainMap<formalism::FluentTag>& predicate_domains,
+                               const analysis::FunctionDomainMap<formalism::FluentTag>& function_domains,
                                size_t num_objects,
                                fd::GroundAtomListView<formalism::FluentTag> atoms,
                                fd::GroundFunctionTermValueListView<formalism::FluentTag> fterm_values,
@@ -48,8 +48,8 @@ void FactsWorkspace::reset()
 
 ConstFactsWorkspace::ConstFactsWorkspace(fd::PredicateListView<f::StaticTag> predicates,
                                          fd::FunctionListView<f::StaticTag> functions,
-                                         const a::DomainListListList& predicate_domains,
-                                         const a::DomainListListList& function_domains,
+                                         const analysis::PredicateDomainMap<formalism::StaticTag>& predicate_domains,
+                                         const analysis::FunctionDomainMap<formalism::StaticTag>& function_domains,
                                          size_t num_objects,
                                          fd::GroundAtomListView<f::StaticTag> atoms,
                                          fd::GroundFunctionTermValueListView<f::StaticTag> fterm_values,

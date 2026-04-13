@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "tyr/analysis/domains.hpp"
+#include "tyr/analysis/declarations.hpp"
 #include "tyr/common/itertools.hpp"
 #include "tyr/common/macros.hpp"
 #include "tyr/common/tuple.hpp"
@@ -245,7 +245,12 @@ TYR_INLINE_IMPL std::pair<GroundConjunctiveConditionView, bool> ground(Conjuncti
     for (const auto literal : element.template get_literals<StaticTag>())
         conj_cond.static_literals.push_back(ground(literal, context).first.get_index());
     for (const auto literal : element.template get_literals<FluentTag>())
-        conj_cond.fluent_facts.push_back(ground(literal, context, fdr));
+    {
+        if (literal.get_polarity())
+            conj_cond.positive_facts.push_back(ground(literal.get_atom(), context, fdr));
+        else
+            conj_cond.negative_facts.push_back(ground(literal.get_atom(), context, fdr));
+    }
     for (const auto literal : element.template get_literals<DerivedTag>())
         conj_cond.derived_literals.push_back(ground(literal, context).first.get_index());
     for (const auto numeric_constraint : element.get_numeric_constraints())
@@ -279,35 +284,21 @@ Data<GroundNumericEffectOperator<T>> ground(NumericEffectOperatorView<T> element
     return visit([&](auto&& arg) { return Data<GroundNumericEffectOperator<T>>(ground(arg, context).first.get_index()); }, element.get_variant());
 }
 
-TYR_INLINE_IMPL std::pair<GroundConjunctiveEffectView, bool>
-ground(ConjunctiveEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr)
+TYR_INLINE_IMPL std::pair<GroundConjunctiveEffectView, bool> ground(ConjunctiveEffectView element, GrounderContext& context, FDRContext& fdr)
 {
     // Fetch and clear
     auto conj_effect_ptr = context.builder.template get_builder<GroundConjunctiveEffect>();
     auto& conj_eff = *conj_effect_ptr;
     conj_eff.clear();
 
-    // 1) create facts and variables
     for (const auto literal : element.get_literals())
-        conj_eff.facts.push_back(ground(literal, context, fdr));
-
-    // 2) deletes first
-    assign.clear();
-    for (const auto fact : conj_eff.facts)
-        if (fact.value == FDRValue::none())
-            assign[fact.variable] = fact.value;  // should be none()
-
-    // 3) adds second (overwrite delete)
-    for (const auto fact : conj_eff.facts)
-        if (fact.value != FDRValue::none())
-            assign[fact.variable] = fact.value;
-
-    // 4) materialize
-    conj_eff.facts.clear();
-    for (const auto& [var, val] : assign)
-        conj_eff.facts.push_back(Data<FDRFact<FluentTag>>(var, val));
-
-    // Fill remaining data
+    {
+        const auto new_fact = ground(literal.get_atom(), context, fdr);
+        if (literal.get_polarity())
+            conj_eff.add_facts.push_back(new_fact);
+        else
+            conj_eff.del_facts.push_back(new_fact);
+    }
     for (const auto numeric_effect : element.get_numeric_effects())
         conj_eff.numeric_effects.push_back(ground(numeric_effect, context));
     if (element.get_auxiliary_numeric_effect().has_value())
@@ -318,8 +309,7 @@ ground(ConjunctiveEffectView element, GrounderContext& context, UnorderedMap<Ind
     return context.destination.get_or_create(conj_eff);
 }
 
-TYR_INLINE_IMPL std::pair<GroundConditionalEffectView, bool>
-ground(ConditionalEffectView element, GrounderContext& context, UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign, FDRContext& fdr)
+TYR_INLINE_IMPL std::pair<GroundConditionalEffectView, bool> ground(ConditionalEffectView element, GrounderContext& context, FDRContext& fdr)
 {
     // Fetch and clear
     auto cond_effect_ptr = context.builder.template get_builder<GroundConditionalEffect>();
@@ -328,7 +318,7 @@ ground(ConditionalEffectView element, GrounderContext& context, UnorderedMap<Ind
 
     // Fill data
     cond_effect.condition = ground(element.get_condition(), context, fdr).first.get_index();
-    cond_effect.effect = ground(element.get_effect(), context, assign, fdr).first.get_index();
+    cond_effect.effect = ground(element.get_effect(), context, fdr).first.get_index();
 
     // Canonicalize and Serialize
     canonicalize(cond_effect);
@@ -352,47 +342,53 @@ TYR_INLINE_IMPL std::pair<ActionBindingView, bool> ground(ActionView action, Gro
 
 TYR_INLINE_IMPL std::pair<GroundActionView, bool> ground(ActionView element,
                                                          GrounderContext& context,
-                                                         const analysis::DomainListListList& cond_effect_domains,
-                                                         UnorderedMap<Index<FDRVariable<FluentTag>>, FDRValue>& assign,
+                                                         GrounderCache& cache,
+                                                         const analysis::ActionDomain& action_domains,
                                                          itertools::cartesian_set::Workspace<Index<formalism::Object>>& iter_workspace,
                                                          FDRContext& fdr)
 {
-    // Fetch and clear
+    const auto binding = ground(element, context).first.get_index();
+
+    auto& action_cache = cache.get_cache<Action>();
+    if (auto it = action_cache.find(binding); it != action_cache.end())
+        return { make_view(it->second, context.destination), false };
+
     auto action_ptr = context.builder.template get_builder<GroundAction>();
     auto& action = *action_ptr;
     action.clear();
 
-    // Fill data
-    action.binding = ground(element, context).first.get_index();
+    action.binding = binding;
     action.condition = ground(element.get_condition(), context, fdr).first.get_index();
 
-    auto binding_size = context.binding.size();
+    const auto binding_size = context.binding.size();
 
     for (uint_t cond_effect_index = 0; cond_effect_index < element.get_effects().size(); ++cond_effect_index)
     {
         const auto cond_effect = element.get_effects()[cond_effect_index];
-        const auto& parameter_domains = cond_effect_domains[cond_effect_index];
+        const auto& parameter_domains = action_domains.payload.effect_domains.at(cond_effect.get_index()).payload.effect_domain.payload;
 
-        // Ensure that we stripped off the action precondition parameter domains.
-        assert(std::distance(parameter_domains.begin(), parameter_domains.end()) == static_cast<int>(cond_effect.get_arity()));
+        assert(std::distance(parameter_domains.begin(), parameter_domains.end()) == static_cast<int>(element.get_arity() + cond_effect.get_arity()));
 
-        itertools::cartesian_set::for_each_element(parameter_domains.begin(),
+        itertools::cartesian_set::for_each_element(parameter_domains.begin() + element.get_arity(),
                                                    parameter_domains.end(),
                                                    iter_workspace,
                                                    [&](auto&& binding_cond)
                                                    {
-                                                       // push the additional parameters to the end
                                                        context.binding.resize(binding_size);
                                                        context.binding.insert(context.binding.end(), binding_cond.begin(), binding_cond.end());
 
-                                                       action.effects.push_back(ground(cond_effect, context, assign, fdr).first.get_index());
+                                                       action.effects.push_back(ground(cond_effect, context, fdr).first.get_index());
                                                    });
     }
-    context.binding.resize(binding_size);  ///< important to restore the binding in case of grounding other actions
 
-    // Canonicalize and Serialize
+    context.binding.resize(binding_size);
+
     canonicalize(action);
-    return context.destination.get_or_create(action);
+    const auto result = context.destination.get_or_create(action);
+
+    action_cache.emplace(binding, result.first.get_index());
+
+    return result;
 }
 
 TYR_INLINE_IMPL std::pair<AxiomBindingView, bool> ground(AxiomView axiom, GrounderContext& context)
@@ -410,21 +406,28 @@ TYR_INLINE_IMPL std::pair<AxiomBindingView, bool> ground(AxiomView axiom, Ground
     return context.destination.get_or_create(binding);
 }
 
-TYR_INLINE_IMPL std::pair<GroundAxiomView, bool> ground(AxiomView element, GrounderContext& context, FDRContext& fdr)
+TYR_INLINE_IMPL std::pair<GroundAxiomView, bool> ground(AxiomView element, GrounderContext& context, GrounderCache& cache, FDRContext& fdr)
 {
-    // Fetch and clear
+    const auto binding = ground(element, context).first.get_index();
+
+    auto& axiom_cache = cache.get_cache<Axiom>();
+    if (auto it = axiom_cache.find(binding); it != axiom_cache.end())
+        return { make_view(it->second, context.destination), false };
+
     auto axiom_ptr = context.builder.template get_builder<GroundAxiom>();
     auto& axiom = *axiom_ptr;
     axiom.clear();
 
-    // Fill data
-    axiom.binding = ground(element, context).first.get_index();
+    axiom.binding = binding;
     axiom.body = ground(element.get_body(), context, fdr).first.get_index();
     axiom.head = ground(element.get_head(), context).first.get_index();
 
-    // Canonicalize and Serialize
     canonicalize(axiom);
-    return context.destination.get_or_create(axiom);
+    const auto result = context.destination.get_or_create(axiom);
+
+    axiom_cache.emplace(binding, result.first.get_index());
+
+    return result;
 }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,6 +91,27 @@ std::ostream& print(std::ostream& os, const planning::Statistics& el)
                el.get_num_expanded(),
                el.get_num_generated(),
                el.get_num_pruned());
+
+    return os;
+}
+
+std::ostream& print(std::ostream& os, const planning::ProgressStatistics& el)
+{
+    if (el.get_snapshots().empty())
+    {
+        fmt::print(os, "[Search] No progress statistics available.");
+        return os;
+    }
+
+    const auto& last = el.get_snapshots().back();
+
+    fmt::print(os,
+               "[Search] Number of expanded states at last snapshot: {}\n"
+               "[Search] Number of generated states at last snapshot: {}\n"
+               "[Search] Number of pruned states at last snapshot: {}",
+               last.get_num_expanded(),
+               last.get_num_generated(),
+               last.get_num_pruned());
 
     return os;
 }
@@ -191,6 +212,8 @@ std::ostream& operator<<(std::ostream& os, const Data<State<GroundTag>>& el) { r
 std::ostream& operator<<(std::ostream& os, const UnpackedState<GroundTag>& el) { return tyr::print(os, el); }
 
 std::ostream& operator<<(std::ostream& os, const Statistics& el) { return tyr::print(os, el); }
+
+std::ostream& operator<<(std::ostream& os, const ProgressStatistics& el) { return tyr::print(os, el); }
 
 template<TaskKind Kind>
 std::ostream& operator<<(std::ostream& os, const StateView<Kind>& el)

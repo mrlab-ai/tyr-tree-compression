@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,14 @@
 
 #include "tyr/common/onetbb.hpp"
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/lifted_task/task_grounder_decl.hpp"
 
 namespace tyr::planning
 {
 
-extern GroundTaskPtr ground_task(LiftedTask& lifted_task, ExecutionContext& execution_context);
+GroundTaskInstantiationResult instantiate_ground_task(LiftedTask& lifted_task,
+                                                      ExecutionContext& execution_context,
+                                                      const GroundTaskInstantiationOptions& options = GroundTaskInstantiationOptions());
 
 }
 

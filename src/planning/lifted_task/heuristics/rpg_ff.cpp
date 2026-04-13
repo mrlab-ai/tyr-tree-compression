@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ FFRPGHeuristic<LiftedTag>::FFRPGHeuristic(std::shared_ptr<Task<LiftedTag>> task,
             task->get_rpg_program().get_program_context().get_program().get_predicates<formalism::FluentTag>().size())),
     m_markings(task->get_rpg_program().get_program_context().get_program().get_predicates<formalism::FluentTag>().size()),
     m_binding(),
-    m_assign(),
     m_iter_workspace(),
     m_effect_families(),
     m_relaxed_plan(),
@@ -136,8 +135,8 @@ void FFRPGHeuristic<LiftedTag>::extract_relaxed_plan_and_preferred_actions(forma
 
         const auto ground_action = formalism::planning::ground(action,
                                                                grounder_context,
-                                                               m_task->get_parameter_domains_per_cond_effect_per_action()[uint_t(action.get_index())],
-                                                               m_assign,
+                                                               m_task->get_grounder_cache(),
+                                                               m_task->get_formalism_task().get_variable_domains().action_domains.at(action.get_index()),
                                                                m_iter_workspace,
                                                                *m_task->get_fdr_context())
                                        .first;

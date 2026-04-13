@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,8 @@ void bind_object_builder(nb::module_& m, const std::string& name)
     using V = Data<Object>;
 
     nb::class_<V>(m, name.c_str())  //
-        .def(nb::init<const std::string&>(), "name"_a);
+        .def(nb::init<const std::string&>(), "name"_a)
+        .def_rw("name", &V::name);
 }
 
 void bind_variable_builder(nb::module_& m, const std::string& name)
@@ -39,7 +40,8 @@ void bind_variable_builder(nb::module_& m, const std::string& name)
     using V = Data<Variable>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<const std::string&>(), "name"_a);
+                   .def(nb::init<const std::string&>(), "name"_a)
+                   .def_rw("name", &V::name);
     add_print(cls);
     add_hash(cls);
 }
@@ -49,7 +51,8 @@ void bind_term_builder(nb::module_& m, const std::string& name)
     using V = Data<Term>;
 
     auto cls = nb::class_<V>(m, name.c_str())  //
-                   .def(nb::init<typename V::template ViewVariant<Repository>>(), "value"_a);
+                   .def(nb::init<typename V::template ViewVariant<Repository>>(), "value"_a)
+                   .def_rw("value", &V::value);
     add_print(cls);
     add_hash(cls);
 }
@@ -325,12 +328,14 @@ void bind_ground_conjunctive_condition_builder(nb::module_& m, const std::string
 
     auto cls = nb::class_<V>(m, name.c_str())  //
                    .def(nb::init<const GroundLiteralViewList<StaticTag>&,
-                                 const FDRFactViewList<FluentTag>&,
                                  const GroundLiteralViewList<DerivedTag>&,
+                                 const FDRFactViewList<FluentTag>&,
+                                 const FDRFactViewList<FluentTag>&,
                                  const GroundBooleanOperatorViewList&>(),
                         "static_literals"_a,
-                        "fluent_facts"_a,
                         "derived_literals"_a,
+                        "positive_facts"_a,
+                        "negative_facts"_a,
                         "numeric_constraints"_a);
     add_print(cls);
     add_hash(cls);
@@ -342,9 +347,11 @@ void bind_ground_conjunctive_effect_builder(nb::module_& m, const std::string& n
 
     auto cls = nb::class_<V>(m, name.c_str())  //
                    .def(nb::init<const FDRFactViewList<FluentTag>&,
+                                 const FDRFactViewList<FluentTag>&,
                                  const GroundNumericEffectOperatorViewList<FluentTag>&,
                                  const std::optional<GroundNumericEffectOperatorView<AuxiliaryTag>>&>(),
-                        "fluent_facts"_a,
+                        "add_facts"_a,
+                        "del_facts"_a,
                         "fluent_numeric_effects"_a,
                         "auxiliary_numeric_effect"_a);
     add_print(cls);
@@ -469,9 +476,6 @@ void bind_ground_task_builder(nb::module_& m, const std::string& name)
                                  const GroundAtomViewList<StaticTag>&,
                                  const GroundAtomViewList<FluentTag>&,
                                  const GroundAtomViewList<DerivedTag>&,
-                                 const GroundFunctionTermViewList<StaticTag>&,
-                                 const GroundFunctionTermViewList<FluentTag>&,
-                                 const std::optional<GroundFunctionTermView<AuxiliaryTag>>&,
                                  const GroundFunctionTermValueViewList<StaticTag>&,
                                  const GroundFunctionTermValueViewList<FluentTag>&,
                                  const std::optional<GroundFunctionTermValueView<AuxiliaryTag>>&,
@@ -489,9 +493,6 @@ void bind_ground_task_builder(nb::module_& m, const std::string& name)
                         "static_atoms"_a,
                         "fluent_atoms"_a,
                         "derived_atoms"_a,
-                        "static_fterm"_a,
-                        "fluent_fterm"_a,
-                        "auxiliary_fterm"_a,
                         "static_fterm_values"_a,
                         "fluent_fterm_values"_a,
                         "auxiliary_fterm_value"_a,

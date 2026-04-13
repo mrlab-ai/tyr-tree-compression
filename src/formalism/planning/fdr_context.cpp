@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ Data<FDRFact<FluentTag>> merge_p2p(FDRFactView<FluentTag> element, MergeContext&
 
 FDRContext::FDRContext(RepositoryPtr context) : m_context(std::move(context)), m_builder(), m_variables(), m_mapping() {}
 
-FDRContext::FDRContext(const std::vector<std::vector<GroundAtomView<FluentTag>>>& mutexes, RepositoryPtr context) :
+FDRContext::FDRContext(const std::vector<GroundAtomViewList<FluentTag>>& mutexes, RepositoryPtr context) :
     m_context(std::move(context)),
     m_builder(),
     m_variables(),
@@ -83,6 +83,25 @@ FDRContext::FDRContext(const std::vector<std::vector<GroundAtomView<FluentTag>>>
             [[maybe_unused]] const auto [it, inserted] = m_mapping.emplace(group[i].get_index(), Data<FDRFact<FluentTag>>(var_index, FDRValue { i + 1 }));
             assert(inserted && "Assumes non overlapping mutex groups");
         }
+    }
+}
+
+FDRContext::FDRContext(const GroundAtomViewList<FluentTag>& all_atoms, RepositoryPtr context) :
+    m_context(std::move(context)),
+    m_builder(),
+    m_variables(),
+    m_mapping()
+{
+    auto variable = Data<FDRVariable<FluentTag>>();
+
+    for (const auto& atom : all_atoms)
+    {
+        variable.clear();
+        variable.atoms.push_back(atom.get_index());
+        canonicalize(variable);
+        const auto var_index = m_context->get_or_create(variable).first.get_index();
+        m_variables.push_back(var_index);
+        m_mapping.emplace(atom.get_index(), Data<FDRFact<FluentTag>>(var_index, FDRValue { 1 }));
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 #ifndef TYR_PLANNING_PROGRAMS_AXIOM_HPP_
 #define TYR_PLANNING_PROGRAMS_AXIOM_HPP_
 
+#include "tyr/common/declarations.hpp"
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
 #include "tyr/datalog/program_context.hpp"
@@ -29,6 +30,7 @@
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/programs/translation_context.hpp"
 
 namespace tyr::planning
 {
@@ -36,19 +38,15 @@ namespace tyr::planning
 class AxiomEvaluatorProgram
 {
 public:
-    // Mapping from program fluent predicate to task derived predicate
-    using PredicateToPredicateMapping =
-        UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::PredicateView<formalism::DerivedTag>>;
-
     explicit AxiomEvaluatorProgram(formalism::planning::TaskView task);
 
-    const PredicateToPredicateMapping& get_predicate_to_predicate_mapping() const noexcept;
+    const TranslationContext& get_translation_context() const noexcept;
     datalog::ProgramContext& get_program_context() noexcept;
     const datalog::ProgramContext& get_program_context() const noexcept;
     const datalog::ConstProgramWorkspace& get_const_program_workspace() const noexcept;
 
 private:
-    PredicateToPredicateMapping m_predicate_to_predicate;
+    TranslationContext m_translation_context;
 
     datalog::ProgramContext m_program_context;
 

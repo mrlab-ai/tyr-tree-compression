@@ -20,10 +20,13 @@ add_gtest(common_dynamic_bitset                          "common/dynamic_bitset.
 
 add_gtest(buffer_indexed_hash_set                        "buffer/indexed_hash_set.cpp")
 
+add_gtest(formalism_planning_invariants_synthesis        "formalism/planning/invariants/synthesis.cpp")
 add_gtest(formalism_builder                              "formalism/builder.cpp")
 add_gtest(formalism_repository                           "formalism/repository.cpp")
 add_gtest(formalism_view                                 "formalism/view.cpp")
 add_gtest(formalism_index                                "formalism/index.cpp")
+add_gtest(formalism_unification                          "formalism/unification.cpp")
 
 add_gtest(planning_lifted_task                           "planning/lifted_task.cpp")
 add_gtest(planning_ground_task                           "planning/ground_task.cpp")
+add_gtest(planning_ground_vs_lifted                      "planning/ground_vs_lifted.cpp")

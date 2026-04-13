@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 #include "tyr/planning/programs/axiom.hpp"
 
 #include "common.hpp"
+#include "tyr/analysis/domains.hpp"
 #include "tyr/formalism/datalog/datas.hpp"
 #include "tyr/formalism/datalog/formatter.hpp"
 #include "tyr/formalism/datalog/repository.hpp"
@@ -33,24 +34,28 @@ namespace fd = tyr::formalism::datalog;
 
 namespace tyr::planning
 {
-namespace axiom
+namespace
 {
-static void process_axiom_body(fp::ConjunctiveConditionView axiom_body, fp::MergeDatalogContext& context, Data<fd::ConjunctiveCondition>& conj_cond)
+void process_axiom_body(fp::ConjunctiveConditionView axiom_body,
+                        const TranslationContext& translation_context,
+                        fp::MergeDatalogContext& context,
+                        Data<fd::ConjunctiveCondition>& conj_cond)
 {
     for (const auto literal : axiom_body.get_literals<f::StaticTag>())
-        conj_cond.static_literals.push_back(fp::merge_p2d(literal, context).first.get_index());
+        conj_cond.static_literals.push_back(fp::merge_p2d(literal, translation_context.p2d.static_to_static_predicate, context).first.get_index());
 
     for (const auto literal : axiom_body.get_literals<f::FluentTag>())
-        conj_cond.fluent_literals.push_back(fp::merge_p2d(literal, context).first.get_index());
+        conj_cond.fluent_literals.push_back(fp::merge_p2d(literal, translation_context.p2d.fluent_to_fluent_predicate, context).first.get_index());
 
     for (const auto literal : axiom_body.get_literals<f::DerivedTag>())
-        conj_cond.fluent_literals.push_back(fp::merge_p2d<f::DerivedTag, f::FluentTag>(literal, context).first.get_index());
+        conj_cond.fluent_literals.push_back(
+            fp::merge_p2d<f::DerivedTag, f::FluentTag>(literal, translation_context.p2d.derived_to_fluent_predicate, context).first.get_index());
 
     for (const auto numeric_constraint : axiom_body.get_numeric_constraints())
         conj_cond.numeric_constraints.push_back(fp::merge_p2d(numeric_constraint, context));
 }
 
-static auto create_axiom_rule(fp::AxiomView axiom, fp::MergeDatalogContext& context)
+auto create_axiom_rule(fp::AxiomView axiom, const TranslationContext& translation_context, fp::MergeDatalogContext& context)
 {
     auto rule_ptr = context.builder.get_builder<fd::Rule>();
     auto& rule = *rule_ptr;
@@ -63,14 +68,15 @@ static auto create_axiom_rule(fp::AxiomView axiom, fp::MergeDatalogContext& cont
     for (const auto variable : axiom.get_variables())
         conj_cond.variables.push_back(fp::merge_p2d(variable, context).first.get_index());
 
-    process_axiom_body(axiom.get_body(), context, conj_cond);
+    process_axiom_body(axiom.get_body(), translation_context, context, conj_cond);
 
     canonicalize(conj_cond);
     const auto new_conj_cond = context.destination.get_or_create(conj_cond).first.get_index();
 
     rule.body = new_conj_cond;
 
-    const auto new_head = fp::merge_p2d<f::DerivedTag, f::FluentTag>(axiom.get_head(), context).first.get_index();
+    const auto new_head =
+        fp::merge_p2d<f::DerivedTag, f::FluentTag>(axiom.get_head(), translation_context.p2d.derived_to_fluent_predicate, context).first.get_index();
 
     rule.head = new_head;
 
@@ -78,7 +84,7 @@ static auto create_axiom_rule(fp::AxiomView axiom, fp::MergeDatalogContext& cont
     return context.destination.get_or_create(rule);
 }
 
-static auto create_program(fp::TaskView task, AxiomEvaluatorProgram::PredicateToPredicateMapping& predicate_to_predicate, fd::Repository& repository)
+auto create_program(fp::TaskView task, TranslationContext& translation_context, fd::Repository& repository)
 {
     auto builder = fd::Builder();
     auto context = fp::MergeDatalogContext(builder, repository);
@@ -87,38 +93,38 @@ static auto create_program(fp::TaskView task, AxiomEvaluatorProgram::PredicateTo
     program.clear();
 
     for (const auto predicate : task.get_domain().get_predicates<f::StaticTag>())
-        program.static_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
-
+    {
+        const auto new_predicate = fp::merge_p2d(predicate, context).first;
+        translation_context.d2p.static_to_static_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.static_to_static_predicate.emplace(predicate, new_predicate);
+        program.static_predicates.push_back(new_predicate.get_index());
+    }
     for (const auto predicate : task.get_domain().get_predicates<f::FluentTag>())
-        program.fluent_predicates.push_back(fp::merge_p2d(predicate, context).first.get_index());
-
+    {
+        const auto new_predicate = fp::merge_p2d(predicate, context).first;
+        translation_context.d2p.fluent_to_fluent_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.fluent_to_fluent_predicate.emplace(predicate, new_predicate);
+        program.fluent_predicates.push_back(new_predicate.get_index());
+    }
     for (const auto predicate : task.get_domain().get_predicates<f::DerivedTag>())
     {
         const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
-
-        [[maybe_unused]] const auto [it, inserted] = predicate_to_predicate.emplace(new_predicate, predicate);
-        assert(inserted);
-
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
-
     for (const auto predicate : task.get_derived_predicates())
     {
         const auto new_predicate = fp::merge_p2d<f::DerivedTag, f::FluentTag>(predicate, context).first;
-
-        [[maybe_unused]] const auto [it, inserted] = predicate_to_predicate.emplace(new_predicate, predicate);
-        assert(inserted);
-
+        translation_context.d2p.fluent_to_derived_predicate.emplace(new_predicate, predicate);
+        translation_context.p2d.derived_to_fluent_predicate.emplace(predicate, new_predicate);
         program.fluent_predicates.push_back(new_predicate.get_index());
     }
 
     for (const auto function : task.get_domain().get_functions<f::StaticTag>())
         program.static_functions.push_back(fp::merge_p2d(function, context).first.get_index());
-
     for (const auto function : task.get_domain().get_functions<f::FluentTag>())
         program.fluent_functions.push_back(fp::merge_p2d(function, context).first.get_index());
-
-    // We can ignore auxiliary function total-cost because it never occurs in a condition
 
     for (const auto object : task.get_domain().get_constants())
         program.objects.push_back(fp::merge_p2d(object, context).first.get_index());
@@ -126,29 +132,29 @@ static auto create_program(fp::TaskView task, AxiomEvaluatorProgram::PredicateTo
         program.objects.push_back(fp::merge_p2d(object, context).first.get_index());
 
     for (const auto atom : task.get_atoms<f::StaticTag>())
-        program.static_atoms.push_back(fp::merge_p2d(atom, context).first.get_index());
-
+        program.static_atoms.push_back(fp::merge_p2d(atom, translation_context.p2d.static_to_static_predicate, context).first.get_index());
     for (const auto atom : task.get_atoms<f::FluentTag>())
-        program.fluent_atoms.push_back(fp::merge_p2d(atom, context).first.get_index());
+        program.fluent_atoms.push_back(fp::merge_p2d(atom, translation_context.p2d.fluent_to_fluent_predicate, context).first.get_index());
 
     for (const auto fterm_value : task.get_fterm_values<f::StaticTag>())
         program.static_fterm_values.push_back(fp::merge_p2d(fterm_value, context).first.get_index());
+    for (const auto fterm_value : task.get_fterm_values<f::FluentTag>())
+        program.fluent_fterm_values.push_back(fp::merge_p2d(fterm_value, context).first.get_index());
 
     for (const auto axiom : task.get_domain().get_axioms())
-        program.rules.push_back(create_axiom_rule(axiom, context).first.get_index());
-
+        program.rules.push_back(create_axiom_rule(axiom, translation_context, context).first.get_index());
     for (const auto axiom : task.get_axioms())
-        program.rules.push_back(create_axiom_rule(axiom, context).first.get_index());
+        program.rules.push_back(create_axiom_rule(axiom, translation_context, context).first.get_index());
 
     canonicalize(program);
     return repository.get_or_create(program).first;
 }
 
-static auto create_program_context(fp::TaskView task, AxiomEvaluatorProgram::PredicateToPredicateMapping& mapping)
+auto create_program_context(fp::TaskView task, TranslationContext& translation_context)
 {
     auto factory = std::make_shared<fd::RepositoryFactory>();
     auto repository = factory->create_shared();
-    auto program = create_program(task, mapping, *repository);
+    auto program = create_program(task, translation_context, *repository);
     auto domains = analysis::compute_variable_domains(program);
     auto strata = analysis::compute_rule_stratification(program);
     auto listeners = analysis::compute_listeners(strata, *repository);
@@ -158,17 +164,14 @@ static auto create_program_context(fp::TaskView task, AxiomEvaluatorProgram::Pre
 }
 
 AxiomEvaluatorProgram::AxiomEvaluatorProgram(fp::TaskView task) :
-    m_predicate_to_predicate(),
-    m_program_context(axiom::create_program_context(task, m_predicate_to_predicate)),
+    m_translation_context(),
+    m_program_context(create_program_context(task, m_translation_context)),
     m_program_workspace(m_program_context)
 {
     // std::cout << m_program_context.get_program() << std::endl;
 }
 
-const AxiomEvaluatorProgram::PredicateToPredicateMapping& AxiomEvaluatorProgram::get_predicate_to_predicate_mapping() const noexcept
-{
-    return m_predicate_to_predicate;
-}
+const TranslationContext& AxiomEvaluatorProgram::get_translation_context() const noexcept { return m_translation_context; }
 
 datalog::ProgramContext& AxiomEvaluatorProgram::get_program_context() noexcept { return m_program_context; }
 

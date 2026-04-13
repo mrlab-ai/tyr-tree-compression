@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,31 +33,37 @@ template<>
 struct Data<formalism::planning::GroundConjunctiveEffect>
 {
     Index<formalism::planning::GroundConjunctiveEffect> index;
-    DataList<formalism::planning::FDRFact<formalism::FluentTag>> facts;
+    DataList<formalism::planning::FDRFact<formalism::FluentTag>> add_facts;
+    DataList<formalism::planning::FDRFact<formalism::FluentTag>> del_facts;
     DataList<formalism::planning::GroundNumericEffectOperator<formalism::FluentTag>> numeric_effects;
     ::cista::optional<Data<formalism::planning::GroundNumericEffectOperator<formalism::AuxiliaryTag>>> auxiliary_numeric_effect;  // :action-cost
 
     Data() = default;
-    Data(DataList<formalism::planning::FDRFact<formalism::FluentTag>> facts_,
+    Data(DataList<formalism::planning::FDRFact<formalism::FluentTag>> add_facts_,
+         DataList<formalism::planning::FDRFact<formalism::FluentTag>> del_facts_,
          DataList<formalism::planning::GroundNumericEffectOperator<formalism::FluentTag>> numeric_effects_,
          ::cista::optional<Data<formalism::planning::GroundNumericEffectOperator<formalism::AuxiliaryTag>>> auxiliary_numeric_effect_) :
         index(),
-        facts(std::move(facts_)),
+        add_facts(std::move(add_facts_)),
+        del_facts(std::move(del_facts_)),
         numeric_effects(std::move(numeric_effects_)),
         auxiliary_numeric_effect(std::move(auxiliary_numeric_effect_))
     {
     }
     // Python constructor
     template<typename C>
-    Data(const std::vector<View<Data<formalism::planning::FDRFact<formalism::FluentTag>>, C>>& facts_,
+    Data(const std::vector<View<Data<formalism::planning::FDRFact<formalism::FluentTag>>, C>>& add_facts_,
+         const std::vector<View<Data<formalism::planning::FDRFact<formalism::FluentTag>>, C>>& del_facts_,
          const std::vector<View<Data<formalism::planning::GroundNumericEffectOperator<formalism::FluentTag>>, C>>& numeric_effects_,
          const std::optional<View<Data<formalism::planning::GroundNumericEffectOperator<formalism::AuxiliaryTag>>, C>>& auxiliary_numeric_effect_) :
         index(),
-        facts(),
+        add_facts(),
+        del_facts(),
         numeric_effects(),
         auxiliary_numeric_effect()
     {
-        set(facts_, facts);
+        set(add_facts_, add_facts);
+        set(del_facts_, del_facts);
         set(numeric_effects_, numeric_effects);
         set(auxiliary_numeric_effect_, auxiliary_numeric_effect);
     }
@@ -66,16 +72,28 @@ struct Data<formalism::planning::GroundConjunctiveEffect>
     Data(Data&& other) = default;
     Data& operator=(Data&& other) = default;
 
+    template<formalism::PolarityKind T>
+    const auto& get_facts() const
+    {
+        if constexpr (std::same_as<T, formalism::PositiveTag>)
+            return add_facts;
+        else if constexpr (std::same_as<T, formalism::NegativeTag>)
+            return del_facts;
+        else
+            static_assert(dependent_false<T>::value, "Missing case");
+    }
+
     void clear() noexcept
     {
         tyr::clear(index);
-        tyr::clear(facts);
+        tyr::clear(add_facts);
+        tyr::clear(del_facts);
         tyr::clear(numeric_effects);
         tyr::clear(auxiliary_numeric_effect);
     }
 
-    auto cista_members() const noexcept { return std::tie(index, facts, numeric_effects, auxiliary_numeric_effect); }
-    auto identifying_members() const noexcept { return std::tie(facts, numeric_effects, auxiliary_numeric_effect); }
+    auto cista_members() const noexcept { return std::tie(index, add_facts, del_facts, numeric_effects, auxiliary_numeric_effect); }
+    auto identifying_members() const noexcept { return std::tie(add_facts, del_facts, numeric_effects, auxiliary_numeric_effect); }
 };
 
 static_assert(!uses_trivial_storage_v<formalism::planning::GroundConjunctiveEffect>);

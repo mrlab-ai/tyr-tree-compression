@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 #ifndef TYR_PLANNING_PROGRAMS_ACTION_HPP_
 #define TYR_PLANNING_PROGRAMS_ACTION_HPP_
 
+#include "tyr/common/declarations.hpp"
 #include "tyr/common/equal_to.hpp"
 #include "tyr/common/hash.hpp"
 #include "tyr/datalog/program_context.hpp"
@@ -27,6 +28,7 @@
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/programs/translation_context.hpp"
 
 namespace tyr::planning
 {
@@ -35,17 +37,19 @@ class ApplicableActionProgram
 {
 public:
     // Mapping from program predicate to task action
-    using AppPredicateToActionsMapping = UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::ActionView>;
+    using AppPredicateToActionMapping = UnorderedMap<formalism::datalog::PredicateView<formalism::FluentTag>, formalism::planning::ActionView>;
 
     explicit ApplicableActionProgram(formalism::planning::TaskView task);
 
-    const AppPredicateToActionsMapping& get_predicate_to_actions_mapping() const noexcept;
+    const TranslationContext& get_translation_context() const noexcept;
+    const AppPredicateToActionMapping& get_predicate_to_action_mapping() const noexcept;
     datalog::ProgramContext& get_program_context() noexcept;
     const datalog::ProgramContext& get_program_context() const noexcept;
     const datalog::ConstProgramWorkspace& get_const_program_workspace() const noexcept;
 
 private:
-    AppPredicateToActionsMapping m_predicate_to_actions;
+    TranslationContext m_translation_context;
+    AppPredicateToActionMapping m_predicate_to_actions;
 
     datalog::ProgramContext m_program_context;
 

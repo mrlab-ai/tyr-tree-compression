@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ struct StateStorageContext<LiftedTag, TreeCompression>
     size_t memory_usage() const noexcept
     {
         size_t bytes = 0;
-        bytes += uint_nodes.mem_usage();
-        bytes += float_nodes.mem_usage();
+        bytes += uint_nodes.memory_usage();
+        bytes += float_nodes.memory_usage();
         return bytes;
     }
 };

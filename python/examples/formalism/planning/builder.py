@@ -43,7 +43,10 @@ from pytyr.formalism.planning import (
 )
 
 from pytyr.planning.lifted import (
-    Task
+    Task,
+    GroundTaskInstantiationOptions,    
+    GroundTaskInstantiationStatus,
+    GroundTaskInstantiationResult,
 )
 
 
@@ -408,9 +411,10 @@ def main():
     goal = get(
         task_repository,
         GroundConjunctiveConditionBuilder(
-            static_literals=[],
-            fluent_facts=[goal_at_ball1_roomb],
+            static_literals=[],            
             derived_literals=[],
+            positive_facts=[goal_at_ball1_roomb],
+            negative_facts=[],
             numeric_constraints=[],
         ),
     )
@@ -454,7 +458,8 @@ def main():
     search_task = Task(planning_task)
 
     # Instantiate the fully grounded task representation.
-    ground_search_task = search_task.instantiate_ground_task(ExecutionContext(1))
+    ground_task_instantiation_result = search_task.instantiate_ground_task(ExecutionContext(1), GroundTaskInstantiationOptions())
+    ground_search_task = ground_task_instantiation_result.task
 
     # Print the grounded formalism task.
     print(ground_search_task.get_formalism_task().get_task())

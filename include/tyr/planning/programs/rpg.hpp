@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/formalism/planning/views.hpp"
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/programs/translation_context.hpp"
 
 namespace tyr::planning
 {
@@ -38,12 +39,14 @@ public:
 
     explicit RPGProgram(formalism::planning::TaskView task);
 
+    const TranslationContext& get_translation_context() const noexcept;
     const RuleToActionMapping& get_rule_to_action_mapping() const noexcept;
     datalog::ProgramContext& get_program_context() noexcept;
     const datalog::ProgramContext& get_program_context() const noexcept;
     const datalog::ConstProgramWorkspace& get_const_program_workspace() const noexcept;
 
 private:
+    TranslationContext m_translation_context;
     RuleToActionMapping m_rule_to_action;
 
     datalog::ProgramContext m_program_context;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -159,9 +159,11 @@ using GroundArithmeticOperatorListView = View<DataList<ArithmeticOperator<Data<G
 
 template<FactKind T>
 using AtomView = View<Index<Atom<T>>, Repository>;
-
 template<FactKind T>
 using AtomListView = View<IndexList<Atom<T>>, Repository>;
+template<FactKind T>
+using AtomViewList = std::vector<AtomView<T>>;
+
 using AxiomView = View<Index<Axiom>, Repository>;
 using AxiomListView = View<IndexList<Axiom>, Repository>;
 using AxiomViewList = std::vector<AxiomView>;

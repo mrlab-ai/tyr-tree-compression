@@ -89,6 +89,7 @@ class EventHandlerBase : public EventHandler<Kind>
 {
 protected:
     tyr::planning::Statistics m_statistics;
+    tyr::planning::ProgressStatistics m_progress_statistics;
     size_t m_verbosity;
 
 private:
@@ -176,6 +177,8 @@ public:
 
     void on_finish_f_layer(float_t f_value) override
     {
+        m_progress_statistics.add_snap_shot(m_statistics);
+
         if (verbosity(0))
         {
             self().on_finish_f_layer_impl(f_value, m_statistics.get_num_expanded(), m_statistics.get_num_generated());
@@ -220,6 +223,7 @@ public:
      */
 
     const tyr::planning::Statistics& get_statistics() const { return m_statistics; }
+    const tyr::planning::ProgressStatistics& get_progress_statistics() const { return m_progress_statistics; }
 };
 
 template<TaskKind Kind>

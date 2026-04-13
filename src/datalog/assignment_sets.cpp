@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 #include "tyr/datalog/assignment_sets.hpp"
 
-#include "tyr/analysis/domains.hpp"
+#include "tyr/analysis/declarations.hpp"
 #include "tyr/common/closed_interval.hpp"
 #include "tyr/common/config.hpp"
 #include "tyr/datalog/assignment.hpp"
@@ -41,13 +41,13 @@ namespace tyr::datalog
 {
 namespace
 {
-[[maybe_unused]] inline bool contains(const analysis::DomainListList& parameter_domains, const VertexAssignment& assignment)
+[[maybe_unused]] inline bool contains(const analysis::VariableDomainList& parameter_domains, const VertexAssignment& assignment)
 {
-    const auto& domain = parameter_domains[uint_t(assignment.index)];
-    return std::find(domain.begin(), domain.end(), assignment.object) != domain.end();
+    const auto& objects = parameter_domains[uint_t(assignment.index)].objects;
+    return std::find(objects.begin(), objects.end(), assignment.object) != objects.end();
 }
 
-[[maybe_unused]] inline bool contains(const analysis::DomainListList& parameter_domains, const EdgeAssignment& assignment)
+[[maybe_unused]] inline bool contains(const analysis::VariableDomainList& parameter_domains, const EdgeAssignment& assignment)
 {
     return contains(parameter_domains, VertexAssignment(assignment.first_index, assignment.first_object))
            && contains(parameter_domains, VertexAssignment(assignment.second_index, assignment.second_object));
@@ -58,7 +58,7 @@ namespace
  * PerfectAssignmentHash
  */
 
-PerfectAssignmentHash::PerfectAssignmentHash(const analysis::DomainListList& parameter_domains, size_t num_objects) :
+PerfectAssignmentHash::PerfectAssignmentHash(const analysis::VariableDomainList& parameter_domains, size_t num_objects) :
     m_num_assignments(0),
     m_remapping(),
     m_offsets(),
@@ -79,7 +79,7 @@ PerfectAssignmentHash::PerfectAssignmentHash(const analysis::DomainListList& par
 
         const auto& parameter_domain = parameter_domains[i];
         auto new_index = uint_t { 0 };
-        for (const auto object_index : parameter_domain)
+        for (const auto object_index : parameter_domain.objects)
         {
             m_remapping[i + 1][uint_t(object_index) + 1] = ++new_index;
             ++m_num_assignments;
@@ -137,7 +137,7 @@ size_t PerfectAssignmentHash::size() const noexcept { return m_num_assignments *
 
 template<formalism::FactKind T>
 PredicateAssignmentSet<T>::PredicateAssignmentSet(formalism::datalog::PredicateView<T> predicate,
-                                                  const analysis::DomainListList& parameter_domains,
+                                                  const analysis::VariableDomainList& parameter_domains,
                                                   size_t num_objects) :
     m_predicate(predicate),
     m_predicate_index(predicate.get_index()),
@@ -236,7 +236,7 @@ PredicateAssignmentSets<T>::PredicateAssignmentSets()
 
 template<formalism::FactKind T>
 PredicateAssignmentSets<T>::PredicateAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
-                                                    const analysis::DomainListListList& predicate_domains,
+                                                    const analysis::PredicateDomainMap<T>& predicate_domains,
                                                     size_t num_objects) :
     m_sets()
 {
@@ -248,7 +248,7 @@ PredicateAssignmentSets<T>::PredicateAssignmentSets(formalism::datalog::Predicat
 
     /* Initialize sets. */
     for (const auto predicate : predicates)
-        m_sets.emplace_back(PredicateAssignmentSet<T>(predicate, predicate_domains[uint_t(predicate.get_index())], num_objects));
+        m_sets.emplace_back(PredicateAssignmentSet<T>(predicate, predicate_domains.at(predicate.get_index()), num_objects));
 }
 
 template<formalism::FactKind T>
@@ -304,9 +304,10 @@ template class PredicateAssignmentSets<f::FluentTag>;
 
 template<formalism::FactKind T>
 FunctionAssignmentSet<T>::FunctionAssignmentSet(formalism::datalog::FunctionView<T> function,
-                                                const analysis::DomainListList& parameter_domains,
+                                                const analysis::VariableDomainList& parameter_domains,
                                                 size_t num_objects) :
-    m_function(function.get_index()),
+    m_function(function),
+    m_function_index(function.get_index()),
     m_hash(PerfectAssignmentHash(parameter_domains, num_objects)),
     m_set(m_hash.size(), ClosedInterval<float_t>())
 {
@@ -324,26 +325,37 @@ void FunctionAssignmentSet<T>::insert(formalism::datalog::FunctionBindingView<T>
     const auto objects = binding.get_objects();
     const auto arity = objects.size();
 
-    auto& empty_assignment_bound = m_set[EmptyAssignment::rank];
-    empty_assignment_bound = hull(empty_assignment_bound, ClosedInterval<float_t>(value, value));
+    {
+        const auto rank = EmptyAssignment::rank;
+
+        auto& empty_assignment_bound = m_set[rank];
+        empty_assignment_bound = hull(empty_assignment_bound, ClosedInterval<float_t>(value, value));
+    }
 
     for (uint_t first_index = 0; first_index < arity; ++first_index)
     {
         const auto first_object = objects[first_index];
 
         // Complete vertex.
-        auto& single_assignment_bound = m_set[m_hash.get_rank<false>(VertexAssignment(formalism::ParameterIndex(first_index), first_object.get_index()))];
-        single_assignment_bound = hull(single_assignment_bound, ClosedInterval<float_t>(value, value));
+        {
+            const auto rank = m_hash.get_rank<false>(VertexAssignment(formalism::ParameterIndex(first_index), first_object.get_index()));
+
+            auto& single_assignment_bound = m_set[rank];
+            single_assignment_bound = hull(single_assignment_bound, ClosedInterval<float_t>(value, value));
+        }
 
         for (uint_t second_index = first_index + 1; second_index < arity; ++second_index)
         {
             const auto second_object = objects[second_index];
 
             // Ordered complete edge.
-            auto& double_assignment_bound = m_set[m_hash.get_rank<false>(EdgeAssignment(formalism::ParameterIndex(first_index),
-                                                                                        first_object.get_index(),
-                                                                                        formalism::ParameterIndex(second_index),
-                                                                                        second_object.get_index()))];
+
+            const auto rank = m_hash.get_rank<false>(EdgeAssignment(formalism::ParameterIndex(first_index),
+                                                                    first_object.get_index(),
+                                                                    formalism::ParameterIndex(second_index),
+                                                                    second_object.get_index()));
+
+            auto& double_assignment_bound = m_set[rank];
             double_assignment_bound = hull(double_assignment_bound, ClosedInterval<float_t>(value, value));
         }
     }
@@ -417,7 +429,7 @@ FunctionAssignmentSets<T>::FunctionAssignmentSets()
 
 template<formalism::FactKind T>
 FunctionAssignmentSets<T>::FunctionAssignmentSets(formalism::datalog::FunctionListView<T> functions,
-                                                  const analysis::DomainListListList& function_domains,
+                                                  const analysis::FunctionDomainMap<T>& function_domains,
                                                   size_t num_objects) :
     m_sets()
 {
@@ -427,7 +439,7 @@ FunctionAssignmentSets<T>::FunctionAssignmentSets(formalism::datalog::FunctionLi
 
     /* Initialize sets. */
     for (const auto function : functions)
-        m_sets.emplace_back(FunctionAssignmentSet<T>(function, function_domains[function.get_index().get_value()], num_objects));
+        m_sets.emplace_back(FunctionAssignmentSet<T>(function, function_domains.at(function.get_index()), num_objects));
 }
 
 template<formalism::FactKind T>
@@ -498,8 +510,8 @@ TaggedAssignmentSets<T>::TaggedAssignmentSets()
 template<formalism::FactKind T>
 TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                                               formalism::datalog::FunctionListView<T> functions,
-                                              const analysis::DomainListListList& predicate_domains,
-                                              const analysis::DomainListListList& function_domains,
+                                              const analysis::PredicateDomainMap<T>& predicate_domains,
+                                              const analysis::FunctionDomainMap<T>& function_domains,
                                               size_t num_objects) :
     predicate(predicates, predicate_domains, num_objects),
     function(functions, function_domains, num_objects)
@@ -509,8 +521,8 @@ TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListV
 template<formalism::FactKind T>
 TaggedAssignmentSets<T>::TaggedAssignmentSets(formalism::datalog::PredicateListView<T> predicates,
                                               formalism::datalog::FunctionListView<T> functions,
-                                              const analysis::DomainListListList& predicate_domains,
-                                              const analysis::DomainListListList& function_domains,
+                                              const analysis::PredicateDomainMap<T>& predicate_domains,
+                                              const analysis::FunctionDomainMap<T>& function_domains,
                                               size_t num_objects,
                                               const TaggedFactSets<T>& fact_sets) :
     TaggedAssignmentSets(predicates, functions, predicate_domains, function_domains, num_objects)
@@ -532,6 +544,7 @@ void TaggedAssignmentSets<T>::insert(const TaggedFactSets<T>& fact_sets)
         const auto& remap = other.get_remap();
         const auto& bindings = other.get_bindings();
         const auto& values = other.get_values();
+
         for (uint_t j = 0; j < remap.size(); ++j)
         {
             if (remap[j] == std::numeric_limits<uint_t>::max())

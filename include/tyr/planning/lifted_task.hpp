@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,11 @@
 #include "tyr/common/vector.hpp"                    // for get
 #include "tyr/formalism/planning/declarations.hpp"  // for OverlayRepos...
 #include "tyr/formalism/planning/fdr_context.hpp"
+#include "tyr/formalism/planning/grounder_decl.hpp"
 #include "tyr/formalism/planning/planning_task.hpp"
 #include "tyr/formalism/planning/views.hpp"  // for View
 #include "tyr/planning/declarations.hpp"
+#include "tyr/planning/lifted_task/task_grounder_decl.hpp"
 #include "tyr/planning/programs/action.hpp"
 #include "tyr/planning/programs/axiom.hpp"
 #include "tyr/planning/programs/rpg.hpp"
@@ -48,7 +50,8 @@ public:
 
     static std::shared_ptr<Task<LiftedTag>> create(formalism::planning::PlanningTask task);
 
-    GroundTaskPtr instantiate_ground_task(ExecutionContext& execution_context);
+    GroundTaskInstantiationResult instantiate_ground_task(ExecutionContext& execution_context,
+                                                          const GroundTaskInstantiationOptions& options = GroundTaskInstantiationOptions());
 
     /**
      * Getters
@@ -60,6 +63,7 @@ public:
     auto& get_fdr_context() noexcept { return m_task.get_fdr_context(); }
     const auto& get_fdr_context() const noexcept { return m_task.get_fdr_context(); }
     const auto& get_repository() const noexcept { return m_task.get_repository(); }
+    bool has_axioms() const noexcept { return !get_task().get_axioms().empty() || !get_domain().get_domain().get_axioms().empty(); }
 
     auto& get_axiom_program() noexcept { return m_axiom_program; }
     const auto& get_axiom_program() const noexcept { return m_axiom_program; }
@@ -67,7 +71,9 @@ public:
     const auto& get_action_program() const noexcept { return m_action_program; }
     auto& get_rpg_program() noexcept { return m_rpg_program; }
     const auto& get_rpg_program() const noexcept { return m_rpg_program; }
-    const auto& get_parameter_domains_per_cond_effect_per_action() const noexcept { return m_parameter_domains_per_cond_effect_per_action; }
+
+    auto& get_grounder_cache() noexcept { return m_grounder_cache; }
+    const auto& get_grounder_cache() const noexcept { return m_grounder_cache; }
 
     const auto& get_static_atoms_bitset() const noexcept { return m_static_atoms_bitset; }
     const auto& get_static_numeric_variables() const noexcept { return m_static_numeric_variables; }
@@ -86,9 +92,10 @@ private:
     AxiomEvaluatorProgram m_axiom_program;
 
     ApplicableActionProgram m_action_program;
-    std::vector<analysis::DomainListListList> m_parameter_domains_per_cond_effect_per_action;
 
     RPGProgram m_rpg_program;
+
+    formalism::planning::GrounderCache m_grounder_cache;
 };
 
 }

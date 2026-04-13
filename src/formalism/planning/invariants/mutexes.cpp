@@ -1,0 +1,364 @@
+/*
+ * Copyright (C) 2025-2026 Dominik Drexler
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "tyr/formalism/planning/invariants/mutexes.hpp"
+
+#include "matching.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <optional>
+#include <tuple>
+#include <vector>
+
+namespace tyr::formalism::planning::invariant
+{
+namespace
+{
+
+std::optional<std::vector<Index<Object>>> extract_rigid_values(const Invariant& inv, const MutableAtom<FluentTag>& pattern, GroundAtomView<FluentTag> atom)
+{
+    const auto sigma = match_invariant_against_ground_atom(inv, pattern, MutableAtom<FluentTag>(atom));
+    if (!sigma.has_value())
+        return std::nullopt;
+
+    std::vector<Index<Object>> rigid_values;
+    rigid_values.reserve(inv.num_rigid_variables);
+
+    for (size_t i = 0; i < inv.num_rigid_variables; ++i)
+    {
+        const auto& value = (*sigma)[ParameterIndex(i)];
+        if (!value.has_value())
+            return std::nullopt;
+
+        const auto maybe_object = std::visit(
+            [](auto&& arg) -> std::optional<Index<Object>>
+            {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, Index<Object>>)
+                {
+                    return arg;
+                }
+                else if constexpr (std::is_same_v<T, ParameterIndex>)
+                {
+                    return std::nullopt;
+                }
+                else
+                {
+                    static_assert(dependent_false<T>::value, "Unhandled case");
+                }
+            },
+            value->value);
+
+        if (!maybe_object.has_value())
+            return std::nullopt;
+
+        rigid_values.push_back(*maybe_object);
+    }
+
+    return rigid_values;
+}
+
+bool instantiate_matches_ground_atom(const MutableAtom<FluentTag>& pattern,
+                                     const std::vector<Index<Object>>& rigid_values,
+                                     std::optional<Index<Object>> counted_value,
+                                     GroundAtomView<FluentTag> ground_atom)
+{
+    if (pattern.predicate != ground_atom.get_predicate())
+        return false;
+    if (pattern.terms.size() != ground_atom.get_row().get_objects().size())
+        return false;
+
+    for (size_t pos = 0; pos < pattern.terms.size(); ++pos)
+    {
+        const auto object = ground_atom.get_row().get_objects()[pos].get_index();
+
+        const bool ok = std::visit(
+            [&](auto&& arg) -> bool
+            {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, ParameterIndex>)
+                {
+                    const auto idx = static_cast<uint_t>(arg);
+                    if (idx < rigid_values.size())
+                        return rigid_values[idx] == object;
+
+                    return counted_value.has_value() && *counted_value == object;
+                }
+                else if constexpr (std::is_same_v<T, Index<Object>>)
+                {
+                    return arg == object;
+                }
+                else
+                {
+                    static_assert(dependent_false<T>::value, "Unhandled case");
+                }
+            },
+            pattern.terms[pos].value);
+
+        if (!ok)
+            return false;
+    }
+
+    return true;
+}
+
+bool initial_atom_matches_part(const Invariant& inv, const MutableAtom<FluentTag>& part, GroundAtomView<FluentTag> atom)
+{
+    return match_invariant_against_ground_atom(inv, part, MutableAtom<FluentTag>(atom)).has_value();
+}
+
+GroundAtomViewList<FluentTag>
+instantiate_group(const Invariant& inv, const std::vector<Index<Object>>& rigid_values, const GroundAtomViewList<FluentTag>& all_atoms)
+{
+    assert(inv.num_counted_variables <= 1);
+
+    GroundAtomViewList<FluentTag> result;
+    std::vector<bool> seen(all_atoms.size(), false);
+
+    for (const auto& pattern : inv.atoms)
+    {
+        std::optional<size_t> counted_position;
+
+        for (size_t pos = 0; pos < pattern.terms.size(); ++pos)
+        {
+            std::visit(
+                [&](auto&& arg)
+                {
+                    using T = std::decay_t<decltype(arg)>;
+                    if constexpr (std::is_same_v<T, ParameterIndex>)
+                    {
+                        if (static_cast<uint_t>(arg) >= inv.num_rigid_variables && !counted_position.has_value())
+                            counted_position = pos;
+                    }
+                },
+                pattern.terms[pos].value);
+
+            if (counted_position.has_value())
+                break;
+        }
+
+        for (const auto atom : all_atoms)
+        {
+            if (pattern.predicate != atom.get_predicate())
+                continue;
+            if (pattern.terms.size() != atom.get_row().get_objects().size())
+                continue;
+
+            std::optional<Index<Object>> counted_object = std::nullopt;
+            if (counted_position.has_value())
+                counted_object = atom.get_row().get_objects()[*counted_position].get_index();
+
+            if (!instantiate_matches_ground_atom(pattern, rigid_values, counted_object, atom))
+                continue;
+
+            const auto i = uint_t(atom.get_index());
+            if (!seen[i])
+            {
+                seen[i] = true;
+                result.push_back(atom);
+            }
+        }
+    }
+
+    return result;
+}
+
+struct PrecomputedGroup
+{
+    size_t inv_index;
+    std::vector<Index<Object>> rigid_values;
+    GroundAtomViewList<FluentTag> atoms;
+
+    auto identifying_members() const noexcept { return std::tie(inv_index, rigid_values, atoms); }
+
+    friend bool operator<(const PrecomputedGroup& lhs, const PrecomputedGroup& rhs) { return lhs.identifying_members() < rhs.identifying_members(); }
+};
+
+struct GroupKey
+{
+    size_t invariant_index;
+    std::vector<Index<Object>> rigid_values;
+
+    auto identifying_members() const noexcept { return std::tie(invariant_index, rigid_values); }
+
+    friend bool operator==(const GroupKey&, const GroupKey&) = default;
+    friend bool operator<(const GroupKey& lhs, const GroupKey& rhs) { return lhs.identifying_members() < rhs.identifying_members(); }
+};
+
+std::vector<PrecomputedGroup>
+precompute_groups(const GroundAtomViewList<FluentTag>& initial_atoms, const GroundAtomViewList<FluentTag>& all_atoms, const InvariantList& invariants)
+{
+    std::vector<PrecomputedGroup> groups;
+    std::set<GroupKey> seen_keys;
+
+    for (size_t inv_index = 0; inv_index < invariants.size(); ++inv_index)
+    {
+        const auto& inv = invariants[inv_index];
+
+        for (const auto atom : initial_atoms)
+        {
+            if (!inv.predicates.contains(atom.get_predicate()))
+                continue;
+
+            for (const auto& part : inv.atoms)
+            {
+                if (part.predicate != atom.get_predicate())
+                    continue;
+                if (!initial_atom_matches_part(inv, part, atom))
+                    continue;
+
+                auto rigid_values = extract_rigid_values(inv, part, atom);
+                if (!rigid_values.has_value())
+                    continue;
+
+                GroupKey key { inv_index, *rigid_values };
+                if (!seen_keys.insert(key).second)
+                    continue;
+
+                auto instantiated_group = instantiate_group(inv, *rigid_values, all_atoms);
+                if (instantiated_group.empty())
+                    continue;
+
+                size_t initial_count = 0;
+                for (const auto gatom : instantiated_group)
+                {
+                    if (std::find(initial_atoms.begin(), initial_atoms.end(), gatom) != initial_atoms.end())
+                        ++initial_count;
+                }
+
+                if (initial_count > 1)
+                    continue;
+
+                std::sort(instantiated_group.begin(), instantiated_group.end());
+
+                groups.push_back(PrecomputedGroup {
+                    .inv_index = inv_index,
+                    .rigid_values = *rigid_values,
+                    .atoms = std::move(instantiated_group),
+                });
+            }
+        }
+    }
+
+    return groups;
+}
+
+size_t compute_uncovered_coverage(const PrecomputedGroup& group, const std::vector<bool>& uncovered)
+{
+    size_t coverage = 0;
+    for (const auto atom : group.atoms)
+    {
+        const auto i = uint_t(atom.get_index());
+        if (uncovered[i])
+            ++coverage;
+    }
+    return coverage;
+}
+
+std::optional<size_t> select_best_group(const std::vector<PrecomputedGroup>& groups, const std::vector<bool>& uncovered)
+{
+    std::optional<size_t> best_group_index;
+    size_t best_coverage = 0;
+
+    for (size_t i = 0; i < groups.size(); ++i)
+    {
+        const auto coverage = compute_uncovered_coverage(groups[i], uncovered);
+        if (coverage > best_coverage)
+        {
+            best_group_index = i;
+            best_coverage = coverage;
+        }
+    }
+
+    return best_group_index;
+}
+
+GroundAtomViewList<FluentTag> build_uncovered_subgroup(const PrecomputedGroup& group, const std::vector<bool>& uncovered)
+{
+    GroundAtomViewList<FluentTag> result;
+    result.reserve(group.atoms.size());
+
+    for (const auto atom : group.atoms)
+    {
+        const auto i = uint_t(atom.get_index());
+        if (uncovered[i])
+            result.push_back(atom);
+    }
+
+    return result;
+}
+
+void mark_group_covered(const GroundAtomViewList<FluentTag>& group, std::vector<bool>& uncovered, size_t& num_uncovered)
+{
+    for (const auto atom : group)
+    {
+        const auto i = uint_t(atom.get_index());
+        if (uncovered[i])
+        {
+            uncovered[i] = false;
+            --num_uncovered;
+        }
+    }
+}
+
+std::vector<GroundAtomViewList<FluentTag>> choose_groups_greedily(const std::vector<PrecomputedGroup>& groups, const GroundAtomViewList<FluentTag>& all_atoms)
+{
+    std::vector<bool> uncovered(all_atoms.size(), true);
+    size_t num_uncovered = all_atoms.size();
+
+    std::vector<GroundAtomViewList<FluentTag>> result;
+    result.reserve(groups.size() + all_atoms.size());
+
+    while (num_uncovered > 0)
+    {
+        const auto best_idx = select_best_group(groups, uncovered);
+        if (!best_idx.has_value())
+            break;
+
+        auto selected_group = build_uncovered_subgroup(groups[*best_idx], uncovered);
+        if (selected_group.empty())
+            break;
+
+        result.push_back(selected_group);
+        mark_group_covered(result.back(), uncovered, num_uncovered);
+    }
+
+    for (size_t pos = 0; pos < all_atoms.size(); ++pos)
+    {
+        if (uncovered[pos])
+            result.push_back(GroundAtomViewList<FluentTag> { all_atoms[pos] });
+    }
+
+    return result;
+}
+
+}  // namespace
+
+std::vector<GroundAtomViewList<FluentTag>>
+compute_mutex_groups(const GroundAtomViewList<FluentTag>& initial_atoms, const GroundAtomViewList<FluentTag>& all_atoms, const InvariantList& invariants)
+{
+    for (uint_t i = 0; i < all_atoms.size(); ++i)
+        assert(uint_t(all_atoms[i].get_index()) == i);
+
+    auto groups = precompute_groups(initial_atoms, all_atoms, invariants);
+    std::sort(groups.begin(), groups.end());
+
+    return choose_groups_greedily(groups, all_atoms);
+}
+
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "tyr/planning/declarations.hpp"
 #include "tyr/planning/heuristic.hpp"
 #include "tyr/planning/lifted_task.hpp"
+#include "tyr/planning/lifted_task/state_data.hpp"
 #include "tyr/planning/lifted_task/state_view.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
 #include "tyr/planning/task_utils.hpp"
@@ -55,10 +56,14 @@ public:
 
         auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
 
-        for (const auto fact : goal.get_facts<formalism::FluentTag>())
+        for (const auto fact : goal.get_facts<formalism::PositiveTag>())
         {
-            if (fact.get_atom())
-                m_workspace.facts.goal_fact_sets.insert(formalism::planning::merge_p2d(fact.get_atom().value(), merge_context).first);
+            assert(fact.has_value());
+            m_workspace.facts.goal_fact_sets.insert(
+                formalism::planning::merge_p2d(fact.get_atom().value(),
+                                               m_task->get_rpg_program().get_translation_context().p2d.fluent_to_fluent_predicate,
+                                               merge_context)
+                    .first);
         }
     }
 
@@ -68,7 +73,11 @@ public:
 
         auto merge_context = formalism::planning::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
 
-        insert_fluent_atoms_to_fact_set(state.get_unpacked_state(), *m_task->get_repository(), merge_context, m_workspace.facts.fact_sets);
+        insert_fluent_atoms_to_fact_set(state.get_unpacked_state(),
+                                        *m_task->get_repository(),
+                                        m_task->get_rpg_program().get_translation_context().p2d.fluent_to_fluent_predicate,
+                                        merge_context,
+                                        m_workspace.facts.fact_sets);
 
         auto ctx = datalog::ProgramExecutionContext(m_workspace, m_task->get_rpg_program().get_const_program_workspace());
         ctx.clear();
@@ -79,6 +88,24 @@ public:
     }
 
     const auto& get_workspace() const noexcept { return m_workspace; }
+
+    void print_summary(size_t verbosity) const override
+    {
+        if (verbosity < 1)
+            return;
+
+        std::cout << "[RPGHeuristic] Summary" << std::endl;
+        std::cout << m_workspace.statistics << std::endl;
+        auto rule_statistics = std::vector<datalog::RuleStatistics> {};
+        for (const auto& ws_rule : m_workspace.rules)
+            rule_statistics.push_back(ws_rule->common.statistics);
+        std::cout << datalog::compute_aggregated_rule_statistics(rule_statistics) << std::endl;
+        auto rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+        for (const auto& ws_rule : m_workspace.rules)
+            for (const auto& worker : ws_rule->worker)
+                rule_worker_statistics.push_back(worker.solve.statistics);
+        std::cout << datalog::compute_aggregated_rule_worker_statistics(rule_worker_statistics) << std::endl;
+    }
 
 protected:
     std::shared_ptr<Task<LiftedTag>> m_task;

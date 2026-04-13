@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,49 +18,27 @@
 #ifndef TYR_ANALYSIS_DOMAINS_HPP_
 #define TYR_ANALYSIS_DOMAINS_HPP_
 
-#include "tyr/common/declarations.hpp"  // for UnorderedSet
-#include "tyr/common/equal_to.hpp"      // for EqualTo
-#include "tyr/common/hash.hpp"          // for Hash
+#include "tyr/analysis/declarations.hpp"
+#include "tyr/common/declarations.hpp"
+#include "tyr/common/equal_to.hpp"
+#include "tyr/common/hash.hpp"
 #include "tyr/common/types.hpp"
 #include "tyr/formalism/datalog/repository.hpp"
+#include "tyr/formalism/object_index.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 
-#include <utility>  // for pair
-#include <vector>   // for vector
+#include <utility>
+#include <vector>
 
 namespace tyr::analysis
 {
-using DomainSet = UnorderedSet<Index<formalism::Object>>;
-using DomainSetList = std::vector<DomainSet>;
-using DomainSetListList = std::vector<DomainSetList>;
+ProgramVariableDomains compute_variable_domains(formalism::datalog::ProgramView program);
 
-using DomainList = std::vector<Index<formalism::Object>>;
-using DomainListList = std::vector<DomainList>;
-using DomainListListList = std::vector<DomainListList>;
+TaskVariableDomains compute_variable_domains(formalism::planning::TaskView task);
 
-struct ProgramVariableDomains
-{
-    DomainListListList static_predicate_domains;
-    DomainListListList fluent_predicate_domains;
-    DomainListListList static_function_domains;
-    DomainListListList fluent_function_domains;
-    DomainListListList rule_domains;
-};
+ProgramVariableDomainsView compute_variable_domain_views(const ProgramVariableDomains& domains, const formalism::datalog::Repository& repository);
 
-struct TaskVariableDomains
-{
-    DomainListListList static_predicate_domains;
-    DomainListListList fluent_predicate_domains;
-    DomainListListList derived_predicate_domains;
-    DomainListListList static_function_domains;
-    DomainListListList fluent_function_domains;
-    std::vector<std::pair<DomainListList, DomainListListList>> action_domains;
-    DomainListListList axiom_domains;
-};
-
-extern ProgramVariableDomains compute_variable_domains(formalism::datalog::ProgramView program);
-
-extern TaskVariableDomains compute_variable_domains(formalism::planning::TaskView task);
+TaskVariableDomainsView compute_variable_domain_views(const TaskVariableDomains& domains, const formalism::planning::Repository& repository);
 }
 
 #endif

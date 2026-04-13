@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ public:
     void compute_extended_state(UnpackedState<LiftedTag>& unpacked_state);
 
     const auto& get_workspace() const noexcept { return m_workspace; }
+
+    void print_summary(size_t verbosity) const;
 
 private:
     std::shared_ptr<Task<LiftedTag>> m_task;

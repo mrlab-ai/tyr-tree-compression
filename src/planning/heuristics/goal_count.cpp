@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,13 +48,19 @@ float_t GoalCountHeuristic<Kind>::evaluate(const StateView<Kind>& state)
 
     auto state_context = StateContext<Kind> { *m_task, state.get_unpacked_state(), float_t { 0 } };
 
-    for (const auto fact : m_goal.template get_facts<formalism::FluentTag>())
+    for (const auto fact : m_goal.template get_facts<formalism::PositiveTag>())
     {
-        if (!is_applicable(fact, state_context))
+        if (!is_applicable<formalism::PositiveTag>(fact, state_context))
             ++unsat_counter;
     }
 
-    for (const auto fact : m_goal.template get_facts<formalism::DerivedTag>())
+    for (const auto fact : m_goal.template get_facts<formalism::NegativeTag>())
+    {
+        if (!is_applicable<formalism::NegativeTag>(fact, state_context))
+            ++unsat_counter;
+    }
+
+    for (const auto fact : m_goal.template get_literals<formalism::DerivedTag>())
     {
         if (!is_applicable(fact, state_context))
             ++unsat_counter;

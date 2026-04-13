@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,10 +108,10 @@ bool is_applicable(formalism::planning::GroundLiteralView<formalism::DerivedTag>
 template<TaskKind Kind, formalism::FactKind T>
 bool is_applicable(formalism::planning::GroundLiteralListView<T> elements, const StateContext<Kind>& context);
 
-template<TaskKind Kind>
+template<formalism::PolarityKind P, TaskKind Kind>
 bool is_applicable(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<Kind>& context);
 
-template<TaskKind Kind>
+template<formalism::PolarityKind P, TaskKind Kind>
 bool is_applicable(formalism::planning::FDRFactListView<formalism::FluentTag> elements, const StateContext<Kind>& context);
 
 template<TaskKind Kind>

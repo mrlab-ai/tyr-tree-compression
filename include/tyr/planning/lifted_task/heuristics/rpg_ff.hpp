@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,6 @@ private:
 
     /// For grounding actions
     IndexList<formalism::Object> m_binding;
-    UnorderedMap<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::FDRValue> m_assign;
     itertools::cartesian_set::Workspace<Index<formalism::Object>> m_iter_workspace;
     formalism::planning::EffectFamilyList m_effect_families;
 

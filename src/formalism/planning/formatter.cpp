@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,6 +106,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::Conditiona
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "variables = " << el.variables << "\n";
 
         os << print_indent << "condition = " << el.condition << "\n";
@@ -122,6 +124,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::ConditionalEffe
     os << "ConditionalEffect(\n";
     {
         IndentScope scope(os);
+
+        os << print_indent << "index = " << el.get_index() << "\n";
 
         os << print_indent << "variables = " << el.get_variables() << "\n";
 
@@ -140,6 +144,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::GroundCond
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "condition = " << el.condition << "\n";
 
         os << print_indent << "effect = " << el.effect << "\n";
@@ -155,6 +161,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::GroundCondition
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.get_index() << "\n";
+
         os << print_indent << "condition = " << el.get_condition() << "\n";
 
         os << print_indent << "effect = " << el.get_effect() << "\n";
@@ -169,6 +177,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::Conjunctiv
     os << "ConjunctiveEffect(\n";
     {
         IndentScope scope(os);
+
+        os << print_indent << "index = " << el.index << "\n";
 
         os << print_indent << "fluent literals = " << el.literals << "\n";
 
@@ -187,6 +197,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::ConjunctiveEffe
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.get_index() << "\n";
+
         os << print_indent << "fluent literals = " << el.get_literals() << "\n";
 
         os << print_indent << "fluent numeric effects = " << el.get_numeric_effects() << "\n";
@@ -204,7 +216,11 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::GroundConj
     {
         IndentScope scope(os);
 
-        os << print_indent << "fluent facts = " << el.facts << "\n";
+        os << print_indent << "index = " << el.index << "\n";
+
+        os << print_indent << "add facts = " << el.add_facts << "\n";
+
+        os << print_indent << "del facts = " << el.del_facts << "\n";
 
         os << print_indent << "fluent numeric effects = " << el.numeric_effects << "\n";
 
@@ -221,7 +237,11 @@ std::ostream& print(std::ostream& os, const formalism::planning::GroundConjuncti
     {
         IndentScope scope(os);
 
-        os << print_indent << "fluent facts = " << el.get_facts() << "\n";
+        os << print_indent << "index = " << el.get_index() << "\n";
+
+        os << print_indent << "add facts = " << el.get_facts<formalism::PositiveTag>() << "\n";
+
+        os << print_indent << "del facts = " << el.get_facts<formalism::NegativeTag>() << "\n";
 
         os << print_indent << "fluent numeric effects = " << el.get_numeric_effects() << "\n";
 
@@ -300,6 +320,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::GroundActionVie
         IndentScope scope(os);
 
         os << print_indent << "index = " << el.get_index() << "\n";
+
+        os << print_indent << "binding = " << el.get_row() << "\n";
 
         os << print_indent << "action index = " << el.get_action().get_index() << "\n";
 
@@ -389,6 +411,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::GroundAxiomView
 
         os << print_indent << "index = " << el.get_index() << "\n";
 
+        os << print_indent << "binding = " << el.get_row() << "\n";
+
         os << print_indent << "axiom index = " << el.get_axiom().get_index() << "\n";
 
         os << print_indent << "body = " << el.get_body() << "\n";
@@ -430,6 +454,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::Task>& el)
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "name = " << el.name << "\n";
 
         os << print_indent << "derived predicates = " << el.derived_predicates << "\n";
@@ -462,6 +488,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::TaskView& el)
     os << "Task(\n";
     {
         IndentScope scope(os);
+
+        os << print_indent << "index = " << el.get_index() << "\n";
 
         os << print_indent << "name = " << el.get_name() << "\n";
 
@@ -496,6 +524,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::Domain>& e
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "name = " << el.name << "\n";
 
         os << print_indent << "static predicates = " << el.static_predicates << "\n";
@@ -526,6 +556,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::DomainView& el)
     os << "Domain(\n";
     {
         IndentScope scope(os);
+
+        os << print_indent << "index = " << el.get_index() << "\n";
 
         os << print_indent << "name = " << el.get_name() << "\n";
 
@@ -564,6 +596,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::Conjunctiv
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "variables = " << el.variables << "\n";
 
         os << print_indent << "static literals = " << el.static_literals << "\n";
@@ -584,6 +618,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::ConjunctiveCond
     os << "ConjunctiveCondition(\n";
     {
         IndentScope scope(os);
+
+        os << print_indent << "index = " << el.get_index() << "\n";
 
         os << print_indent << "variables = " << el.get_variables() << "\n";
 
@@ -606,11 +642,15 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::GroundConj
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "static literals = " << el.static_literals << "\n";
 
-        os << print_indent << "fluent facts = " << el.fluent_facts << "\n";
-
         os << print_indent << "derived literals = " << el.derived_literals << "\n";
+
+        os << print_indent << "positive facts = " << el.positive_facts << "\n";
+
+        os << print_indent << "negative facts = " << el.negative_facts << "\n";
 
         os << print_indent << "numeric constraints = " << el.numeric_constraints << "\n";
     }
@@ -625,11 +665,15 @@ std::ostream& print(std::ostream& os, const formalism::planning::GroundConjuncti
     {
         IndentScope scope(os);
 
-        os << print_indent << "static literals = " << el.template get_facts<formalism::StaticTag>() << "\n";
+        os << print_indent << "index = " << el.get_index() << "\n";
 
-        os << print_indent << "fluent facts = " << el.template get_facts<formalism::FluentTag>() << "\n";
+        os << print_indent << "static literals = " << el.template get_literals<formalism::StaticTag>() << "\n";
 
-        os << print_indent << "derived facts = " << el.template get_facts<formalism::DerivedTag>() << "\n";
+        os << print_indent << "derived literals = " << el.template get_literals<formalism::DerivedTag>() << "\n";
+
+        os << print_indent << "positive facts = " << el.template get_facts<formalism::PositiveTag>() << "\n";
+
+        os << print_indent << "negative facts = " << el.template get_facts<formalism::NegativeTag>() << "\n";
 
         os << print_indent << "numeric constraints = " << el.get_numeric_constraints() << "\n";
     }
@@ -644,6 +688,8 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::FDRTask>& 
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.index << "\n";
+
         os << print_indent << "name = " << el.name << "\n";
 
         os << print_indent << "derived predicates = " << el.derived_predicates << "\n";
@@ -655,12 +701,6 @@ std::ostream& print(std::ostream& os, const Data<formalism::planning::FDRTask>& 
         os << print_indent << "fluent atoms = " << el.fluent_atoms << "\n";
 
         os << print_indent << "derived atoms = " << el.derived_atoms << "\n";
-
-        os << print_indent << "static fterms = " << el.static_fterms << "\n";
-
-        os << print_indent << "fluent fterms = " << el.fluent_fterms << "\n";
-
-        os << print_indent << "auxiliary fterm = " << el.auxiliary_fterm << "\n";
 
         os << print_indent << "static numeric variables = " << el.static_fterm_values << "\n";
 
@@ -695,6 +735,8 @@ std::ostream& print(std::ostream& os, const formalism::planning::FDRTaskView& el
     {
         IndentScope scope(os);
 
+        os << print_indent << "index = " << el.get_index() << "\n";
+
         os << print_indent << "name = " << el.get_name() << "\n";
 
         os << print_indent << "derived predicates = " << el.get_derived_predicates() << "\n";
@@ -706,12 +748,6 @@ std::ostream& print(std::ostream& os, const formalism::planning::FDRTaskView& el
         os << print_indent << "fluent atoms = " << el.template get_atoms<formalism::FluentTag>() << "\n";
 
         os << print_indent << "derived atoms = " << el.template get_atoms<formalism::DerivedTag>() << "\n";
-
-        os << print_indent << "static fterms = " << el.template get_fterms<formalism::StaticTag>() << "\n";
-
-        os << print_indent << "fluent fterms = " << el.template get_fterms<formalism::FluentTag>() << "\n";
-
-        os << print_indent << "auxiliary fterm = " << el.get_auxiliary_fterm() << "\n";
 
         os << print_indent << "static numeric variables = " << el.template get_fterm_values<formalism::StaticTag>() << "\n";
 

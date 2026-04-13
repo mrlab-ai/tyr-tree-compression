@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,10 @@
 
 #include "../../common/bindings.hpp"
 #include "datas.hpp"
+#include "domains.hpp"
 #include "indices.hpp"
+#include "invariants.hpp"
+#include "mutable.hpp"
 #include "views.hpp"
 
 namespace tyr::formalism::planning
@@ -79,6 +82,24 @@ void bind_module_definitions(nb::module_& m)
 
     bind_fixed_uint<FDRValue>(m, "FDRValue");
     bind_fixed_uint<ParameterIndex>(m, "ParameterIndex");
+
+    /**
+     * Invariants
+     */
+
+    invariant::bind_invariants(m);
+
+    /**
+     * Mutable
+     */
+
+    bind_mutable(m);
+
+    /**
+     * Domains
+     */
+
+    bind_variable_domains(m);
 
     /**
      * Index
@@ -305,7 +326,8 @@ void bind_module_definitions(nb::module_& m)
             .def("get_task", &PlanningTask::get_task)
             .def("get_repository", &PlanningTask::get_repository)
             .def("get_fdr_context", &PlanningTask::get_fdr_context, nb::rv_policy::reference_internal)
-            .def("get_domain", &PlanningTask::get_domain);
+            .def("get_domain", &PlanningTask::get_domain)
+            .def("get_variable_domains", &PlanningTask::get_variable_domains_view);
     }
 
     {

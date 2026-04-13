@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,51 @@
 #ifndef TYR_PLANNING_TASK_UTILS_HPP_
 #define TYR_PLANNING_TASK_UTILS_HPP_
 
-#include "tyr/analysis/domains.hpp"
+#include "tyr/analysis/declarations.hpp"
 #include "tyr/common/config.hpp"
 #include "tyr/datalog/declarations.hpp"
 #include "tyr/formalism/datalog/repository.hpp"
 #include "tyr/formalism/planning/merge_datalog_decl.hpp"
 #include "tyr/formalism/planning/repository.hpp"
 #include "tyr/planning/lifted_task/unpacked_state.hpp"
+#include "tyr/planning/programs/translation_context.hpp"
 #include "tyr/planning/task.hpp"
 
 namespace tyr::planning
 {
 
-// Fact Set
-
 extern void insert_fluent_atoms_to_fact_set(const UnpackedState<LiftedTag>& state,
                                             const formalism::planning::Repository& repository,
+                                            const UnorderedMap<formalism::planning::PredicateView<formalism::FluentTag>,
+                                                               formalism::datalog::PredicateView<formalism::FluentTag>>& fluent_to_fluent_predicate,
                                             formalism::planning::MergeDatalogContext& merge_context,
                                             datalog::TaggedFactSets<formalism::FluentTag>& fact_sets);
+
+void insert_derived_atoms_to_fact_set(const UnpackedState<LiftedTag>& state,
+                                      const formalism::planning::Repository& repository,
+                                      const UnorderedMap<formalism::planning::PredicateView<formalism::DerivedTag>,
+                                                         formalism::datalog::PredicateView<formalism::FluentTag>>& derived_to_fluent_predicate,
+                                      formalism::planning::MergeDatalogContext& merge_context,
+                                      datalog::TaggedFactSets<formalism::FluentTag>& fact_sets);
+
+void insert_numeric_variables_to_fact_set(const UnpackedState<LiftedTag>& state,
+                                          const formalism::planning::Repository& repository,
+                                          formalism::planning::MergeDatalogContext& merge_context,
+                                          datalog::TaggedFactSets<formalism::FluentTag>& fact_sets);
+
+void insert_extended_state(const UnpackedState<LiftedTag>& unpacked_state,
+                           const formalism::planning::Repository& atoms_context,
+                           const P2DTranslationContext& translation_context,
+                           formalism::planning::MergeDatalogContext& merge_context,
+                           datalog::TaggedFactSets<formalism::FluentTag>& fact_sets,
+                           datalog::TaggedAssignmentSets<formalism::FluentTag>& assignment_sets);
+
+void insert_unextended_state(const UnpackedState<LiftedTag>& unpacked_state,
+                             const formalism::planning::Repository& atoms_context,
+                             const P2DTranslationContext& translation_context,
+                             formalism::planning::MergeDatalogContext& merge_context,
+                             datalog::TaggedFactSets<formalism::FluentTag>& fact_sets,
+                             datalog::TaggedAssignmentSets<formalism::FluentTag>& assignment_sets);
 
 }
 

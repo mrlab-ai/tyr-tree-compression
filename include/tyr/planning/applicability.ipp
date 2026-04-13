@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,16 +167,25 @@ bool is_applicable(formalism::planning::GroundLiteralListView<T> elements, const
     return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable(arg, context); });
 }
 
-template<TaskKind Kind>
+template<formalism::PolarityKind P, TaskKind Kind>
 bool is_applicable(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<Kind>& context)
 {
-    return context.unpacked_state.get(element.get_variable().get_index()) == element.get_value();
+    assert(element.has_value());
+
+    const auto value = context.unpacked_state.get(element.get_variable().get_index());
+
+    if constexpr (std::same_as<P, formalism::PositiveTag>)
+        return value == element.get_value();
+    else if constexpr (std::same_as<P, formalism::NegativeTag>)
+        return value != element.get_value();
+    else
+        static_assert(dependent_false<P>::value, "Missing case");
 }
 
-template<TaskKind Kind>
+template<formalism::PolarityKind P, TaskKind Kind>
 bool is_applicable(formalism::planning::FDRFactListView<formalism::FluentTag> elements, const StateContext<Kind>& context)
 {
-    return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable(arg, context); });
+    return std::all_of(elements.begin(), elements.end(), [&](auto&& arg) { return is_applicable<P>(arg, context); });
 }
 
 template<TaskKind Kind>
@@ -251,9 +260,10 @@ bool is_applicable(formalism::planning::GroundNumericEffectOperatorView<formalis
 template<TaskKind Kind>
 bool is_applicable(formalism::planning::GroundConjunctiveConditionView element, const StateContext<Kind>& context)
 {
-    return is_applicable(element.template get_facts<formalism::StaticTag>(), context)      //
-           && is_applicable(element.template get_facts<formalism::FluentTag>(), context)   //
-           && is_applicable(element.template get_facts<formalism::DerivedTag>(), context)  //
+    return is_applicable(element.template get_literals<formalism::StaticTag>(), context)                            //
+           && is_applicable<formalism::PositiveTag>(element.template get_facts<formalism::PositiveTag>(), context)  //
+           && is_applicable<formalism::NegativeTag>(element.template get_facts<formalism::NegativeTag>(), context)  //
+           && is_applicable(element.template get_literals<formalism::DerivedTag>(), context)                        //
            && is_applicable(element.get_numeric_constraints(), context);
 }
 
@@ -319,7 +329,7 @@ TYR_INLINE_IMPL bool is_statically_applicable(formalism::planning::GroundLiteral
 
 TYR_INLINE_IMPL bool is_statically_applicable(formalism::planning::GroundConjunctiveConditionView element, const boost::dynamic_bitset<>& static_atoms)
 {
-    return is_statically_applicable(element.template get_facts<formalism::StaticTag>(), static_atoms);
+    return is_statically_applicable(element.template get_literals<formalism::StaticTag>(), static_atoms);
 }
 
 // GroundAction
@@ -345,8 +355,9 @@ TYR_INLINE_IMPL bool is_statically_applicable(formalism::planning::GroundAxiomVi
 template<TaskKind Kind>
 bool is_dynamically_applicable(formalism::planning::GroundConjunctiveConditionView element, const StateContext<Kind>& context)
 {
-    return is_applicable(element.template get_facts<formalism::FluentTag>(), context)      //
-           && is_applicable(element.template get_facts<formalism::DerivedTag>(), context)  //
+    return is_applicable<formalism::PositiveTag>(element.template get_facts<formalism::PositiveTag>(), context)     //
+           && is_applicable<formalism::NegativeTag>(element.template get_facts<formalism::NegativeTag>(), context)  //
+           && is_applicable(element.template get_literals<formalism::DerivedTag>(), context)                        //
            && is_applicable(element.get_numeric_constraints(), context);
 }
 
@@ -360,20 +371,48 @@ TYR_INLINE_IMPL bool is_consistent(formalism::planning::GroundConjunctiveConditi
                                    UnorderedMap<Index<formalism::planning::FDRVariable<formalism::FluentTag>>, formalism::planning::FDRValue>& fluent_assign,
                                    UnorderedMap<Index<formalism::planning::GroundAtom<formalism::DerivedTag>>, bool>& derived_assign)
 {
-    for (const auto fact : element.template get_facts<formalism::FluentTag>())
+    for (const auto fact : element.template get_facts<formalism::PositiveTag>())
     {
-        if (const auto it = fluent_assign.find(fact.get_variable().get_index()); it != fluent_assign.end() && it->second != fact.get_value())
-            return false;
+        const auto var = fact.get_variable().get_index();
+        const auto val = fact.get_value();
+
+        if (const auto it = fluent_assign.find(var); it != fluent_assign.end())
+        {
+            if (it->second != val)
+                return false;
+        }
         else
-            fluent_assign.emplace(fact.get_variable().get_index(), fact.get_value());
+        {
+            fluent_assign.emplace(var, val);
+        }
     }
 
-    for (const auto literal : element.template get_facts<formalism::DerivedTag>())
+    for (const auto fact : element.template get_facts<formalism::NegativeTag>())
     {
-        if (const auto it = derived_assign.find(literal.get_atom().get_index()); it != derived_assign.end() && it->second != literal.get_polarity())
-            return false;
+        const auto var = fact.get_variable().get_index();
+        const auto val = fact.get_value();
+
+        if (const auto it = fluent_assign.find(var); it != fluent_assign.end())
+        {
+            if (it->second == val)
+                return false;
+        }
+    }
+
+    for (const auto literal : element.template get_literals<formalism::DerivedTag>())
+    {
+        const auto atom = literal.get_atom().get_index();
+        const auto pol = literal.get_polarity();
+
+        if (const auto it = derived_assign.find(atom); it != derived_assign.end())
+        {
+            if (it->second != pol)
+                return false;
+        }
         else
-            derived_assign.emplace(literal.get_atom().get_index(), literal.get_polarity());
+        {
+            derived_assign.emplace(atom, pol);
+        }
     }
 
     return true;

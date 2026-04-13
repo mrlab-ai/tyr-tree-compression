@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 #include "tyr/formalism/planning/datas.hpp"
 #include "tyr/formalism/planning/grounder.hpp"
 #include "tyr/formalism/planning/indices.hpp"
+#include "tyr/formalism/planning/invariants/formatter.hpp"
+#include "tyr/formalism/planning/invariants/invariant.hpp"
+#include "tyr/formalism/planning/invariants/synthesis.hpp"
 #include "tyr/formalism/planning/merge.hpp"
 #include "tyr/formalism/planning/parser.hpp"
 #include "tyr/formalism/planning/planning_domain.hpp"

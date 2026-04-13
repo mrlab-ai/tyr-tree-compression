@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -138,11 +138,19 @@ template bool is_applicable(formalism::planning::GroundLiteralListView<formalism
 template bool is_applicable(formalism::planning::GroundLiteralListView<formalism::StaticTag> elements, const StateContext<GroundTag>& context);
 template bool is_applicable(formalism::planning::GroundLiteralListView<formalism::DerivedTag> elements, const StateContext<GroundTag>& context);
 
-template bool is_applicable(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<LiftedTag>& context);
-template bool is_applicable(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<GroundTag>& context);
+template bool is_applicable<formalism::PositiveTag>(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<LiftedTag>& context);
+template bool is_applicable<formalism::NegativeTag>(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<LiftedTag>& context);
+template bool is_applicable<formalism::PositiveTag>(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<GroundTag>& context);
+template bool is_applicable<formalism::NegativeTag>(formalism::planning::FDRFactView<formalism::FluentTag> element, const StateContext<GroundTag>& context);
 
-template bool is_applicable(formalism::planning::FDRFactListView<formalism::FluentTag> elements, const StateContext<LiftedTag>& context);
-template bool is_applicable(formalism::planning::FDRFactListView<formalism::FluentTag> elements, const StateContext<GroundTag>& context);
+template bool is_applicable<formalism::PositiveTag>(formalism::planning::FDRFactListView<formalism::FluentTag> elements,
+                                                    const StateContext<LiftedTag>& context);
+template bool is_applicable<formalism::NegativeTag>(formalism::planning::FDRFactListView<formalism::FluentTag> elements,
+                                                    const StateContext<LiftedTag>& context);
+template bool is_applicable<formalism::PositiveTag>(formalism::planning::FDRFactListView<formalism::FluentTag> elements,
+                                                    const StateContext<GroundTag>& context);
+template bool is_applicable<formalism::NegativeTag>(formalism::planning::FDRFactListView<formalism::FluentTag> elements,
+                                                    const StateContext<GroundTag>& context);
 
 template bool is_applicable(formalism::planning::GroundBooleanOperatorListView elements, const StateContext<LiftedTag>& context);
 template bool is_applicable(formalism::planning::GroundBooleanOperatorListView elements, const StateContext<GroundTag>& context);

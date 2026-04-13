@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -394,6 +394,21 @@ void bind_ground_module_definitions(nb::module_& m)
 
 void bind_lifted_module_definitions(nb::module_& m)
 {
+    nb::enum_<GroundTaskInstantiationStatus>(m, "GroundTaskInstantiationStatus")
+        .value("SUCCESS", GroundTaskInstantiationStatus::SUCCESS)
+        .value("PROVEN_UNSOLVABLE", GroundTaskInstantiationStatus::PROVEN_UNSOLVABLE);
+
+    nb::class_<GroundTaskInstantiationResult>(m, "GroundTaskInstantiationResult")
+        .def(nb::init<>())
+        .def(nb::init<GroundTaskPtr, GroundTaskInstantiationStatus>(), "task"_a, "status"_a)
+        .def_rw("task", &GroundTaskInstantiationResult::task)
+        .def_rw("status", &GroundTaskInstantiationResult::status);
+
+    nb::class_<GroundTaskInstantiationOptions>(m, "GroundTaskInstantiationOptions")
+        .def(nb::init<>())
+        .def(nb::init<bool>(), "disable_invariant_synthesis"_a = true)
+        .def_rw("disable_invariant_synthesis", &GroundTaskInstantiationOptions::disable_invariant_synthesis);
+
     nb::class_<Task<LiftedTag>>(m, "Task")  //
         .def(nb::new_([](formalism::planning::PlanningTask&& task) { return Task<LiftedTag>::create(std::move(task)); }),
              "formalism_task"_a,
@@ -415,7 +430,7 @@ should not be used further.
         .def("get_repository", &Task<LiftedTag>::get_repository)
         .def("get_task", &Task<LiftedTag>::get_task)
         .def("get_fdr_context", nb::overload_cast<>(&Task<LiftedTag>::get_fdr_context, nb::const_))
-        .def("instantiate_ground_task", &Task<LiftedTag>::instantiate_ground_task);
+        .def("instantiate_ground_task", &Task<LiftedTag>::instantiate_ground_task, "execution_context"_a, "options"_a);
 
     bind_index<Index<State<LiftedTag>>>(m, "StateIndex");
     bind_state<LiftedTag>(m, "State");
@@ -672,5 +687,4 @@ void bind_lifted_module_definitions(nb::module_& m)
     bind_default_event_handler<LiftedTag>(m, "DefaultEventHandler");
 }
 }
-
 }

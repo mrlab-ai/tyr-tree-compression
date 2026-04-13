@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,38 +46,30 @@ namespace fp = tyr::formalism::planning;
 
 namespace tyr::planning
 {
-
-static void insert_unextended_state(const UnpackedState<LiftedTag>& unpacked_state,
-                                    const fp::Repository& atoms_context,
-                                    fp::MergeDatalogContext& merge_context,
-                                    d::TaggedFactSets<f::FluentTag>& fact_sets,
-                                    d::TaggedAssignmentSets<f::FluentTag>& assignment_sets)
+namespace
 {
-    fact_sets.reset();
-    assignment_sets.reset();
-
-    insert_fluent_atoms_to_fact_set(unpacked_state, atoms_context, merge_context, fact_sets);
-
-    assignment_sets.insert(fact_sets);
-}
-
-static void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram& axiom_program,
-                                                    UnpackedState<LiftedTag>& unpacked_state,
-                                                    fp::MergePlanningContext& merge_context,
-                                                    d::TaggedFactSets<f::FluentTag>& fact_sets)
+void read_derived_atoms_from_program_context(const AxiomEvaluatorProgram& axiom_program,
+                                             UnpackedState<LiftedTag>& unpacked_state,
+                                             fp::MergePlanningContext& merge_context,
+                                             d::TaggedFactSets<f::FluentTag>& fact_sets)
 {
     for (const auto& set : fact_sets.predicate.get_sets())
     {
         for (const auto& binding : set.get_bindings())
         {
-            if (axiom_program.get_predicate_to_predicate_mapping().contains(binding.get_relation()))
+            if (axiom_program.get_translation_context().d2p.fluent_to_derived_predicate.contains(binding.get_relation()))
             {
-                const auto ground_atom = fp::merge_atom_d2p<f::FluentTag, f::DerivedTag>(binding, merge_context).first.get_index();
+                const auto ground_atom =
+                    fp::merge_atom_d2p<f::FluentTag, f::DerivedTag>(binding,
+                                                                    axiom_program.get_translation_context().d2p.fluent_to_derived_predicate,
+                                                                    merge_context)
+                        .first.get_index();
 
                 unpacked_state.set(ground_atom);
             }
         }
     }
+}
 }
 
 AxiomEvaluator<LiftedTag>::AxiomEvaluator(std::shared_ptr<Task<LiftedTag>> task, ExecutionContextPtr execution_context) :
@@ -99,17 +91,41 @@ std::shared_ptr<AxiomEvaluator<LiftedTag>> AxiomEvaluator<LiftedTag>::create(std
 void AxiomEvaluator<LiftedTag>::compute_extended_state(UnpackedState<LiftedTag>& unpacked_state)
 {
     auto merge_datalog_context = fp::MergeDatalogContext { m_workspace.datalog_builder, m_workspace.workspace_repository };
+    const auto& program = m_task->get_axiom_program();
 
-    insert_unextended_state(unpacked_state, *m_task->get_repository(), merge_datalog_context, m_workspace.facts.fact_sets, m_workspace.facts.assignment_sets);
+    insert_unextended_state(unpacked_state,
+                            *m_task->get_repository(),
+                            program.get_translation_context().p2d,
+                            merge_datalog_context,
+                            m_workspace.facts.fact_sets,
+                            m_workspace.facts.assignment_sets);
 
-    auto ctx = d::ProgramExecutionContext(m_workspace, m_task->get_axiom_program().get_const_program_workspace());
+    auto ctx = d::ProgramExecutionContext(m_workspace, program.get_const_program_workspace());
     ctx.clear();
 
     m_execution_context->arena().execute([&] { d::solve_bottom_up(ctx); });
 
     auto merge_planning_context = fp::MergePlanningContext { m_workspace.planning_builder, *m_task->get_repository() };
 
-    read_derived_atoms_from_program_context(m_task->get_axiom_program(), unpacked_state, merge_planning_context, m_workspace.facts.fact_sets);
+    read_derived_atoms_from_program_context(program, unpacked_state, merge_planning_context, m_workspace.facts.fact_sets);
+}
+
+void AxiomEvaluator<LiftedTag>::print_summary(size_t verbosity) const
+{
+    if (verbosity < 1)
+        return;
+
+    std::cout << "[Axiom evaluator] Summary" << std::endl;
+    std::cout << m_workspace.statistics << std::endl;
+    auto axiom_evaluator_rule_statistics = std::vector<datalog::RuleStatistics> {};
+    for (const auto& ws_rule : m_workspace.rules)
+        axiom_evaluator_rule_statistics.push_back(ws_rule->common.statistics);
+    std::cout << datalog::compute_aggregated_rule_statistics(axiom_evaluator_rule_statistics) << std::endl;
+    auto axiom_evaluator_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+    for (const auto& ws_rule : m_workspace.rules)
+        for (const auto& worker : ws_rule->worker)
+            axiom_evaluator_rule_worker_statistics.push_back(worker.solve.statistics);
+    std::cout << datalog::compute_aggregated_rule_worker_statistics(axiom_evaluator_rule_worker_statistics) << std::endl;
 }
 
 static_assert(AxiomEvaluatorConcept<AxiomEvaluator<LiftedTag>, LiftedTag>);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,11 @@ public:
     const auto& get_handle() const noexcept { return m_handle; }
 
     auto get_index() const noexcept { return m_handle; }
-    auto get_facts() const noexcept { return make_view(get_data().facts, *m_context); }
+    template<formalism::PolarityKind T>
+    auto get_facts() const noexcept
+    {
+        return make_view(get_data().template get_facts<T>(), *m_context);
+    }
     auto get_numeric_effects() const noexcept { return make_view(get_data().numeric_effects, *m_context); }
     auto get_auxiliary_numeric_effect() const noexcept { return make_view(get_data().auxiliary_numeric_effect, *m_context); }
 

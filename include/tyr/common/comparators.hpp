@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,7 +10,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *<
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -32,7 +32,7 @@ bool operator==(const T& lhs, const T& rhs)
 template<Identifiable T>
 bool operator!=(const T& lhs, const T& rhs)
 {
-    return !(lhs.identifying_members() == rhs.identifying_members());
+    return !(lhs == rhs);
 }
 
 template<Identifiable T>
@@ -44,7 +44,7 @@ bool operator<(const T& lhs, const T& rhs)
 template<Identifiable T>
 bool operator<=(const T& lhs, const T& rhs)
 {
-    return lhs.identifying_members() <= rhs.identifying_members();
+    return !(lhs > rhs);
 }
 
 template<Identifiable T>
@@ -56,7 +56,7 @@ bool operator>(const T& lhs, const T& rhs)
 template<Identifiable T>
 bool operator>=(const T& lhs, const T& rhs)
 {
-    return lhs.identifying_members() >= rhs.identifying_members();
+    return !(lhs < rhs);
 }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static as::DepGraph build_dependency_graph(fp::FDRTaskView task, size_t num_atom
     {
         const auto h_atom = axiom.get_head().get_index();
 
-        for (const auto literal : axiom.get_body().get_facts<f::DerivedTag>())
+        for (const auto literal : axiom.get_body().get_literals<f::DerivedTag>())
         {
             const auto b_atom = literal.get_atom().get_index();
 

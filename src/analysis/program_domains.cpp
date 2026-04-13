@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,511 +41,413 @@ namespace tyr::analysis
 {
 namespace
 {
-DomainListListList to_list(const DomainSetListList& set)
+
+/**
+ * Temporary internal representation during computation.
+ */
+
+template<typename Element, typename Payload>
+struct TmpScoped
 {
-    auto vec = DomainListListList();
-    vec.reserve(set.size());
-    for (const auto& parameter_domains : set)
-    {
-        auto predicate_domains_vec = DomainListList();
-        predicate_domains_vec.reserve(parameter_domains.size());
-        for (const auto& parameter_domain : parameter_domains)
-        {
-            auto domain = DomainList(parameter_domain.begin(), parameter_domain.end());
-            std::sort(domain.begin(), domain.end());
-            predicate_domains_vec.push_back(std::move(domain));
-        }
-        vec.push_back(predicate_domains_vec);
-    }
-    return vec;
+    Index<Element> element;
+    Payload payload;
+};
+
+struct TmpVariableDomain
+{
+    UnorderedSet<Index<formalism::Object>> objects;
+};
+
+using TmpVariableDomainList = std::vector<TmpVariableDomain>;
+
+template<typename Element>
+using TmpSimpleScopedDomain = TmpScoped<Element, TmpVariableDomainList>;
+
+template<typename Element>
+using TmpSimpleScopedDomainMap = UnorderedMap<Index<Element>, TmpVariableDomainList>;
+
+template<formalism::FactKind T>
+using TmpPredicateDomainMap = TmpSimpleScopedDomainMap<formalism::Predicate<T>>;
+
+template<formalism::FactKind T>
+using TmpFunctionDomainMap = TmpSimpleScopedDomainMap<formalism::Function<T>>;
+
+using TmpRuleDomainMap = TmpSimpleScopedDomainMap<formalism::datalog::Rule>;
+
+/**
+ * Conversion helpers to public representation.
+ */
+
+VariableDomain to_variable_domain(const TmpVariableDomain& domain)
+{
+    auto objects = std::vector<Index<f::Object>>(domain.objects.begin(), domain.objects.end());
+    std::sort(objects.begin(), objects.end());
+    return VariableDomain { std::move(objects) };
+}
+
+VariableDomainList to_variable_domain_list(const TmpVariableDomainList& domains)
+{
+    auto result = VariableDomainList {};
+    result.reserve(domains.size());
+
+    for (const auto& domain : domains)
+        result.push_back(to_variable_domain(domain));
+
+    return result;
 }
 
 template<f::FactKind T>
-DomainSetListList initialize_predicate_domain_sets(fd::PredicateListView<T> predicates)
+PredicateDomainMap<T> to_predicate_domain_map(const TmpPredicateDomainMap<T>& domains)
 {
-    auto predicate_domain_sets = DomainSetListList(predicates.size());
+    auto result = PredicateDomainMap<T> {};
+    result.reserve(domains.size());
+
+    for (const auto& [predicate, variable_domains] : domains)
+        result.emplace(predicate, to_variable_domain_list(variable_domains));
+
+    return result;
+}
+
+template<f::FactKind T>
+FunctionDomainMap<T> to_function_domain_map(const TmpFunctionDomainMap<T>& domains)
+{
+    auto result = FunctionDomainMap<T> {};
+    result.reserve(domains.size());
+
+    for (const auto& [function, variable_domains] : domains)
+        result.emplace(function, to_variable_domain_list(variable_domains));
+
+    return result;
+}
+
+RuleDomainMap to_rule_domain_map(const TmpRuleDomainMap& domains)
+{
+    auto result = RuleDomainMap {};
+    result.reserve(domains.size());
+
+    for (const auto& [rule, variable_domains] : domains)
+    {
+        result.emplace(rule,
+                       SimpleScopedDomain<formalism::datalog::Rule> {
+                           rule,
+                           to_variable_domain_list(variable_domains),
+                       });
+    }
+
+    return result;
+}
+
+/**
+ * Initialization of temporary maps.
+ */
+
+template<f::FactKind T>
+TmpPredicateDomainMap<T> initialize_predicate_domain_sets(fd::PredicateListView<T> predicates)
+{
+    auto predicate_domain_sets = TmpPredicateDomainMap<T> {};
+    predicate_domain_sets.reserve(predicates.size());
 
     for (const auto predicate : predicates)
-        predicate_domain_sets[predicate.get_index().value].resize(predicate.get_arity());
+        predicate_domain_sets.emplace(predicate.get_index(), TmpVariableDomainList(predicate.get_arity()));
 
     return predicate_domain_sets;
 }
 
 template<f::FactKind T>
-void insert_into_predicate_domain_sets(fd::GroundAtomListView<T> atoms, DomainSetListList& predicate_domain_sets)
+void insert_into_predicate_domain_sets(fd::GroundAtomListView<T> atoms, TmpPredicateDomainMap<T>& predicate_domain_sets)
 {
     for (const auto atom : atoms)
     {
         const auto predicate = atom.get_predicate();
+        auto& variable_domains = predicate_domain_sets.at(predicate.get_index());
+
         auto pos = size_t { 0 };
         for (const auto object : atom.get_row().get_objects())
-            predicate_domain_sets[predicate.get_index().value][pos++].insert(object.get_index());
+            variable_domains[pos++].objects.insert(object.get_index());
     }
 }
 
 template<f::FactKind T>
-DomainSetListList initialize_function_domain_sets(fd::FunctionListView<T> functions)
+TmpFunctionDomainMap<T> initialize_function_domain_sets(fd::FunctionListView<T> functions)
 {
-    auto function_domain_sets = DomainSetListList(functions.size());
+    auto function_domain_sets = TmpFunctionDomainMap<T> {};
+    function_domain_sets.reserve(functions.size());
 
     for (const auto function : functions)
-        function_domain_sets[function.get_index().value].resize(function.get_arity());
+        function_domain_sets.emplace(function.get_index(), TmpVariableDomainList(function.get_arity()));
 
     return function_domain_sets;
 }
 
 template<f::FactKind T>
-void insert_into_function_domain_sets(fd::GroundFunctionTermValueListView<T> fterm_values, DomainSetListList& function_domain_sets)
+void insert_into_function_domain_sets(fd::GroundFunctionTermValueListView<T> fterm_values, TmpFunctionDomainMap<T>& function_domain_sets)
 {
     for (const auto term_value : fterm_values)
     {
         const auto fterm = term_value.get_fterm();
         const auto function = fterm.get_function();
+        auto& variable_domains = function_domain_sets.at(function.get_index());
+
         auto pos = size_t { 0 };
         for (const auto object : fterm.get_row().get_objects())
-            function_domain_sets[function.get_index().value][pos++].insert(object.get_index());
+            variable_domains[pos++].objects.insert(object.get_index());
+    }
+}
+
+template<typename Fn>
+void for_each_term_with_position(Fn&& fn, fd::TermListView terms)
+{
+    size_t pos = 0;
+    for (const auto term : terms)
+    {
+        visit([&](auto&& arg) { fn(pos, arg); }, term.get_variant());
+        ++pos;
     }
 }
 
 /**
- * Insert constants
+ * Policies
  */
 
-void insert_constants_into_parameter_domain(fd::FunctionExpressionView element, DomainSetListList& function_domain_sets);
-
-void insert_constants_into_parameter_domain(float_t, DomainSetListList&) {}
-
-template<f::OpKind O>
-void insert_constants_into_parameter_domain(fd::LiftedUnaryOperatorView<O> element, DomainSetListList& function_domain_sets)
+struct InsertConstantPolicy
 {
-    insert_constants_into_parameter_domain(element.get_arg(), function_domain_sets);
+    TmpPredicateDomainMap<f::StaticTag>& static_predicate_domain_sets;
+    TmpPredicateDomainMap<f::FluentTag>& fluent_predicate_domain_sets;
+    TmpFunctionDomainMap<f::StaticTag>& static_function_domain_sets;
+    TmpFunctionDomainMap<f::FluentTag>& fluent_function_domain_sets;
+
+    template<typename Element>
+    bool should_skip(Element) const
+    {
+        return false;
+    }
+
+    bool should_skip(fd::FunctionView<f::FluentTag>) const { return true; }
+
+    auto& get_domains(fd::PredicateView<f::StaticTag>) { return static_predicate_domain_sets; }
+    auto& get_domains(fd::PredicateView<f::FluentTag>) { return fluent_predicate_domain_sets; }
+
+    auto& get_domains(fd::FunctionView<f::StaticTag>) { return static_function_domain_sets; }
+    auto& get_domains(fd::FunctionView<f::FluentTag>) { return fluent_function_domain_sets; }
+
+    template<typename Symbol>
+    void on_object(size_t pos, fd::ObjectView object, Symbol symbol)
+    {
+        auto& domain = get_domains(symbol).at(symbol.get_index())[pos];
+        domain.objects.insert(object.get_index());
+    }
+
+    template<typename Symbol>
+    void on_parameter(size_t, f::ParameterIndex, Symbol)
+    {
+    }
+};
+
+struct RestrictPolicy
+{
+    const TmpPredicateDomainMap<f::StaticTag>& static_predicate_domain_sets;
+    const TmpPredicateDomainMap<f::FluentTag>& fluent_predicate_domain_sets;
+    const TmpFunctionDomainMap<f::StaticTag>& static_function_domain_sets;
+    const TmpFunctionDomainMap<f::FluentTag>& fluent_function_domain_sets;
+    TmpVariableDomainList& parameter_domains;
+
+    template<typename Element>
+    bool should_skip(Element) const
+    {
+        return false;
+    }
+
+    template<f::FactKind T>
+    bool should_skip(fd::LiteralView<T> literal) const
+    {
+        return !literal.get_polarity();
+    }
+
+    bool should_skip(fd::FunctionView<f::FluentTag>) const { return true; }
+
+    const auto& get_domains(fd::PredicateView<f::StaticTag>) const { return static_predicate_domain_sets; }
+    const auto& get_domains(fd::PredicateView<f::FluentTag>) const { return fluent_predicate_domain_sets; }
+
+    const auto& get_domains(fd::FunctionView<f::StaticTag>) const { return static_function_domain_sets; }
+    const auto& get_domains(fd::FunctionView<f::FluentTag>) const { return fluent_function_domain_sets; }
+
+    template<typename Symbol>
+    void on_object(size_t, fd::ObjectView, Symbol)
+    {
+    }
+
+    template<typename Symbol>
+    void on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
+    {
+        auto& parameter_domain = parameter_domains[uint_t(param)];
+        const auto& symbol_domain = get_domains(symbol).at(symbol.get_index())[pos];
+        intersect_inplace(parameter_domain.objects, symbol_domain.objects);
+    }
+};
+
+struct LiftPolicy
+{
+    TmpPredicateDomainMap<f::StaticTag>& static_predicate_domain_sets;
+    TmpPredicateDomainMap<f::FluentTag>& fluent_predicate_domain_sets;
+    TmpFunctionDomainMap<f::StaticTag>& static_function_domain_sets;
+    TmpFunctionDomainMap<f::FluentTag>& fluent_function_domain_sets;
+    const TmpVariableDomainList& parameter_domains;
+
+    template<typename Element>
+    bool should_skip(Element) const
+    {
+        return false;
+    }
+
+    bool should_skip(fd::FunctionView<f::StaticTag>) const { return true; }
+
+    auto& get_domains(fd::PredicateView<f::StaticTag>) { return static_predicate_domain_sets; }
+
+    auto& get_domains(fd::PredicateView<f::FluentTag>) { return fluent_predicate_domain_sets; }
+
+    auto& get_domains(fd::FunctionView<f::StaticTag>) { return static_function_domain_sets; }
+
+    auto& get_domains(fd::FunctionView<f::FluentTag>) { return fluent_function_domain_sets; }
+
+    template<typename Symbol>
+    void on_object(size_t pos, fd::ObjectView object, Symbol symbol)
+    {
+        auto& domain = get_domains(symbol).at(symbol.get_index())[pos];
+        domain.objects.insert(object.get_index());
+    }
+
+    template<typename Symbol>
+    void on_parameter(size_t pos, f::ParameterIndex param, Symbol symbol)
+    {
+        auto& domain = get_domains(symbol).at(symbol.get_index())[pos];
+        union_inplace(domain.objects, parameter_domains[uint_t(param)].objects);
+    }
+};
+
+/**
+ * Policy traversal
+ */
+
+template<typename Policy>
+void apply_policy(fd::FunctionExpressionView element, Policy& policy);
+
+template<typename Policy>
+void apply_policy(float_t, Policy&)
+{
 }
 
-template<f::OpKind O>
-void insert_constants_into_parameter_domain(fd::LiftedBinaryOperatorView<O> element, DomainSetListList& function_domain_sets)
+template<f::OpKind O, typename Policy>
+void apply_policy(fd::LiftedUnaryOperatorView<O> element, Policy& policy)
 {
-    insert_constants_into_parameter_domain(element.get_lhs(), function_domain_sets);
-    insert_constants_into_parameter_domain(element.get_rhs(), function_domain_sets);
+    apply_policy(element.get_arg(), policy);
 }
 
-template<f::OpKind O>
-void insert_constants_into_parameter_domain(fd::LiftedMultiOperatorView<O> element, DomainSetListList& function_domain_sets)
+template<f::OpKind O, typename Policy>
+void apply_policy(fd::LiftedBinaryOperatorView<O> element, Policy& policy)
+{
+    apply_policy(element.get_lhs(), policy);
+    apply_policy(element.get_rhs(), policy);
+}
+
+template<f::OpKind O, typename Policy>
+void apply_policy(fd::LiftedMultiOperatorView<O> element, Policy& policy)
 {
     for (const auto arg : element.get_args())
-        insert_constants_into_parameter_domain(arg, function_domain_sets);
+        apply_policy(arg, policy);
 }
 
-template<f::FactKind T>
-void insert_constants_into_parameter_domain(fd::AtomView<T> element, DomainSetListList& predicate_domain_sets)
+template<f::FactKind T, typename Policy>
+void apply_policy(fd::AtomView<T> element, Policy& policy)
 {
     const auto predicate = element.get_predicate();
 
-    auto pos = size_t { 0 };
-    for (const auto term : element.get_terms())
-    {
-        visit(
-            [&](auto&& arg)
-            {
-                using Alternative = std::decay_t<decltype(arg)>;
+    if (policy.should_skip(predicate))
+        return;
 
-                if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
-                {
-                    auto& predicate_domain = predicate_domain_sets[predicate.get_index().value][pos];
-                    predicate_domain.insert(arg.get_index());
-                }
-                else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>) {}
-                else
-                {
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-                }
-            },
-            term.get_variant());
-        ++pos;
-    }
+    for_each_term_with_position(
+        [&](size_t pos, auto&& arg)
+        {
+            using Alternative = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
+            {
+                policy.on_object(pos, arg, predicate);
+            }
+            else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
+            {
+                policy.on_parameter(pos, arg, predicate);
+            }
+            else
+            {
+                static_assert(dependent_false<Alternative>::value, "Missing case");
+            }
+        },
+        element.get_terms());
 }
 
-template<f::FactKind T>
-void insert_constants_into_parameter_domain(fd::FunctionTermView<T> element, DomainSetListList& function_domain_sets)
+template<f::FactKind T, typename Policy>
+void apply_policy(fd::LiteralView<T> element, Policy& policy)
+{
+    if (policy.should_skip(element))
+        return;
+
+    apply_policy(element.get_atom(), policy);
+}
+
+template<f::FactKind T, typename Policy>
+void apply_policy(fd::FunctionTermView<T> element, Policy& policy)
 {
     const auto function = element.get_function();
 
-    auto pos = size_t { 0 };
-    for (const auto term : element.get_terms())
-    {
-        visit(
-            [&](auto&& arg)
+    if (policy.should_skip(function))
+        return;
+
+    for_each_term_with_position(
+        [&](size_t pos, auto&& arg)
+        {
+            using Alternative = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
             {
-                using Alternative = std::decay_t<decltype(arg)>;
-
-                if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
-                {
-                    auto& function_domain = function_domain_sets[function.get_index().value][pos];
-                    function_domain.insert(arg.get_index());
-                }
-                else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>) {}
-                else
-                {
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-                }
-            },
-            term.get_variant());
-        ++pos;
-    }
-}
-
-void insert_constants_into_parameter_domain(fd::FunctionTermView<f::FluentTag> element, DomainSetListList& function_domain_sets)
-{
-    // Dont restrict for fluent fterm
-}
-
-void insert_constants_into_parameter_domain(fd::LiftedArithmeticOperatorView element, DomainSetListList& function_domain_sets)
-{
-    visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
-}
-
-void insert_constants_into_parameter_domain(fd::FunctionExpressionView element, DomainSetListList& function_domain_sets)
-{
-    visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
-}
-
-void insert_constants_into_parameter_domain(fd::LiftedBooleanOperatorView element, DomainSetListList& function_domain_sets)
-{
-    visit([&](auto&& arg) { insert_constants_into_parameter_domain(arg, function_domain_sets); }, element.get_variant());
-}
-
-/**
- * Restrict
- */
-
-void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&);
-
-template<f::OpKind O>
-void restrict_parameter_domain(fd::LiftedUnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-template<f::OpKind O>
-void restrict_parameter_domain(fd::LiftedBinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-template<f::OpKind O>
-void restrict_parameter_domain(fd::LiftedMultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-template<f::FactKind T>
-void restrict_parameter_domain(fd::AtomView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
-
-template<f::FactKind T>
-void restrict_parameter_domain(fd::LiteralView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets);
-
-template<f::FactKind T>
-void restrict_parameter_domain(fd::FunctionTermView<T> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-void restrict_parameter_domain(fd::FunctionTermView<f::FluentTag> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-void restrict_parameter_domain(fd::LiftedArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-void restrict_parameter_domain(fd::FunctionExpressionView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-void restrict_parameter_domain(fd::LiftedBooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets);
-
-void restrict_parameter_domain(float_t, DomainSetList&, const DomainSetListList&) {}
-
-template<f::OpKind O>
-void restrict_parameter_domain(fd::LiftedUnaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
-{
-    restrict_parameter_domain(element.get_arg(), parameter_domains, function_domain_sets);
-}
-
-template<f::OpKind O>
-void restrict_parameter_domain(fd::LiftedBinaryOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
-{
-    restrict_parameter_domain(element.get_lhs(), parameter_domains, function_domain_sets);
-    restrict_parameter_domain(element.get_rhs(), parameter_domains, function_domain_sets);
-}
-
-template<f::OpKind O>
-void restrict_parameter_domain(fd::LiftedMultiOperatorView<O> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
-{
-    for (const auto arg : element.get_args())
-        restrict_parameter_domain(arg, parameter_domains, function_domain_sets);
-}
-
-template<f::FactKind T>
-void restrict_parameter_domain(fd::AtomView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets)
-{
-    const auto predicate = element.get_predicate();
-
-    auto pos = size_t { 0 };
-    for (const auto term : element.get_terms())
-    {
-        visit(
-            [&](auto&& arg)
+                policy.on_object(pos, arg, function);
+            }
+            else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
             {
-                using Alternative = std::decay_t<decltype(arg)>;
-
-                if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
-                {
-                    // Cannot know parameter index such that there is nothing to be done.
-                }
-                else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
-                {
-                    const auto parameter_index = uint_t(arg);
-                    auto& parameter_domain = parameter_domains[parameter_index];
-                    const auto& predicate_domain = predicate_domain_sets[predicate.get_index().value][pos];
-
-                    intersect_inplace(parameter_domain, predicate_domain);
-                }
-                else
-                {
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-                }
-            },
-            term.get_variant());
-        ++pos;
-    }
-}
-
-template<f::FactKind T>
-void restrict_parameter_domain(fd::LiteralView<T> element, DomainSetList& parameter_domains, const DomainSetListList& predicate_domain_sets)
-{
-    if (!element.get_polarity())
-        return;  // IMPORTANT: do NOT restrict from negated literals
-
-    restrict_parameter_domain(element.get_atom(), parameter_domains, predicate_domain_sets);
-}
-
-template<f::FactKind T>
-void restrict_parameter_domain(fd::FunctionTermView<T> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
-{
-    const auto function = element.get_function();
-
-    auto pos = size_t { 0 };
-    for (const auto term : element.get_terms())
-    {
-        visit(
-            [&](auto&& arg)
+                policy.on_parameter(pos, arg, function);
+            }
+            else
             {
-                using Alternative = std::decay_t<decltype(arg)>;
-
-                if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
-                {
-                    // Cannot know parameter index such that there is nothing to be done.
-                }
-                else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
-                {
-                    const auto parameter_index = uint_t(arg);
-                    auto& parameter_domain = parameter_domains[parameter_index];
-                    const auto& function_domain = function_domain_sets[function.get_index().value][pos];
-
-                    intersect_inplace(parameter_domain, function_domain);
-                }
-                else
-                {
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-                }
-            },
-            term.get_variant());
-        ++pos;
-    }
+                static_assert(dependent_false<Alternative>::value, "Missing case");
+            }
+        },
+        element.get_terms());
 }
 
-void restrict_parameter_domain(fd::FunctionTermView<f::FluentTag> element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+template<typename Policy>
+void apply_policy(fd::LiftedArithmeticOperatorView element, Policy& policy)
 {
-    // Dont restrict for fluent fterm
+    visit([&](auto&& arg) { apply_policy(arg, policy); }, element.get_variant());
 }
 
-void restrict_parameter_domain(fd::LiftedArithmeticOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+template<typename Policy>
+void apply_policy(fd::FunctionExpressionView element, Policy& policy)
 {
-    visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
+    visit([&](auto&& arg) { apply_policy(arg, policy); }, element.get_variant());
 }
 
-void restrict_parameter_domain(fd::FunctionExpressionView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
+template<typename Policy>
+void apply_policy(fd::LiftedBooleanOperatorView element, Policy& policy)
 {
-    visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
+    visit([&](auto&& arg) { apply_policy(arg, policy); }, element.get_variant());
 }
 
-void restrict_parameter_domain(fd::LiftedBooleanOperatorView element, DomainSetList& parameter_domains, const DomainSetListList& function_domain_sets)
-{
-    visit([&](auto&& arg) { restrict_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
-}
-
-/**
- * Lift
- */
-
-bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&);
-
-template<f::OpKind O>
-bool lift_parameter_domain(fd::LiftedUnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-template<f::OpKind O>
-bool lift_parameter_domain(fd::LiftedBinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-template<f::OpKind O>
-bool lift_parameter_domain(fd::LiftedMultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-template<f::FactKind T>
-bool lift_parameter_domain(fd::AtomView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
-
-template<f::FactKind T>
-bool lift_parameter_domain(fd::LiteralView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets);
-
-template<f::FactKind T>
-bool lift_parameter_domain(fd::FunctionTermView<T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(fd::FunctionTermView<f::StaticTag> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(fd::LiftedArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(fd::LiftedBooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets);
-
-bool lift_parameter_domain(float_t, const DomainSetList&, DomainSetListList&) { return false; }
-
-template<f::OpKind O>
-bool lift_parameter_domain(fd::LiftedUnaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return lift_parameter_domain(element.get_arg(), parameter_domains, function_domain_sets);
-}
-
-template<f::OpKind O>
-bool lift_parameter_domain(fd::LiftedBinaryOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return lift_parameter_domain(element.get_lhs(), parameter_domains, function_domain_sets)
-           || lift_parameter_domain(element.get_rhs(), parameter_domains, function_domain_sets);
-}
-
-template<f::OpKind O>
-bool lift_parameter_domain(fd::LiftedMultiOperatorView<O> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return std::any_of(element.get_args().begin(),
-                       element.get_args().end(),
-                       [&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); });
-}
-
-template<f::FactKind T>
-bool lift_parameter_domain(fd::AtomView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets)
-{
-    const auto predicate = element.get_predicate();
-
-    bool changed = false;
-
-    auto pos = size_t { 0 };
-    for (const auto term : element.get_terms())
-    {
-        visit(
-            [&](auto&& arg)
-            {
-                using Alternative = std::decay_t<decltype(arg)>;
-
-                if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
-                {
-                    auto& predicate_domain = predicate_domain_sets[predicate.get_index().value][pos];
-                    size_t before = predicate_domain.size();
-                    union_inplace(predicate_domain, DomainSet { arg.get_index() });
-                    if (predicate_domain.size() != before)
-                        changed = true;
-                }
-                else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
-                {
-                    const auto parameter_index = uint_t(arg);
-                    const auto& parameter_domain = parameter_domains[parameter_index];
-                    auto& predicate_domain = predicate_domain_sets[predicate.get_index().value][pos];
-                    size_t before = predicate_domain.size();
-                    union_inplace(predicate_domain, parameter_domain);
-                    if (predicate_domain.size() != before)
-                        changed = true;
-                }
-                else
-                {
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-                }
-            },
-            term.get_variant());
-        ++pos;
-    }
-    return changed;
-}
-
-template<f::FactKind T>
-bool lift_parameter_domain(fd::LiteralView<T> element, const DomainSetList& parameter_domains, DomainSetListList& predicate_domain_sets)
-{
-    return lift_parameter_domain(element.get_atom(), parameter_domains, predicate_domain_sets);
-}
-
-template<f::FactKind T>
-bool lift_parameter_domain(fd::FunctionTermView<T> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    const auto function = element.get_function();
-
-    bool changed = false;
-
-    auto pos = size_t { 0 };
-    for (const auto term : element.get_terms())
-    {
-        visit(
-            [&](auto&& arg)
-            {
-                using Alternative = std::decay_t<decltype(arg)>;
-
-                if constexpr (std::is_same_v<Alternative, fd::ObjectView>)
-                {
-                    auto& function_domain = function_domain_sets[function.get_index().value][pos];
-                    size_t before = function_domain.size();
-                    union_inplace(function_domain, DomainSet { arg.get_index() });
-                    if (function_domain.size() != before)
-                        changed = true;
-                }
-                else if constexpr (std::is_same_v<Alternative, f::ParameterIndex>)
-                {
-                    const auto parameter_index = uint_t(arg);
-                    const auto& parameter_domain = parameter_domains[parameter_index];
-                    auto& function_domain = function_domain_sets[function.get_index().value][pos];
-                    size_t before = function_domain.size();
-                    union_inplace(function_domain, parameter_domain);
-                    if (function_domain.size() != before)
-                        changed = true;
-                }
-                else
-                {
-                    static_assert(dependent_false<Alternative>::value, "Missing case");
-                }
-            },
-            term.get_variant());
-        ++pos;
-    }
-    return changed;
-}
-
-bool lift_parameter_domain(fd::FunctionTermView<f::StaticTag> element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return false;
-}
-
-bool lift_parameter_domain(fd::LiftedArithmeticOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
-}
-
-bool lift_parameter_domain(fd::FunctionExpressionView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
-}
-
-bool lift_parameter_domain(fd::LiftedBooleanOperatorView element, const DomainSetList& parameter_domains, DomainSetListList& function_domain_sets)
-{
-    return visit([&](auto&& arg) { return lift_parameter_domain(arg, parameter_domains, function_domain_sets); }, element.get_variant());
-}
-}
+}  // namespace
 
 ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
 {
-    auto objects = std::vector<Index<f::Object>> {};
+    auto universe = UnorderedSet<Index<f::Object>> {};
     for (const auto object : program.get_objects())
-        objects.push_back(object.get_index());
-    auto universe = DomainSet(objects.begin(), objects.end());
+        universe.insert(object.get_index());
 
     ///--- Step 1: Initialize static and fluent predicate parameter domains
 
@@ -561,96 +463,89 @@ ProgramVariableDomains compute_variable_domains(fd::ProgramView program)
     insert_into_function_domain_sets(program.get_fterm_values<f::StaticTag>(), static_function_domain_sets);
     insert_into_function_domain_sets(program.get_fterm_values<f::FluentTag>(), fluent_function_domain_sets);
 
-    // Important not to forget constants in schemas
-    for (const auto rule : program.get_rules())
-    {
-        for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
-            insert_constants_into_parameter_domain(literal.get_atom(), static_predicate_domain_sets);
+    ///--- Step 2.5: Important not to forget constants in schemas
 
-        for (const auto op : rule.get_body().get_numeric_constraints())
-            insert_constants_into_parameter_domain(op, static_function_domain_sets);
+    {
+        auto insert_policy = InsertConstantPolicy {
+            static_predicate_domain_sets,
+            fluent_predicate_domain_sets,
+            static_function_domain_sets,
+            fluent_function_domain_sets,
+        };
+
+        for (const auto rule : program.get_rules())
+        {
+            for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
+                apply_policy(literal.get_atom(), insert_policy);
+
+            for (const auto op : rule.get_body().get_numeric_constraints())
+                apply_policy(op, insert_policy);
+        }
     }
 
     ///--- Step 3: Compute rule parameter domains as tightest bound from the previously computed domains of the static predicates.
 
-    auto rule_domain_sets = DomainSetListList();
+    auto rule_domain_sets = TmpRuleDomainMap {};
+    rule_domain_sets.reserve(program.get_rules().size());
+
+    for (const auto rule : program.get_rules())
     {
-        for (const auto rule : program.get_rules())
-        {
-            auto variables = rule.get_body().get_variables();
-            auto parameter_domains = DomainSetList(variables.size(), universe);
+        auto variables = rule.get_body().get_variables();
+        auto parameter_domains = TmpVariableDomainList(variables.size());
 
-            for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
-                restrict_parameter_domain(literal, parameter_domains, static_predicate_domain_sets);
+        for (auto& domain : parameter_domains)
+            domain.objects = universe;
 
-            for (const auto op : rule.get_body().get_numeric_constraints())
-                restrict_parameter_domain(op, parameter_domains, static_function_domain_sets);
+        auto restrict_policy = RestrictPolicy {
+            static_predicate_domain_sets, fluent_predicate_domain_sets, static_function_domain_sets, fluent_function_domain_sets, parameter_domains,
+        };
 
-            assert(rule.get_index().value == rule_domain_sets.size());
-            rule_domain_sets.push_back(std::move(parameter_domains));
-        }
+        for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
+            apply_policy(literal, restrict_policy);
+
+        for (const auto op : rule.get_body().get_numeric_constraints())
+            apply_policy(op, restrict_policy);
+
+        rule_domain_sets.emplace(rule.get_index(), std::move(parameter_domains));
     }
 
     ///--- Step 4: Lift the fluent predicate domains given the variable relationships in the rules.
 
-    bool changed = false;
-
-    do
+    for (const auto rule : program.get_rules())
     {
-        changed = false;
+        const auto& parameter_domains = rule_domain_sets.at(rule.get_index());
 
-        for (const auto rule : program.get_rules())
-        {
-            auto& parameter_domains = rule_domain_sets[rule.get_index().value];
+        auto lift_policy = LiftPolicy {
+            static_predicate_domain_sets, fluent_predicate_domain_sets, static_function_domain_sets, fluent_function_domain_sets, parameter_domains,
+        };
 
-            for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
-                if (lift_parameter_domain(literal, parameter_domains, static_predicate_domain_sets))
-                    changed = true;
+        for (const auto literal : rule.get_body().get_literals<f::StaticTag>())
+            apply_policy(literal, lift_policy);
 
-            for (const auto literal : rule.get_body().get_literals<f::FluentTag>())
-                if (lift_parameter_domain(literal, parameter_domains, fluent_predicate_domain_sets))
-                    changed = true;
+        for (const auto literal : rule.get_body().get_literals<f::FluentTag>())
+            apply_policy(literal, lift_policy);
 
-            for (const auto op : rule.get_body().get_numeric_constraints())
-                if (lift_parameter_domain(op, parameter_domains, fluent_function_domain_sets))
-                    changed = true;
+        for (const auto op : rule.get_body().get_numeric_constraints())
+            apply_policy(op, lift_policy);
 
-            if (lift_parameter_domain(rule.get_head(), parameter_domains, fluent_predicate_domain_sets))
-                changed = true;
-        }
-    } while (changed);
+        apply_policy(rule.get_head(), lift_policy);
+    }
 
-    ///--- Step 5: Compress sets to vectors.
+    ///--- Step 5: Convert internal sets to public domain wrapper types.
 
-    auto static_predicate_domains = to_list(static_predicate_domain_sets);
-    auto fluent_predicate_domains = to_list(fluent_predicate_domain_sets);
-    auto static_function_domains = to_list(static_function_domain_sets);
-    auto fluent_function_domains = to_list(fluent_function_domain_sets);
-    auto rule_domains = to_list(rule_domain_sets);
+    auto static_predicate_domains = to_predicate_domain_map(static_predicate_domain_sets);
+    auto fluent_predicate_domains = to_predicate_domain_map(fluent_predicate_domain_sets);
+    auto static_function_domains = to_function_domain_map(static_function_domain_sets);
+    auto fluent_function_domains = to_function_domain_map(fluent_function_domain_sets);
+    auto rule_domains = to_rule_domain_map(rule_domain_sets);
 
-    // std::cout << std::endl;
-    // std::cout << "Result domains: " << std::endl;
-    // std::cout << "static_predicate_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_predicates<f::StaticTag>().size(); ++i)
-    //     std::cout << program.get_predicates<f::StaticTag>()[i] << ": " << static_predicate_domains[i] << std::endl;
-    // std::cout << "fluent_predicate_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_predicates<f::FluentTag>().size(); ++i)
-    //     std::cout << program.get_predicates<f::FluentTag>()[i] << ": " << fluent_predicate_domains[i] << std::endl;
-    // std::cout << "static_function_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_functions<f::StaticTag>().size(); ++i)
-    //     std::cout << program.get_functions<f::StaticTag>()[i] << ": " << static_function_domains[i] << std::endl;
-    // std::cout << "fluent_function_domains:" << std::endl;
-    // for (uint_t i = 0; i < program.get_functions<f::FluentTag>().size(); ++i)
-    //     std::cout << program.get_functions<f::FluentTag>()[i] << ": " << fluent_function_domains[i] << std::endl;
-    // for (uint_t i = 0; i < program.get_rules().size(); ++i)
-    //     std::cout << program.get_rules()[i] << ": " << rule_domains[i] << std::endl;
-    // std::cout << std::endl;
-
-    return ProgramVariableDomains { std::move(static_predicate_domains),
-                                    std::move(fluent_predicate_domains),
-                                    std::move(static_function_domains),
-                                    std::move(fluent_function_domains),
-                                    std::move(rule_domains) };
+    return ProgramVariableDomains {
+        std::move(static_predicate_domains),
+        std::move(fluent_predicate_domains),
+        std::move(static_function_domains),
+        std::move(fluent_function_domains),
+        std::move(rule_domains),
+    };
 }
 
-}
+}  // namespace tyr::analysis

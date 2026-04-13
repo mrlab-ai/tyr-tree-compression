@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,19 +53,21 @@ void process_effects(fp::GroundActionView action,
     {
         if (is_applicable(cond_effect.get_condition(), state_context))
         {
-            for (const auto fact : cond_effect.get_effect().get_facts())
-                if (fact.get_value() == fp::FDRValue::none())
-                    tmp_del_effects.push_back(fact.get_data());
-                else
-                    tmp_add_effects.push_back(fact.get_data());
+            const auto effect = cond_effect.get_effect();
 
-            for (const auto numeric_effect : cond_effect.get_effect().get_numeric_effects())
+            for (const auto fact : effect.template get_facts<formalism::NegativeTag>())
+                tmp_del_effects.push_back(fact.get_data());
+
+            for (const auto fact : effect.template get_facts<formalism::PositiveTag>())
+                tmp_add_effects.push_back(fact.get_data());
+
+            for (const auto numeric_effect : effect.get_numeric_effects())
                 visit([&](auto&& arg) { succ_unpacked_state.set(arg.get_fterm().get_index(), evaluate(numeric_effect, state_context)); },
                       numeric_effect.get_variant());
 
             /// Collect the increment (total-cost) in the state_context
-            if (cond_effect.get_effect().get_auxiliary_numeric_effect().has_value())
-                state_context.auxiliary_value = evaluate(cond_effect.get_effect().get_auxiliary_numeric_effect().value(), state_context);
+            if (effect.get_auxiliary_numeric_effect().has_value())
+                state_context.auxiliary_value = evaluate(effect.get_auxiliary_numeric_effect().value(), state_context);
         }
     }
 }
@@ -99,7 +101,9 @@ Node<Kind> ActionExecutor::apply_action(const StateContext<Kind>& state_context,
     process_effects(action, succ_unpacked_state, tmp_state_context, m_del_effects, m_add_effects);
 
     for (const auto fact : m_del_effects)
-        succ_unpacked_state.set(fact);
+        if (succ_unpacked_state.get(fact.variable) == fact.value)
+            succ_unpacked_state.set(Data<fp::FDRFact<f::FluentTag>> { fact.variable, fp::FDRValue::none() });
+
     for (const auto fact : m_add_effects)
         succ_unpacked_state.set(fact);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -355,9 +355,10 @@ void bind_ground_conjunctive_condition(nb::module_& m, const std::string& name)
 
     auto cls = nb::class_<V>(m, name.c_str())  //
                    .def("get_index", &V::get_index)
-                   .def("get_static_facts", &V::get_facts<StaticTag>)
-                   .def("get_fluent_facts", &V::get_facts<FluentTag>)
-                   .def("get_derived_facts", &V::get_facts<DerivedTag>)
+                   .def("get_static_facts", &V::get_literals<StaticTag>)
+                   .def("get_derived_facts", &V::get_literals<DerivedTag>)
+                   .def("get_positive_facts", &V::get_facts<PositiveTag>)
+                   .def("get_negative_facts", &V::get_facts<NegativeTag>)
                    .def("get_numeric_constraints", &V::get_numeric_constraints);
     add_print(cls);
     add_hash(cls);
@@ -369,7 +370,8 @@ void bind_ground_conjunctive_effect(nb::module_& m, const std::string& name)
 
     auto cls = nb::class_<V>(m, name.c_str())  //
                    .def("get_index", &V::get_index)
-                   .def("get_facts", &V::get_facts)
+                   .def("get_add_facts", &V::get_facts<PositiveTag>)
+                   .def("get_del_facts", &V::get_facts<NegativeTag>)
                    .def("get_numeric_effects", &V::get_numeric_effects)
                    .def("get_auxiliary_numeric_effect", &V::get_auxiliary_numeric_effect);
     add_print(cls);
@@ -483,9 +485,6 @@ void bind_ground_task(nb::module_& m, const std::string& name)
                    .def("get_static_atoms", &V::get_atoms<StaticTag>)
                    .def("get_fluent_atoms", &V::get_atoms<FluentTag>)
                    .def("get_derived_atoms", &V::get_atoms<DerivedTag>)
-                   .def("get_static_fterm", &V::get_fterms<StaticTag>)
-                   .def("get_fluent_fterm", &V::get_fterms<FluentTag>)
-                   .def("get_auxiliary_fterm", &V::get_auxiliary_fterm)
                    .def("get_static_fterm_values", &V::get_fterm_values<StaticTag>)
                    .def("get_fluent_fterm_values", &V::get_fterm_values<FluentTag>)
                    .def("get_auxiliary_fterm_value", &V::get_auxiliary_fterm_value)

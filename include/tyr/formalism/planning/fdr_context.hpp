@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,10 @@ public:
     explicit FDRContext(RepositoryPtr context);
 
     // Construct with ground mutexes.
-    FDRContext(const std::vector<std::vector<GroundAtomView<FluentTag>>>& mutexes, RepositoryPtr context);
+    FDRContext(const std::vector<GroundAtomViewList<FluentTag>>& mutexes, RepositoryPtr context);
+
+    // Construct with binary ground mutexes.
+    FDRContext(const GroundAtomViewList<FluentTag>& all_atoms, RepositoryPtr context);
 
     // Copy the FDRContext.
     FDRContext(const FDRContext& other, Builder& builder, RepositoryPtr context);

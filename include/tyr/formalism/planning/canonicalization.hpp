@@ -1,7 +1,7 @@
 
 
 /*
- * Copyright (C) 2025 Dominik Drexler
+ * Copyright (C) 2025-2026 Dominik Drexler
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -152,7 +152,10 @@ inline bool is_canonical(const Data<GroundConditionalEffect>& data) { return tru
 
 inline bool is_canonical(const Data<ConjunctiveEffect>& data) { return is_canonical(data.literals) && is_canonical(data.numeric_effects); }
 
-inline bool is_canonical(const Data<GroundConjunctiveEffect>& data) { return is_canonical(data.facts) && is_canonical(data.numeric_effects); }
+inline bool is_canonical(const Data<GroundConjunctiveEffect>& data)
+{
+    return is_canonical(data.add_facts) && is_canonical(data.del_facts) && is_canonical(data.numeric_effects);
+}
 
 inline bool is_canonical(const Data<Action>& data) { return true; }
 
@@ -197,7 +200,7 @@ inline bool is_canonical(const Data<ConjunctiveCondition>& data)
 
 inline bool is_canonical(const Data<GroundConjunctiveCondition>& data)
 {
-    return is_canonical(data.static_literals) && is_canonical(data.fluent_facts) && is_canonical(data.derived_literals)
+    return is_canonical(data.static_literals) && is_canonical(data.derived_literals) && is_canonical(data.positive_facts) && is_canonical(data.negative_facts)
            && is_canonical(data.numeric_constraints);
 }
 
@@ -346,7 +349,8 @@ inline void canonicalize(Data<ConjunctiveEffect>& data)
 
 inline void canonicalize(Data<GroundConjunctiveEffect>& data)
 {
-    canonicalize(data.facts);
+    canonicalize(data.add_facts);
+    canonicalize(data.del_facts);
     canonicalize(data.numeric_effects);
 }
 
@@ -406,8 +410,9 @@ inline void canonicalize(Data<ConjunctiveCondition>& data)
 inline void canonicalize(Data<GroundConjunctiveCondition>& data)
 {
     canonicalize(data.static_literals);
-    canonicalize(data.fluent_facts);
     canonicalize(data.derived_literals);
+    canonicalize(data.positive_facts);
+    canonicalize(data.negative_facts);
     canonicalize(data.numeric_constraints);
 }
 
