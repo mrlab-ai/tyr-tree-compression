@@ -20,6 +20,18 @@ def add_search_time_s(content, props):
         props["search_time_s"] = props["search_time_ns"] / 1_000_000_000
 
 
+def out_of_memory(content, props):
+    props["out_of_memory"] = int("std_bad_alloc" in props)
+
+
+def out_of_time(content, props):
+    props["out_of_time"] = int(
+        props["out_of_memory"] == 0
+        and props["coverage"] == 0
+        and props["unsolvable"] == 0
+    )
+
+
 def add_total_time_s(content, props):
     if "total_time_ns" in props:
         props["total_time_s"] = props["total_time_ns"] / 1_000_000_000
@@ -38,6 +50,34 @@ def add_search_time_ms_per_expanded(context, props):
             props["search_time_ms_per_expanded"] = (
                 props["search_time_ns"] / 1_000_000 / props["num_expanded"]
             )
+
+
+def make_add_score_peak_memory_usage_bytes(max_memory_bytes: int):
+    def add_scores(content, props):
+        success = props["coverage"] or props["unsolvable"]
+
+        props["score_peak_memory_usage_bytes"] = tools.compute_log_score(
+            success,
+            props.get("peak_memory_usage_bytes"),
+            lower_bound=2_000_000,
+            upper_bound=max_memory_bytes,
+        )
+
+    return add_scores
+
+
+def make_add_score_state_peak_memory_usage_bytes(max_memory_bytes: int):
+    def add_scores(content, props):
+        success = props["coverage"] or props["unsolvable"]
+
+        props["score_state_peak_memory_usage_bytes"] = tools.compute_log_score(
+            success,
+            props.get("state_peak_memory_usage_bytes"),
+            lower_bound=2_000_000,
+            upper_bound=max_memory_bytes,
+        )
+
+    return add_scores
 
 
 def add_memory_mb(content, props):
@@ -78,49 +118,52 @@ class SearchParser(Parser):
 
     """
 
-    def __init__(self, search_algo: str = "gbfs"):
+    def __init__(self, max_memory_bytes: int):
         super().__init__()
-
-        if search_algo == "gbfs":
-            self.add_gbfs_patterns()
-        elif search_algo == "astar":
-            self.add_astar_patterns()
-
+        prefix = r"\[[^\]]+\] "
+        self.add_pattern("cost", prefix + r"Plan cost: (\d+)", type=int)
+        self.add_pattern("length", prefix + r"Plan length: (\d+)", type=int)
         self.add_pattern(
-            "search_time_ms", r"\[Search\] Search time: (\d+) ms", type=int
-        )
-        self.add_pattern(
-            "search_time_ns", r"\[Search\] Search time: \d+ ms \((\d+) ns\)", type=int
-        )
-        self.add_pattern(
-            "num_expanded", r"\[Search\] Number of expanded states: (\d+)", type=int
-        )
-        self.add_pattern(
-            "num_generated", r"\[Search\] Number of generated states: (\d+)", type=int
+            "initial_h_value", prefix + r"Start node h_value: (\d+)", type=int
         )
 
-        self.add_pattern("total_time_ms", r"\[Total\] Total time: (\d+) ms", type=int)
+        self.add_pattern("search_time_ms", prefix + r"Search time: (\d+) ms", type=int)
         self.add_pattern(
-            "total_time_ns", r"\[Total\] Total time: \d+ ms \((\d+) ns\)", type=int
+            "search_time_ns", prefix + r"Search time: \d+ ms \((\d+) ns\)", type=int
         )
         self.add_pattern(
-            "num_fluent_atoms", r"\[Total\] Number of fluent atoms: (\d+)", type=int
+            "num_expanded", prefix + r"Number of expanded states: (\d+)", type=int
         )
         self.add_pattern(
-            "num_derived_atoms", r"\[Total\] Number of derived atoms: (\d+)", type=int
+            "num_generated", prefix + r"Number of generated states: (\d+)", type=int
+        )
+
+        self.add_pattern("total_time_ms", prefix + r"Total time: (\d+) ms", type=int)
+        self.add_pattern(
+            "total_time_ns", prefix + r"Total time: \d+ ms \((\d+) ns\)", type=int
         )
         self.add_pattern(
-            "num_fluent_fterms", r"\[Total\] Number of fluent fterms: (\d+)", type=int
+            "num_fluent_atoms", prefix + r"Number of fluent atoms: (\d+)", type=int
+        )
+        self.add_pattern(
+            "num_derived_atoms", prefix + r"Number of derived atoms: (\d+)", type=int
+        )
+        self.add_pattern(
+            "num_fluent_fterms", prefix + r"Number of fluent fterms: (\d+)", type=int
         )
         self.add_pattern(
             "states_memory_usage_bytes",
-            r"\[Total\] States memory usage: (\d+) bytes",
+            prefix + r"States memory usage: (\d+) bytes",
             type=int,
         )
         self.add_pattern(
             "peak_memory_usage_bytes",
-            r"\[Total\] Peak memory usage: (\d+) bytes",
+            prefix + r"Peak memory usage: (\d+) bytes",
             type=int,
+        )
+
+        self.add_pattern(
+            "std_bad_alloc", r".*(std::bad_alloc).*", type=str, file="run.err"
         )
 
         self.add_pattern("unsolvable", r"(Task is unsolvable!)", type=str)
@@ -137,24 +180,20 @@ class SearchParser(Parser):
         self.add_function(add_memory_mb)
         self.add_function(add_coverage)
 
-    def add_gbfs_patterns(self):
-        self.add_pattern("cost", r"\[GBFS\] Plan cost: (\d+)", type=int)
-        self.add_pattern("length", r"\[GBFS\] Plan length: (\d+)", type=int)
-        self.add_pattern(
-            "initial_h_value", r"\[GBFS\] Start node h_value: (\d+)", type=int
+        self.add_function(make_add_score_peak_memory_usage_bytes(max_memory_bytes))
+        self.add_function(
+            make_add_score_state_peak_memory_usage_bytes(max_memory_bytes)
         )
 
-    def add_astar_patterns(self):
-        self.add_pattern("cost", r"\[ASTAR\] Plan cost: (\d+)", type=int)
-        self.add_pattern("length", r"\[ASTAR\] Plan length: (\d+)", type=int)
-        self.add_pattern(
-            "initial_h_value", r"\[ASTAR\] Start node h_value: (\d+)", type=int
-        )
+        self.add_function(out_of_memory)
+        self.add_function(out_of_time)
 
     @staticmethod
     def get_attributes():
         return [
             Attribute("coverage", min_wins=False),
+            "out_of_memory",
+            "out_of_time",
             "cost",
             "length",
             "unsolvable",
@@ -172,4 +211,6 @@ class SearchParser(Parser):
             Attribute("states_memory_usage_bytes", function=geometric_mean),
             Attribute("peak_memory_usage_bytes", function=geometric_mean),
             Attribute("memory_mb", function=geometric_mean),
+            "score_peak_memory_usage_bytes",
+            "score_state_peak_memory_usage_bytes",
         ]

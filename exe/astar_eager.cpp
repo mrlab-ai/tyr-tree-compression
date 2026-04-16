@@ -90,9 +90,11 @@ int main(int argc, char** argv)
 
         auto heuristic_name = program.get<std::string>("--heuristic");
         std::shared_ptr<planning::Heuristic<planning::LiftedTag>> heuristic;
+        std::shared_ptr<planning::FFRPGHeuristic<planning::LiftedTag>> ff_heuristic;
         if (heuristic_name == "ff")
         {
-            heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+            ff_heuristic = planning::FFRPGHeuristic<planning::LiftedTag>::create(lifted_task, execution_context);
+            heuristic = ff_heuristic;
         }
         else if (heuristic_name == "goalcount")
         {
@@ -121,6 +123,51 @@ int main(int argc, char** argv)
             }
             plan_file << result.plan.value();
             plan_file.close();
+        }
+
+        std::cout << "[Successor generator] Summary" << std::endl;
+        std::cout << successor_generator.get_workspace().statistics << std::endl;
+        auto successor_generator_rule_statistics = std::vector<datalog::RuleStatistics> {};
+        for (const auto& ws_rule : successor_generator.get_workspace().rules)
+            successor_generator_rule_statistics.push_back(ws_rule->common.statistics);
+        std::cout << datalog::compute_aggregated_rule_statistics(successor_generator_rule_statistics) << std::endl;
+        auto successor_generator_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+        for (const auto& ws_rule : successor_generator.get_workspace().rules)
+            for (const auto& worker : ws_rule->worker)
+                successor_generator_rule_worker_statistics.push_back(worker.solve.statistics);
+        std::cout << datalog::compute_aggregated_rule_worker_statistics(successor_generator_rule_worker_statistics) << std::endl;
+
+        if (successor_generator.get_state_repository()->get_axiom_evaluator())
+        {
+            std::cout << "[Axiom evaluator] Summary" << std::endl;
+            std::cout << successor_generator.get_state_repository()->get_axiom_evaluator()->get_workspace().statistics << std::endl;
+            auto axiom_evaluator_rule_statistics = std::vector<datalog::RuleStatistics> {};
+            for (const auto& ws_rule : successor_generator.get_state_repository()->get_axiom_evaluator()->get_workspace().rules)
+                axiom_evaluator_rule_statistics.push_back(ws_rule->common.statistics);
+            std::cout << datalog::compute_aggregated_rule_statistics(axiom_evaluator_rule_statistics) << std::endl;
+            auto axiom_evaluator_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+            for (const auto& ws_rule : successor_generator.get_state_repository()->get_axiom_evaluator()->get_workspace().rules)
+                for (const auto& worker : ws_rule->worker)
+                    axiom_evaluator_rule_worker_statistics.push_back(worker.solve.statistics);
+            std::cout << datalog::compute_aggregated_rule_worker_statistics(axiom_evaluator_rule_worker_statistics) << std::endl;
+        }
+
+        if (ff_heuristic)
+        {
+            std::cout << "[RPGHeuristic] Summary" << std::endl;
+            std::cout << ff_heuristic->get_workspace().statistics << std::endl;
+            auto ff_heuristic_rule_statistics = std::vector<datalog::RuleStatistics> {};
+            for (size_t i = 0; i < ff_heuristic->get_workspace().rules.size(); ++i)
+            {
+                const auto& ws_rule = ff_heuristic->get_workspace().rules[i];
+                ff_heuristic_rule_statistics.push_back(ws_rule->common.statistics);
+            }
+            std::cout << datalog::compute_aggregated_rule_statistics(ff_heuristic_rule_statistics) << std::endl;
+            auto ff_heuristic_rule_worker_statistics = std::vector<datalog::RuleWorkerStatistics> {};
+            for (const auto& ws_rule : ff_heuristic->get_workspace().rules)
+                for (const auto& worker : ws_rule->worker)
+                    ff_heuristic_rule_worker_statistics.push_back(worker.solve.statistics);
+            std::cout << datalog::compute_aggregated_rule_worker_statistics(ff_heuristic_rule_worker_statistics) << std::endl;
         }
 
         std::cout << "[Total] Number of fluent atoms: " << lifted_task->get_repository()->size<formalism::planning::GroundAtom<formalism::FluentTag>>()

@@ -52,7 +52,7 @@ from experiments.suite_test import (
     SUITE_IPC_SATISFICING_ADL_TEST,
 )
 
-
+STORAGE = "TREE"
 # Create custom report class with suitable info and error attributes.
 class BaseReport(AbsoluteReport):
     INFO_ATTRIBUTES = ["wall_time_limit", "memory_limit"]
@@ -175,7 +175,7 @@ for h in HEURISTICS:
             # Every run has to have a unique id in the form of a list.
             # The algorithm name is only really needed when there are
             # multiple algorithms.
-            run.set_property("id", [algorithm, task.domain, task.problem])
+            run.set_property("id", [STORAGE, algorithm, task.domain, task.problem])
 
 # Add step that writes experiment files to disk.
 exp.add_step("build", exp.build)
