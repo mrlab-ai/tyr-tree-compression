@@ -71,7 +71,7 @@ def byte_size_to_divisor(unit: str):
 def make_add_score_peak_memory_usage_bytes(max_memory_bytes: int, unit: str = "bytes"):
     def add_scores(content, props):
 
-        if f"score_peak_memory_usage_{unit}" not in props:
+        if "peak_memory_usage_bytes" not in props:
             props[f"score_peak_memory_usage_{unit}"] = 0
             return
         
@@ -91,7 +91,7 @@ def make_add_score_peak_memory_usage_bytes(max_memory_bytes: int, unit: str = "b
 def make_add_score_state_peak_memory_usage_bytes(max_memory_bytes: int, unit: str = "bytes"):
     def add_scores(content, props):
 
-        if f"score_state_peak_memory_usage_{unit}" not in props:
+        if "state_peak_memory_usage_bytes" not in props:
             props[f"score_state_peak_memory_usage_{unit}"] = 0
             return
 
