@@ -58,30 +58,41 @@ def add_search_time_ms_per_expanded(context, props):
                 props["search_time_ns"] / 1_000_000 / props["num_expanded"]
             )
 
+def byte_size_to_divisor(unit: str):
+    return {
+        "b": 1,
+        "byte": 1,
+        "bytes": 1,
+        "kb": 1_000,
+        "mb": 1_000_000,
+        "gb": 1_000_000_000
+    }[unit.lower()]
 
-def make_add_score_peak_memory_usage_bytes(max_memory_bytes: int):
+def make_add_score_peak_memory_usage_bytes(max_memory_bytes: int, unit: str = "bytes"):
     def add_scores(content, props):
         success = props["coverage"] or props["unsolvable"]
+        d = byte_size_to_divisor(unit)
 
-        props["score_peak_memory_usage_bytes"] = tools.compute_log_score(
+        props[f"score_peak_memory_usage_{unit}"] = tools.compute_log_score(
             success,
-            props.get("peak_memory_usage_bytes"),
-            lower_bound=2_000_000,
-            upper_bound=max_memory_bytes,
+            props.get("peak_memory_usage_bytes") / d,
+            lower_bound=2_000_000 / d,
+            upper_bound=max_memory_bytes / d,
         )
 
     return add_scores
 
 
-def make_add_score_state_peak_memory_usage_bytes(max_memory_bytes: int):
+def make_add_score_state_peak_memory_usage_bytes(max_memory_bytes: int, unit: str = "bytes"):
     def add_scores(content, props):
         success = props["coverage"] or props["unsolvable"]
+        d = byte_size_to_divisor(unit)
 
-        props["score_state_peak_memory_usage_bytes"] = tools.compute_log_score(
+        props[f"score_state_peak_memory_usage_{unit}"] = tools.compute_log_score(
             success,
-            props.get("state_peak_memory_usage_bytes"),
-            lower_bound=2_000_000,
-            upper_bound=max_memory_bytes,
+            props.get("state_peak_memory_usage_bytes") / d,
+            lower_bound=2_000_000 / d,
+            upper_bound=max_memory_bytes / d,
         )
 
     return add_scores
@@ -194,6 +205,11 @@ class SearchParser(Parser):
         self.add_function(make_add_score_peak_memory_usage_bytes(max_memory_bytes))
         self.add_function(
             make_add_score_state_peak_memory_usage_bytes(max_memory_bytes)
+        )
+
+        self.add_function(make_add_score_peak_memory_usage_bytes(max_memory_bytes, "mb"))
+        self.add_function(
+            make_add_score_state_peak_memory_usage_bytes(max_memory_bytes, "mb")
         )
 
         self.add_function(out_of_memory)
