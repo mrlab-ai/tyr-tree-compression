@@ -169,6 +169,10 @@ class SearchParser(Parser):
             type=int,
         )
 
+        self.add_pattern("state_peak_memory_usage_bytes", 
+                         prefix + r"States memory usage: (\d+)", 
+                        type=int)
+
         self.add_pattern(
             "std_bad_alloc", r".*(std::bad_alloc).*", type=str, file="run.err"
         )
