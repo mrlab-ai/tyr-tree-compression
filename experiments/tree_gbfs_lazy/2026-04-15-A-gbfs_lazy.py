@@ -127,7 +127,7 @@ HEURISTICS = [
 
 # Create a new experiment.
 exp = Experiment(environment=ENV)
-exp.add_parser(SearchParser(MEMORY_LIMIT))
+exp.add_parser(SearchParser(MEMORY_LIMIT * 1_000_000))
 exp.add_parser(DatalogParser())
 
 PLANNER_DIR = REPO / "build" / "exe" / "gbfs_lazy"
