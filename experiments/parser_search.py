@@ -251,4 +251,6 @@ class SearchParser(Parser):
             Attribute("memory_mb", function=geometric_mean),
             "score_peak_memory_usage_bytes",
             "score_state_peak_memory_usage_bytes",
+            "score_peak_memory_usage_mb",
+            "score_state_peak_memory_usage_mb",
         ]
