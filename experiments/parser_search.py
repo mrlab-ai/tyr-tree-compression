@@ -20,6 +20,13 @@ def add_search_time_s(content, props):
         props["search_time_s"] = props["search_time_ns"] / 1_000_000_000
 
 
+def resolve_unexplained_errors(content, props):
+    if "unexplained_errors" in props and (
+        props["out_of_memory"] == 1 or props["out_of_time"] == 1
+    ):
+        del props["unexplained_errors"]
+
+
 def out_of_memory(content, props):
     props["out_of_memory"] = int("std_bad_alloc" in props)
 
@@ -187,6 +194,7 @@ class SearchParser(Parser):
 
         self.add_function(out_of_memory)
         self.add_function(out_of_time)
+        self.add_function(resolve_unexplained_errors)
 
     @staticmethod
     def get_attributes():
