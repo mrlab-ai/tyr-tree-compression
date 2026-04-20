@@ -52,7 +52,7 @@ from experiments.suite_test import (
     SUITE_IPC_SATISFICING_ADL_TEST,
 )
 
-STORAGE = "TREE"
+STORAGE = "HASHSET"
 # Create custom report class with suitable info and error attributes.
 class BaseReport(AbsoluteReport):
     INFO_ATTRIBUTES = ["wall_time_limit", "memory_limit"]
