@@ -142,7 +142,7 @@ for h in HEURISTICS:
             run = exp.add_run()
             run.add_resource("domain", task.domain_file, symlink=True)
             run.add_resource("problem", task.problem_file, symlink=True)
-            algorithm = f"{STORAGE}-gbfs-lazy-hff-{h}"
+            algorithm = f"{STORAGE}-gbfs-lazy-{h}"
             run.add_command(
                 algorithm,
                 [
