@@ -1,0 +1,174 @@
+#! /usr/bin/env python
+
+import platform
+import re
+import os
+import sys
+
+from pathlib import Path
+
+from downward import suites
+from downward.reports.absolute import AbsoluteReport
+from lab.environments import TetralithEnvironment, LocalEnvironment
+from lab.experiment import Experiment
+from lab.reports import Attribute, geometric_mean, arithmetic_mean
+
+DIR = Path(__file__).resolve().parent
+REPO = DIR.parent.parent
+
+sys.path.append(str(DIR.parent.parent))
+
+from experiments.parser_datalog import DatalogParser
+from experiments.parser_search import SearchParser
+
+from experiments.suite import (
+    SUITE_IPC2023_NUMERIC,
+    SUITE_MINEPDDL_NUMERIC,
+)
+from experiments.suite_test import (
+    SUITE_CNOT_SYNTHESIS_TEST,
+    SUITE_IPC_OPTIMAL_STRIPS_TEST,
+    SUITE_IPC_OPTIMAL_ADL_TEST,
+    SUITE_IPC_SATISFICING_STRIPS_TEST,
+    SUITE_IPC_LEARNING_TEST,
+    SUITE_AUTOSCALE_OPTIMAL_STRIPS_TEST,
+    SUITE_AUTOSCALE_AGILE_STRIPS_TEST,
+    SUITE_HTG_TEST,
+    SUITE_IPC2023_NUMERIC_TEST,
+    SUITE_PUSHWORLD_TEST,
+    SUITE_BELUGA2025_SCALABILITY_DETERMINISTIC_TEST,
+    SUITE_MINEPDDL_TEST,
+    SUITE_IPC_SATISFICING_ADL_TEST,
+)
+
+STORAGE = "TREE"
+# Create custom report class with suitable info and error attributes.
+class BaseReport(AbsoluteReport):
+    INFO_ATTRIBUTES = ["wall_time_limit", "memory_limit"]
+    ERROR_ATTRIBUTES = [
+        "domain",
+        "problem",
+        "algorithm",
+        "unexplained_errors",
+        "error",
+        "node",
+    ]
+
+
+BENCHMARKS_DIR = Path(os.environ["DOWNWARD_BENCHMARKS"])
+
+NODE = platform.node()
+REMOTE = re.match(r"tetralith\d+.nsc.liu.se|n\d+", NODE)
+
+NUM_THREADS = 1
+RANDOM_SEED = 0
+
+MEMORY_LIMIT = 4000
+
+if REMOTE:
+    ENV = TetralithEnvironment(
+        setup=TetralithEnvironment.DEFAULT_SETUP,
+        memory_per_cpu=f"{MEMORY_LIMIT}M",
+        extra_options="#SBATCH --account=naiss2025-5-382",
+    )
+
+    ENV.MAX_TASKS = 500
+else:
+    ENV = LocalEnvironment(processes=6)
+
+if REMOTE:
+    SUITES = [
+        ("ipc2023-numeric", SUITE_IPC2023_NUMERIC),
+        ("mine-pddl-numeric", SUITE_MINEPDDL_NUMERIC),
+    ]
+    WALL_TIME_LIMIT = 30 * 60
+else:
+    SUITES = [
+        ("ipc2023-numeric", SUITE_IPC2023_NUMERIC[:1]),
+    ]
+    WALL_TIME_LIMIT = 10
+
+ATTRIBUTES = [
+    "run_dir",
+]
+ATTRIBUTES += SearchParser.get_attributes()
+ATTRIBUTES += DatalogParser.get_attributes()
+
+
+
+HEURISTICS = [
+    "blind", 
+    # "goalcount"
+]
+
+# Create a new experiment.
+exp = Experiment(environment=ENV)
+exp.add_parser(SearchParser(MEMORY_LIMIT * 1_000_000))
+exp.add_parser(DatalogParser())
+
+PLANNER_DIR = REPO / "build" / "exe" / "astar_eager"
+
+exp.add_resource("planner_exe", PLANNER_DIR)
+
+
+for h in HEURISTICS:
+    for prefix, SUITE in SUITES:
+        for task in suites.build_suite(BENCHMARKS_DIR / prefix, SUITE):
+            ################ Grounded ################
+            run = exp.add_run()
+            run.add_resource("domain", task.domain_file, symlink=True)
+            run.add_resource("problem", task.problem_file, symlink=True)
+            algorithm = f"{STORAGE}-astar-{h}"
+            run.add_command(
+                algorithm,
+                [
+                    "{planner_exe}",
+                    "-D",
+                    "{domain}",
+                    "-P",
+                    "{problem}",
+                    "-O",
+                    "plan.out",
+                    "-H",
+                    h,
+                    "--random-seed",
+                    str(RANDOM_SEED),
+                ],
+                time_limit=None,
+                wall_time_limit=WALL_TIME_LIMIT,
+                memory_limit=MEMORY_LIMIT,
+            )
+            # AbsoluteReport needs the following properties:
+            # 'domain', 'problem', 'algorithm', 'coverage'.
+            run.set_property("domain", task.domain)
+            run.set_property("problem", task.problem)
+            run.set_property("algorithm", algorithm)
+            # BaseReport needs the following properties:
+            # 'time_limit', 'memory_limit'.
+            run.set_property("wall_time_limit", WALL_TIME_LIMIT)
+            run.set_property("memory_limit", MEMORY_LIMIT)
+            run.set_property("prefix", prefix)
+
+            run.set_property("storage", STORAGE)
+            # Every run has to have a unique id in the form of a list.
+            # The algorithm name is only really needed when there are
+            # multiple algorithms.
+            run.set_property("id", [STORAGE, algorithm, task.domain, task.problem])
+
+# Add step that writes experiment files to disk.
+exp.add_step("build", exp.build)
+
+# Add step that executes all runs.
+exp.add_step("start", exp.start_runs)
+
+exp.add_step("parse", exp.parse)
+
+# Add step that collects properties from run directories and
+# writes them to *-eval/properties.
+exp.add_fetcher(name="fetch")
+
+# Make a report.
+exp.add_report(BaseReport(attributes=ATTRIBUTES), outfile="report.html")
+
+# Parse the commandline and run the specified steps.
+exp.run_steps()
